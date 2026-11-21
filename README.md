@@ -18,5 +18,11 @@ L'hébergeur republie alors le site automatiquement (environ 1 minute).
 - **Version finale (Cloudflare Pages)** : une petite fonction `/api` garde la clé GitHub côté serveur ;
   l'entrepreneur se connecte avec un simple mot de passe.
 
+## Hébergement
+- Boutique : https://toutzafer.pages.dev (Cloudflare Pages, projet « toutzafer », branche main, sans commande de build).
+- Gestion : https://toutzafer.pages.dev/gestion/
+- Secrets du projet Cloudflare (Paramètres → Variables et secrets, Production) : `ADMIN_PASSWORD`, `GITHUB_TOKEN`.
+  Après modification d'un secret, relancer un déploiement.
+
 ## Vidéo de démonstration
 `media/Toutzafer_demo.mp4`
