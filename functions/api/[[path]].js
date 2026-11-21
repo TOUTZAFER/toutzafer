@@ -9,7 +9,7 @@
  * Variables d'environnement (Cloudflare > projet > Settings > Variables and Secrets) :
  *   ADMIN_PASSWORD  mot de passe de la page Gestion            (secret)
  *   GITHUB_TOKEN    clé GitHub fine-grained, dépôt seul, Contents: Read and write (secret)
- *   GITHUB_REPO     ex. "Souweyd/toutzafer"   (facultatif, valeur par défaut ci-dessous)
+ *   GITHUB_REPO     ex. "TOUTZAFER/toutzafer"   (facultatif, valeur par défaut ci-dessous)
  *   GITHUB_BRANCH   ex. "main"                (facultatif)
  * La clé GitHub ne quitte jamais le serveur : la page n'envoie que le mot de passe.
  */
@@ -39,7 +39,7 @@ async function checkPassword(request, env) {
 }
 
 function gh(env) {
-  const repo = env.GITHUB_REPO || "Souweyd/toutzafer", branch = env.GITHUB_BRANCH || "main";
+  const repo = env.GITHUB_REPO || "TOUTZAFER/toutzafer", branch = env.GITHUB_BRANCH || "main";
   const base = (env.GITHUB_API || "https://api.github.com") + "/repos/" + repo;
   async function api(path, opt = {}) {
     const r = await fetch(base + path, {
