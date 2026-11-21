@@ -20,7 +20,7 @@
 :root{
   --bg:#ffffff; --bg-alt:#f5f5f7; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7;
   --brand:#0020fe; --brand-fg:#ffffff; --brand-soft:#e8ebff; --brand-text:#0020fe;
-  --warn:#b25000; --warn-soft:#fff1e3; --ok:#1f8a3e; --pop:#ffe600; --pop-fg:#141414; --wa:#128c4a; --fb:#1b5fd9; --hl:rgba(255,226,0,.5);
+  --warn:#b25000; --warn-soft:#fff1e3; --ok:#1f8a3e; --pop:#fbef1a; --pop-fg:#141414; --wa:#128c4a; --fb:#1b5fd9; --hl:rgba(255,226,0,.5);
   --s1:#c25400; --s1-bg:#fff0e0; --s2:#1238e6; --s2-bg:#e6ebff; --s3:#18803a; --s3-bg:#e2f5e7; --cash:#7a5a00; --cash-bg:#fff4bf; --card:#6a3bd1; --card-bg:#efe8ff; --s4:#c4262e; --s4-bg:#fde7e7;
   --tile:#f5f5f7; --hero-bg:#0a1240; --overlay:rgba(0,0,0,.36); --glass:rgba(255,255,255,.8); --knob:#ffffff;
   --font:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
@@ -46,7 +46,8 @@ img{display:block}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--brand);color:var(--brand-fg);
   margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:0 max(16px,env(safe-area-inset-left,0px))}
 .top .wrap{display:flex;align-items:center;gap:16px;height:52px}
-.logo{font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:-.035em;background:none;border:0;padding:0;color:var(--brand-fg)}
+.logo{background:none;border:0;padding:4px 0;display:flex;align-items:center;color:var(--brand-fg)}
+.logo img{display:block;height:30px;width:auto}
 .top .sp{flex:1}
 .top .link{background:none;border:0;color:var(--brand-fg);opacity:.8;font-size:13px;padding:6px 4px;white-space:nowrap}
 @media (max-width:400px){.top .link{font-size:12px}}
@@ -68,7 +69,8 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 @media (min-width:1112px){.hero .in{padding-left:0;padding-right:0}}
 .copy{max-width:560px}
 .ship{display:inline-flex;align-items:center;gap:8px;background:var(--pop);color:var(--pop-fg);font-weight:800;font-size:14px;border-radius:980px;padding:7px 14px 7px 12px;margin-bottom:18px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-.hero h1{font-family:var(--font-display);font-size:clamp(56px,10vw,104px);line-height:.98;font-weight:800;letter-spacing:-.04em;margin:0;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.25)}
+.hero h1{margin:0;line-height:0}
+.hero h1 .wm{display:block;width:clamp(240px,40vw,440px);height:auto;filter:drop-shadow(0 2px 18px rgba(0,0,0,.3))}
 .lead{font-family:var(--font-display);font-size:clamp(22px,3.2vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:12px 0 0;max-width:20ch;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.25)}
 .ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .btn-o{border:1.5px solid rgba(255,255,255,.6);background:rgba(255,255,255,.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;border-radius:980px;padding:12px 20px;font-weight:600;font-size:15px}
@@ -90,7 +92,7 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
   .hero{align-items:flex-end;min-height:440px}
   .shade{background:linear-gradient(0deg,rgba(0,8,45,.9) 0%,rgba(0,8,45,.7) 45%,rgba(0,8,45,.15) 80%,rgba(0,8,45,.05) 100%)}
   .hero .in{padding-top:28px;padding-bottom:76px}
-  .hero h1{font-size:clamp(48px,14vw,64px)}
+  .hero h1 .wm{width:min(78vw,320px)}
   .lead{font-size:21px;margin-top:8px}
   .ship{margin-bottom:12px;font-size:13px}
   .trust{margin-top:14px;font-size:13px;gap:6px 14px}
@@ -237,7 +239,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
 footer .wrap{display:grid;grid-template-columns:2fr 1fr;gap:28px}
 @media (max-width:720px){footer .wrap{grid-template-columns:1fr;gap:24px}}
 .fcol{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0}
-.flogo{font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:-.035em;color:var(--fg)}
+.flogo{display:block;height:44px;width:auto;margin-bottom:6px}
 .fh{font-weight:700;color:var(--fg);font-size:13px;margin-bottom:4px}
 footer button{background:none;border:0;color:var(--muted);font-size:13px;padding:0;text-align:left}
 footer button:hover{color:var(--fg);text-decoration:underline}
@@ -361,7 +363,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
 
 <header class="top">
   <div class="wrap">
-    <button class="logo" id="goHome" aria-label="Tout'zafer, accueil">Tout’zafer.</button>
+    <button class="logo" id="goHome" aria-label="Tout'zafer, accueil"><img src="img/logo/wordmark.svg" alt="Tout’zafer" width="95" height="30"></button>
     <div class="sp"></div>
     <button class="cartbtn" id="openCart" aria-label="Ouvrir le panier">Panier <span class="n tabnum" id="cartCount">0</span></button>
   </div>
@@ -374,7 +376,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <div class="in">
       <div class="copy">
         <span class="ship"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>Livraison offerte</span>
-        <h1>Tout’zafer.</h1>
+        <h1><img class="wm" src="img/logo/wordmark.svg" alt="Tout’zafer" width="418" height="132"></h1>
         <p class="lead">Les articles du quotidien à petit prix.</p>
         <ul class="trust">
           <li><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>Paiement à la livraison</li>
@@ -469,7 +471,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
 
 <footer>
   <div class="wrap">
-    <div class="fcol"><span class="flogo">Tout’zafer.</span><span>Les articles du quotidien à petit prix</span><span>La Réunion · Livraison offerte · Paiement à la livraison</span></div>
+    <div class="fcol"><img class="flogo" src="img/logo/badge.svg" alt="Tout’zafer" width="118" height="44"><span>Les articles du quotidien à petit prix</span><span>La Réunion · Livraison offerte · Paiement à la livraison</span></div>
     <div class="fcol"><span class="fh">Informations</span><button id="legal">Mentions légales</button><button id="cgv">Conditions de réservation</button></div>
   </div>
 </footer>
