@@ -145,7 +145,7 @@
    "a07-n2",
    "a07-n3"
   ],
-  "oos": false
+  "oos": true
  },
  {
   "id": "a08",
@@ -436,7 +436,7 @@
   "n": 21,
   "cat": "animaux",
   "name": "Hamac pour chat",
-  "price": 35.0,
+  "price": 35,
   "d": "Griffoir intégré · 50 × 35 × 32 cm",
   "desc": "Un fauteuil-hamac en bois avec assise en griffoir. Votre chat s'y prélasse et y fait ses griffes, plutôt que sur votre canapé.",
   "specs": [
@@ -479,7 +479,7 @@
   "n": 23,
   "cat": "maison",
   "name": "Support jeux vidéo",
-  "price": 35.0,
+  "price": 35,
   "d": "Tour de rangement manettes et jeux",
   "desc": "Une tour de rangement qui centralise votre coin gaming : une colonne pour ranger vos boîtiers de jeux et des supports latéraux pour 4 manettes. Un bureau ou un meuble TV toujours bien rangé.",
   "specs": [
@@ -604,7 +604,7 @@
   "n": 29,
   "cat": "rangement",
   "name": "Étagère bibliothèque",
-  "price": 45.0,
+  "price": 45,
   "d": "Cubes décalés · 141,5 cm",
   "desc": "Une bibliothèque design faite de cubes empilés et décalés, en métal fin. Elle range livres, enceinte ou objets déco tout en apportant une touche graphique au salon ou à la chambre.",
   "specs": [
