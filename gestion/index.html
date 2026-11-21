@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0020fe">
+<title>Tout'zafer · Gestion</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/ico/favicon-32.png">
+<link rel="apple-touch-icon" href="../img/ico/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@700;800&display=swap">
+<style>
+:root{
+  --bg:#fff;--bg-alt:#f5f5f7;--fg:#1d1d1f;--muted:#6e6e73;--line:#d2d2d7;
+  --brand:#0020fe;--brand-fg:#fff;--brand-soft:#e8ebff;
+  --ok:#1f8a3e;--ok-soft:#e2f5e7;--warn:#b25000;--warn-soft:#fff1e3;--err:#c4262e;--err-soft:#fde7e7;
+  --tile:#f5f5f7;--r:18px;
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  --font-display:"Inter Tight","Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+img{display:block}
+.wrap{max-width:860px;margin:0 auto}
+.tabnum{font-variant-numeric:tabular-nums}
+
+/* En-tête */
+header.top{position:sticky;top:0;z-index:20;background:var(--brand);color:var(--brand-fg);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.top .wrap{display:flex;align-items:center;gap:10px;height:54px}
+.logo{font-family:var(--font-display);font-weight:800;font-size:21px;letter-spacing:-.035em}
+.tag{font-size:12px;font-weight:700;background:rgba(255,255,255,.2);border-radius:980px;padding:3px 10px}
+.sp{flex:1}
+.top a,.top button.lk{color:var(--brand-fg);opacity:.85;font-size:13px;text-decoration:none;background:none;border:0;padding:6px 2px;white-space:nowrap}
+.top header :focus-visible{outline-color:#fff}
+
+/* Bandeau d'état */
+.status{position:sticky;top:calc(54px + env(safe-area-inset-top,0px));z-index:15;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:9px max(16px,env(safe-area-inset-left,0px));font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;background:var(--bg-alt);color:var(--muted);border-bottom:1px solid var(--line)}
+.status .d{width:8px;height:8px;border-radius:50%;background:#8e8e93;flex:none}
+.status.saving .d{background:#ff9f0a;animation:pulse 1s infinite}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.ok .d{background:var(--ok)}
+.status.err{background:var(--err-soft);color:var(--err)} .status.err .d{background:var(--err)}
+.status.wait{background:var(--warn-soft);color:var(--warn)} .status.wait .d{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+
+h1{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,5vw,34px);letter-spacing:-.025em;margin:22px 0 4px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px}
+
+/* Barre d'outils */
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.inp,.sel,.ta{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:15px;width:100%;min-width:0}
+.ta{resize:vertical;min-height:84px;line-height:1.45}
+.tools .inp{flex:1 1 220px;width:auto;background:var(--bg-alt)}
+.tools .sel{width:auto;flex:0 0 auto;background:var(--bg-alt)}
+.btn{border:0;border-radius:980px;padding:11px 18px;font-size:15px;font-weight:600;background:var(--bg-alt);white-space:nowrap}
+.btn.pri{background:var(--brand);color:#fff}
+.btn.sm{padding:8px 14px;font-size:13px}
+.btn.danger{background:var(--err-soft);color:var(--err)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+@media (max-width:560px){.tools .btn.pri{flex:1 1 100%}.tools .sel{flex:1 1 auto}}
+@media (max-width:360px){.tag{display:none}}
+
+/* Liste */
+.count{font-size:13px;color:var(--muted);margin:4px 0 8px}
+.list{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+.row:last-child{border-bottom:0}
+.row .main{min-width:0;cursor:pointer;display:contents}
+.row img,.row .ph0{width:60px;height:60px;border-radius:12px;object-fit:cover;background:var(--tile);cursor:pointer}
+.row .t{font-weight:600;font-size:15px;line-height:1.25;overflow-wrap:anywhere;cursor:pointer}
+.row .u{font-size:13px;color:var(--muted);margin-top:2px}
+.row.off .t,.row.off .u{color:var(--muted)}
+.row.off img{filter:grayscale(1);opacity:.6}
+.flag{display:inline-block;font-size:11px;font-weight:700;border-radius:980px;padding:2px 8px;margin:4px 4px 0 0;background:var(--bg-alt);color:var(--muted)}
+.flag.w{background:var(--warn-soft);color:var(--warn)}
+.empty{color:var(--muted);text-align:center;padding:36px 16px;border:1.5px dashed var(--line);border-radius:var(--r)}
+
+/* Interrupteur stock */
+.sw{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;cursor:pointer;min-width:64px}
+.sw input{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:980px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.sw input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked{background:var(--ok)}
+.sw input:checked::after{transform:translateX(20px)}
+.sw .in{color:var(--ok)} .sw .out{color:var(--warn)}
+
+/* Connexion */
+.login{max-width:440px;margin:8vh auto 0;display:flex;flex-direction:column;gap:14px}
+.login h1{margin:0}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.note ol{padding-left:18px;margin:6px 0 0}
+.errbox{background:var(--err-soft);color:var(--err);border-radius:12px;padding:10px 12px;font-size:14px}
+
+/* Fiche article */
+dialog{border:0;border-radius:22px;padding:0;width:min(640px,calc(100% - 20px));max-height:calc(100dvh - 20px);box-shadow:0 20px 60px rgba(0,0,0,.25);color:var(--fg);background:var(--bg)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dh{display:flex;align-items:center;gap:12px;padding:18px 20px 10px;position:sticky;top:0;background:var(--bg);z-index:2}
+.dh h2{margin:0;font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.02em;flex:1}
+.x{border:0;background:var(--bg-alt);width:36px;height:36px;border-radius:50%;font-size:20px;line-height:1}
+.db{padding:6px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.df{display:flex;gap:8px;align-items:center;padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);flex-wrap:wrap}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.fld small{font-weight:500}
+.fld .inp,.fld .sel,.fld .ta{color:var(--fg);font-weight:400}
+.frow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.frow{grid-template-columns:minmax(0,1fr)}}
+.phs{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.ph{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--tile)}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph .pa{position:absolute;inset:auto 4px 4px;display:flex;gap:4px;justify-content:space-between}
+.ph .pa button{border:0;background:rgba(255,255,255,.94);border-radius:8px;width:28px;height:28px;font-size:13px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ph .pa button:disabled{opacity:.3}
+.ph .n1{position:absolute;top:4px;left:4px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;border-radius:980px;padding:2px 7px}
+.ph .nw{position:absolute;top:4px;right:4px;background:var(--ok);color:#fff;font-size:10px;font-weight:700;border-radius:980px;padding:2px 7px}
+.addph{aspect-ratio:1;border:1.5px dashed var(--line);border-radius:12px;display:grid;place-items:center;text-align:center;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;padding:6px}
+.addph input{display:none}
+.addph.busy{opacity:.6;pointer-events:none}
+.sws{display:flex;flex-wrap:wrap;gap:12px 24px}
+.sws label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--fg)}
+.sws input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:980px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;margin:0;flex:none}
+.sws input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.sws input:checked{background:var(--ok)}
+.sws input:checked::after{transform:translateX(18px)}
+.hint{font-size:12px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--fg);color:var(--bg);border-radius:980px;padding:10px 18px;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <span class="logo">Tout’zafer.</span><span class="tag">Gestion</span>
+    <span class="sp"></span>
+    <a href="../" target="_blank" rel="noopener">Boutique ↗</a>
+    <button class="lk" id="logout" hidden>Déconnexion</button>
+  </div>
+</header>
+<div class="status" id="status" hidden><span class="d"></span><span id="statusTxt"></span></div>
+
+<main class="wrap">
+  <!-- Connexion -->
+  <section class="login" id="vLogin" hidden>
+    <h1>Gestion des articles</h1>
+    <p class="sub" id="loginSub"></p>
+    <label class="fld" id="loginLbl"><span id="loginLblTxt">Clé d’accès</span><input class="inp" id="loginIn" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false"></label>
+    <div class="errbox" id="loginErr" hidden></div>
+    <button class="btn pri" id="loginBtn">Se connecter</button>
+    <div class="note" id="loginNote"></div>
+  </section>
+
+  <!-- Articles -->
+  <section id="vList" hidden>
+    <h1>Articles</h1>
+    <p class="sub">Touchez un article pour le modifier. L’interrupteur passe un article en rupture ou le remet en stock.</p>
+    <div class="tools">
+      <input class="inp" id="q" type="search" placeholder="Rechercher un article" aria-label="Rechercher un article">
+      <select class="sel" id="flt" aria-label="Filtrer">
+        <option value="all">Tous</option><option value="in">En stock</option><option value="out">En rupture</option><option value="hid">Masqués du site</option>
+      </select>
+      <button class="btn pri" id="newBtn">+ Nouvel article</button>
+    </div>
+    <p class="count tabnum" id="count"></p>
+    <div id="list"></div>
+  </section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgT"></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* =====================================================================
+   Tout'zafer · Gestion
+   Lit et enregistre catalogue.json (et les photos) dans le dépôt GitHub.
+   Deux modes, choisis automatiquement :
+   - « relais » : le site est hébergé chez Cloudflare avec la fonction /api ;
+     l'entrepreneur se connecte avec un simple mot de passe.
+   - « github » : simulation sur GitHub Pages ; la page écrit directement
+     dans le dépôt avec une clé GitHub enregistrée sur cet appareil.
+   ===================================================================== */
+const CFG={repo:"Souweyd/toutzafer",branch:"main",file:"catalogue.json"};
+const CATS=[["cuisine","Cuisine"],["rangement","Rangement"],["maison","Maison"],["enfants","Bébé & enfants"],["animaux","Animaux"]];
+const CATNAME=Object.fromEntries(CATS);
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const eur=n=>(+n||0).toLocaleString("fr-FR",{style:"currency",currency:"EUR"});
+const num=s=>parseFloat(String(s).replace(/[\s  €]/g,"").replace(",","."))||0;
+const pad=n=>String(n).padStart(2,"0");
+const ls={get(k){try{return localStorage.getItem("tzg_"+k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem("tzg_"+k):localStorage.setItem("tzg_"+k,v)}catch(e){}}};
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),2600)}
+
+/* ---------- Photos ---------- */
+// « aNN-nK » -> ../img/w/aNN-nK-360.webp ; « aNN-uK.jpg » -> ../img/w/aNN-uK-360.jpg
+function imgPath(b,s){const m=String(b).match(/^(.*)\.(webp|jpg|png)$/);return m?`img/w/${m[1]}-${s}.${m[2]}`:`img/w/${b}-${s}.webp`}
+const localUrls={}; // photos ajoutées dans cette session : aperçu immédiat avant la mise en ligne
+const rawUrl=p=>`https://raw.githubusercontent.com/${CFG.repo}/${CFG.branch}/${p}`;
+function thumb(b){return localUrls[b]||"../"+imgPath(b,360)}
+// si la photo n'est pas encore en ligne (publication en cours), on la prend directement dans le dépôt
+document.addEventListener("error",e=>{const im=e.target;if(im.tagName!=="IMG"||im.dataset.fb||!im.dataset.b)return;im.dataset.fb="1";im.src=rawUrl(imgPath(im.dataset.b,360))},true);
+
+function loadImage(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("image illisible"))};im.src=u})}
+function squareCanvas(im,size){
+  const c=document.createElement("canvas");c.width=c.height=size;const g=c.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,size,size);g.imageSmoothingQuality="high";
+  const w=im.naturalWidth,h=im.naturalHeight,r=w/h;
+  if(r>=.8&&r<=1.25){const s=Math.min(w,h);g.drawImage(im,(w-s)/2,(h-s)/2,s,s,0,0,size,size)}       // presque carrée : recadrage centré
+  else{const k=size/Math.max(w,h),dw=w*k,dh=h*k;g.drawImage(im,(size-dw)/2,(size-dh)/2,dw,dh)}       // sinon : photo entière sur fond blanc
+  return c;
+}
+const toBlob=(c,type,q)=>new Promise(r=>c.toBlob(r,type,q));
+async function makePhoto(file){
+  const im=await loadImage(file);const out={};let ext="webp";
+  for(const s of [360,720]){let b=await toBlob(squareCanvas(im,s),"image/webp",.82);
+    if(!b||b.type!=="image/webp"){ext="jpg";b=await toBlob(squareCanvas(im,s),"image/jpeg",.85)} out[s]=b}
+  if(ext==="jpg"&&out[360].type==="image/webp")out[360]=await toBlob(squareCanvas(im,360),"image/jpeg",.85);
+  return {ext,blobs:out};
+}
+const b64=blob=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob)});
+const utf8b64=s=>{const bytes=new TextEncoder().encode(s);let bin="";for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(bin)};
+const b64utf8=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,"")),c=>c.charCodeAt(0)));
+
+/* ---------- Enregistrement : mode GitHub (simulation) ---------- */
+class Conflict extends Error{}
+class AuthError extends Error{}
+const GH={
+  token:()=>ls.get("token"),
+  async api(path,opt={}){
+    const r=await fetch("https://api.github.com/repos/"+CFG.repo+path,{...opt,cache:"no-store",headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+GH.token(),"X-GitHub-Api-Version":"2022-11-28",...(opt.body?{"Content-Type":"application/json"}:{})}});
+    if(r.status===401||r.status===403){const t=await r.text();throw new AuthError(r.status===401?"Clé refusée par GitHub (expirée ou incorrecte).":"Cette clé n’a pas le droit d’écrire dans le dépôt. "+t.slice(0,120))}
+    if(r.status===409||r.status===422)throw new Conflict("conflit");
+    if(!r.ok)throw new Error("GitHub "+r.status);
+    return r.status===204?null:r.json();
+  },
+  async load(){const j=await GH.api(`/contents/${CFG.file}?ref=${CFG.branch}&t=${Date.now()}`);return {catalogue:JSON.parse(b64utf8(j.content)),sha:j.sha}},
+  async save(catalogue,sha,files,message){
+    const ref=await GH.api(`/git/ref/heads/${CFG.branch}`);const head=ref.object.sha;
+    const cur=await GH.api(`/contents/${CFG.file}?ref=${head}`);if(cur.sha!==sha)throw new Conflict("modifié ailleurs");
+    const commit=await GH.api(`/git/commits/${head}`);
+    const tree=[];
+    for(const f of files){const bl=await GH.api("/git/blobs",{method:"POST",body:JSON.stringify({content:f.data,encoding:"base64"})});tree.push({path:f.path,mode:"100644",type:"blob",sha:bl.sha})}
+    const cat=await GH.api("/git/blobs",{method:"POST",body:JSON.stringify({content:utf8b64(catalogue),encoding:"base64"})});
+    tree.push({path:CFG.file,mode:"100644",type:"blob",sha:cat.sha});
+    const t=await GH.api("/git/trees",{method:"POST",body:JSON.stringify({base_tree:commit.tree.sha,tree})});
+    const c=await GH.api("/git/commits",{method:"POST",body:JSON.stringify({message,tree:t.sha,parents:[head]})});
+    await GH.api(`/git/refs/heads/${CFG.branch}`,{method:"PATCH",body:JSON.stringify({sha:c.sha,force:false})});
+    return cat.sha;
+  }
+};
+/* ---------- Enregistrement : mode relais (Cloudflare) ---------- */
+const RELAY={
+  pass:()=>ls.get("pass"),
+  async call(path,opt={}){
+    const r=await fetch("../api/"+path,{...opt,cache:"no-store",headers:{"X-Gestion-Password":RELAY.pass()||"",...(opt.body?{"Content-Type":"application/json"}:{})}});
+    if(r.status===401)throw new AuthError("Mot de passe incorrect.");
+    if(r.status===409)throw new Conflict("conflit");
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||("Erreur "+r.status));return j;
+  },
+  load:()=>RELAY.call("catalogue"),
+  save:async(catalogue,sha,files,message)=>(await RELAY.call("save",{method:"POST",body:JSON.stringify({catalogue,sha,files,message})})).sha
+};
+let MODE=null,STORE=null;
+async function detectMode(){try{const r=await fetch("../api/ping",{cache:"no-store"});if(r.ok&&(await r.json()).ok)return "relay"}catch(e){}return "github"}
+
+/* ---------- État ---------- */
+let items=[],sha=null,pendingFiles=[],dirtyMsgs=[],saving=false,saveTimer=null,lastSaved=null;
+function setStatus(kind,txt){const s=$("#status");s.hidden=false;s.className="status "+kind;$("#statusTxt").textContent=txt}
+function idle(){if(saving||saveTimer||dirtyMsgs.length)return;setStatus(lastSaved?"ok":"",lastSaved?`Enregistré à ${lastSaved.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})} · visible sur la boutique d’ici 1 à 2 minutes`:"Tout est à jour")}
+function change(msg,delay=1200){dirtyMsgs.push(msg);clearTimeout(saveTimer);setStatus("wait","Modification en attente d’enregistrement…");saveTimer=setTimeout(()=>{saveTimer=null;flush()},delay)}
+async function flush(){
+  if(saving||!dirtyMsgs.length)return;saving=true;
+  const msgs=dirtyMsgs.splice(0),files=pendingFiles.splice(0);
+  setStatus("saving","Enregistrement…");
+  const body=JSON.stringify(items,null,1)+"\n";
+  const message="Gestion : "+(msgs.length>3?msgs.slice(0,3).join(" ; ")+` (+${msgs.length-3})`:msgs.join(" ; "));
+  try{sha=await STORE.save(body,sha,files,message);lastSaved=new Date();saving=false;
+    if(dirtyMsgs.length)flush();else idle()}
+  catch(e){saving=false;
+    if(e instanceof Conflict){setStatus("err","Le catalogue a été modifié depuis un autre appareil : rechargement…");await reload().catch(()=>{});setStatus("err","Le catalogue avait été modifié ailleurs : liste rechargée, refaites la dernière modification.");return}
+    dirtyMsgs.unshift(...msgs);pendingFiles.unshift(...files);
+    if(e instanceof AuthError){setStatus("err",e.message);showLogin(e.message);return}
+    setStatus("err","Échec de l’enregistrement ("+(e.message||e)+"). Nouvel essai dans 15 s…");saveTimer=setTimeout(()=>{saveTimer=null;flush()},15000)}
+}
+addEventListener("beforeunload",e=>{if(saving||saveTimer||dirtyMsgs.length){e.preventDefault();e.returnValue=""}});
+
+async function reload(){const r=await STORE.load();items=r.catalogue;sha=r.sha;dirtyMsgs=[];pendingFiles=[];render();idle()}
+
+/* ---------- Liste ---------- */
+let q="",flt="all";
+function render(){
+  let L=items.slice();const w=q.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  if(w)L=L.filter(p=>(p.name+" "+(p.d||"")+" "+(CATNAME[p.cat]||"")).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(w));
+  if(flt==="in")L=L.filter(p=>!p.oos&&!p.hidden);if(flt==="out")L=L.filter(p=>p.oos);if(flt==="hid")L=L.filter(p=>p.hidden);
+  const ord=CATS.map(c=>c[0]);L.sort((a,b)=>ord.indexOf(a.cat)-ord.indexOf(b.cat)||a.name.localeCompare(b.name,"fr"));
+  const nOut=items.filter(p=>p.oos&&!p.hidden).length;
+  $("#count").textContent=`${items.length} article${items.length>1?"s":""} · ${nOut} en rupture`+(L.length!==items.length?` · ${L.length} affiché${L.length>1?"s":""}`:"");
+  $("#list").className=L.length?"list":"";
+  $("#list").innerHTML=L.length?L.map(p=>{const b=(p.base||[])[0];
+    return `<div class="row${p.oos||p.hidden?" off":""}">
+      ${b?`<img src="${thumb(b)}" data-b="${esc(b)}" data-edit="${p.id}" alt="" loading="lazy" width="60" height="60">`:`<span class="ph0" data-edit="${p.id}"></span>`}
+      <div style="min-width:0" data-edit="${p.id}"><div class="t">${esc(p.name)}</div><div class="u tabnum">${eur(p.price)} · ${CATNAME[p.cat]||esc(p.cat)}</div>
+        ${p.hidden?'<span class="flag">Masqué du site</span>':""}${!String(p.desc||"").trim()?'<span class="flag w">Sans description</span>':""}</div>
+      <label class="sw"><input type="checkbox" data-sw="${p.id}" ${p.oos?"":"checked"} aria-label="${esc(p.name)} en stock"><span class="${p.oos?"out":"in"}">${p.oos?"Rupture":"En stock"}</span></label></div>`}).join("")
+    :`<p class="empty">${items.length?"Aucun article ne correspond.":"Aucun article pour l’instant."}</p>`;
+}
+$("#q").addEventListener("input",e=>{q=e.target.value;render()});
+$("#flt").addEventListener("change",e=>{flt=e.target.value;render()});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-edit]");if(t)openEditor(t.dataset.edit)});
+document.addEventListener("change",e=>{const id=e.target.dataset?.sw;if(!id)return;const p=items.find(x=>x.id===id);if(!p)return;
+  p.oos=!e.target.checked;render();toast(`${p.name} : ${p.oos?"en rupture":"de nouveau en stock"}`);change(`${p.name} ${p.oos?"en rupture":"en stock"}`)});
+$("#newBtn").onclick=()=>openEditor(null);
+
+/* ---------- Fiche article ---------- */
+let ed=null;
+function openEditor(id){
+  const isNew=!id;
+  if(isNew){const n=Math.max(0,...items.map(p=>+p.n||0))+1;ed={id:"a"+pad(n),n,cat:"maison",name:"",price:"",d:"",desc:"",specs:[],base:[],oos:false,isNew:true}}
+  else{const p=items.find(x=>x.id===id);if(!p)return;ed=JSON.parse(JSON.stringify(p))}
+  ed.newPhotos={};
+  $("#dlg").innerHTML=`<div class="dh"><h2 id="dlgT">${isNew?"Nouvel article":"Modifier l’article"}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+  <div class="db">
+    <div class="fld">Photos <small>la première est la photo principale</small><div class="phs" id="ePhs"></div></div>
+    <label class="fld">Nom<input class="inp" id="eName" value="${esc(ed.name)}" placeholder="Ex. Lot de 3 boîtes hermétiques"></label>
+    <div class="frow"><label class="fld">Prix (€)<input class="inp tabnum" id="ePrice" type="text" inputmode="decimal" value="${ed.price===""?"":String(ed.price).replace(".",",")}" placeholder="19,99"></label>
+      <label class="fld">Catégorie<select class="sel" id="eCat">${CATS.map(([k,l])=>`<option value="${k}"${k===ed.cat?" selected":""}>${l}</option>`).join("")}</select></label></div>
+    <label class="fld">Précision courte <small>sous le nom, ex. « Lot de 3 · 1,2 L »</small><input class="inp" id="eD" value="${esc(ed.d||"")}"></label>
+    <label class="fld">Description<textarea class="ta" id="eDesc" rows="4" placeholder="À quoi sert l’article, pourquoi il est pratique…">${esc(ed.desc||"")}</textarea></label>
+    <label class="fld">Caractéristiques <small>une par ligne</small><textarea class="ta" id="eSpecs" rows="4" placeholder="Dimensions : 30 × 20 cm&#10;Matière : verre">${esc((ed.specs||[]).join("\n"))}</textarea></label>
+    <label class="fld">Modèles au choix <small>facultatif, un par ligne ; chaque modèle s’affiche avec sa photo, dans le même ordre</small><textarea class="ta" id="eVar" rows="2" placeholder="Licorne&#10;Astronaute">${esc((ed.variants||[]).map(v=>v.name).join("\n"))}</textarea></label>
+    <div class="sws"><label><input type="checkbox" id="eStock" ${ed.oos?"":"checked"}> En stock</label><label><input type="checkbox" id="eVis" ${ed.hidden?"":"checked"}> Visible sur la boutique</label></div>
+  </div>
+  <div class="df">${isNew?"":`<button class="btn sm danger" id="eDel">Supprimer</button>`}<span class="sp"></span><button class="btn" data-close>Annuler</button><button class="btn pri" id="eSave">${isNew?"Créer l’article":"Enregistrer"}</button></div>`;
+  renderPhotos();$("#dlg").showModal();
+  $("#eSave").onclick=saveEditor;
+  const del=$("#eDel");if(del)del.onclick=()=>{if(del.dataset.armed){deleteItem();return}del.dataset.armed="1";del.textContent="Confirmer la suppression";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="Supprimer"}},5000)};
+  if(isNew)setTimeout(()=>$("#eName").focus(),60);
+}
+function renderPhotos(){
+  const B=ed.base;
+  $("#ePhs").innerHTML=B.map((b,i)=>`<div class="ph"><img src="${thumb(b)}" data-b="${esc(b)}" alt="Photo ${i+1}">${i===0?'<span class="n1">Principale</span>':""}${ed.newPhotos[b]?'<span class="nw">Nouvelle</span>':""}
+    <div class="pa"><button type="button" data-pm="${i}" data-dir="-1" aria-label="Avancer" ${i===0?"disabled":""}>←</button><button type="button" data-pdel="${i}" aria-label="Retirer">✕</button><button type="button" data-pm="${i}" data-dir="1" aria-label="Reculer" ${i===B.length-1?"disabled":""}>→</button></div></div>`).join("")
+    +`<label class="addph" id="addPh">+ Ajouter des photos<input type="file" id="phIn" accept="image/*" multiple></label>`;
+  $("#phIn").onchange=e=>addPhotos([...e.target.files]);
+}
+document.addEventListener("click",e=>{
+  if(!ed)return;
+  const pm=e.target.closest("[data-pm]");if(pm){const i=+pm.dataset.pm,j=i+ +pm.dataset.dir;if(j<0||j>=ed.base.length)return;[ed.base[i],ed.base[j]]=[ed.base[j],ed.base[i]];renderPhotos();return}
+  const pd=e.target.closest("[data-pdel]");if(pd){const [b]=ed.base.splice(+pd.dataset.pdel,1);delete ed.newPhotos[b];renderPhotos();return}
+});
+document.addEventListener("click",e=>{if(e.target.closest("[data-close]"))$("#dlg").close()});
+$("#dlg").addEventListener("close",()=>{ed=null});
+function nextPhotoName(id){const used=new Set(items.flatMap(p=>p.base||[]).concat(ed.base).map(b=>String(b).replace(/\.(webp|jpg|png)$/,"")));let k=1;while(used.has(`${id}-u${k}`))k++;return `${id}-u${k}`}
+async function addPhotos(files){
+  if(!files.length)return;const lbl=$("#addPh");lbl.classList.add("busy");lbl.firstChild.textContent=`Préparation de ${files.length} photo${files.length>1?"s":""}…`;
+  for(const f of files){try{const ph=await makePhoto(f);const name=nextPhotoName(ed.id);const b=ph.ext==="webp"?name:name+"."+ph.ext;
+      ed.newPhotos[b]=ph;localUrls[b]=URL.createObjectURL(ph.blobs[360]);ed.base.push(b)}
+    catch(err){toast("Une photo n’a pas pu être lue")}}
+  renderPhotos();
+}
+async function saveEditor(){
+  const name=$("#eName").value.trim(),price=num($("#ePrice").value);
+  if(!ed.base.length){toast("Ajoutez au moins une photo");return}
+  if(!name){toast("Donnez un nom à l’article");$("#eName").focus();return}
+  if(!(price>0)){toast("Indiquez un prix");$("#ePrice").focus();return}
+  const btn=$("#eSave");btn.disabled=true;btn.textContent="Préparation…";
+  try{
+    for(const [b,ph] of Object.entries(ed.newPhotos)){if(!ed.base.includes(b))continue;const stem=b.replace(/\.(webp|jpg|png)$/,"");
+      for(const s of [360,720])pendingFiles.push({path:`img/w/${stem}-${s}.${ph.ext}`,data:await b64(ph.blobs[s])})}
+    const vnames=$("#eVar").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    const p={id:ed.id,n:ed.n,cat:$("#eCat").value,name,price:Math.round(price*100)/100,d:$("#eD").value.trim(),desc:$("#eDesc").value.trim(),
+      specs:$("#eSpecs").value.split("\n").map(s=>s.trim()).filter(Boolean),base:ed.base.slice(),oos:!$("#eStock").checked};
+    if(vnames.length){const off=p.base.length>vnames.length?1:0;p.variants=vnames.map((v,i)=>{const prev=(ed.variants||[]).find(x=>x.name===v);return {name:v,img:Math.min(prev?prev.img:i+off,p.base.length-1)}})}
+    if(!$("#eVis").checked)p.hidden=true;
+    const i=items.findIndex(x=>x.id===p.id);
+    if(i<0)items.push(p);else items[i]=p;
+    const isNew=ed.isNew;$("#dlg").close();render();
+    toast(isNew?"Article créé":"Article enregistré");change(isNew?`nouvel article ${name}`:`${name} modifié`,200);
+  }catch(e){btn.disabled=false;btn.textContent="Enregistrer";toast("Préparation impossible : "+(e.message||e))}
+}
+function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=items.filter(x=>x.id!==p.id);$("#dlg").close();render();toast(`${p.name} supprimé`);change(`${p.name} supprimé`,200)}
+
+/* ---------- Connexion ---------- */
+function showLogin(err){
+  $("#vList").hidden=true;$("#vLogin").hidden=false;$("#logout").hidden=true;
+  if(MODE==="relay"){$("#loginSub").textContent="Entrez le mot de passe de gestion.";$("#loginLblTxt").textContent="Mot de passe";$("#loginNote").textContent="";}
+  else{$("#loginSub").textContent="Version de simulation : la page enregistre directement dans le dépôt GitHub.";$("#loginLblTxt").textContent="Clé d’accès GitHub";
+    $("#loginNote").innerHTML=`La clé reste enregistrée sur cet appareil uniquement. Pour en créer une :<ol><li>GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token</li><li>Repository access : <b>Only select repositories</b> → ${esc(CFG.repo)}</li><li>Permissions → Repository permissions → <b>Contents : Read and write</b></li></ol>`}
+  $("#loginErr").hidden=!err;$("#loginErr").textContent=err||"";
+}
+$("#loginBtn").onclick=async()=>{
+  const v=$("#loginIn").value.trim();if(!v)return;ls.set(MODE==="relay"?"pass":"token",v);
+  $("#loginBtn").disabled=true;$("#loginBtn").textContent="Connexion…";
+  try{await start()}catch(e){ls.set(MODE==="relay"?"pass":"token",null);showLogin(e instanceof AuthError?e.message:"Connexion impossible : "+(e.message||e))}
+  $("#loginBtn").disabled=false;$("#loginBtn").textContent="Se connecter";
+};
+$("#loginIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click()});
+$("#logout").onclick=()=>{ls.set("token",null);ls.set("pass",null);$("#loginIn").value="";showLogin()};
+async function start(){
+  setStatus("saving","Chargement du catalogue…");
+  await reload();
+  $("#vLogin").hidden=true;$("#vList").hidden=false;$("#logout").hidden=false;
+}
+(async()=>{
+  MODE=await detectMode();STORE=MODE==="relay"?RELAY:GH;
+  if(!(MODE==="relay"?RELAY.pass():GH.token())){showLogin();return}
+  try{await start()}catch(e){showLogin(e instanceof AuthError?e.message:"Connexion impossible : "+(e.message||e))}
+})();
+</script>
+</body>
+</html>

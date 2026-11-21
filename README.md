@@ -1,17 +1,22 @@
-# Tout'zafer — maquette du site de réservation
+# Tout'zafer : boutique et gestion des articles
 
-Maquette fonctionnelle du site de Tout'zafer (articles du quotidien, La Réunion) :
-catalogue de 29 articles, fiches produit avec galerie photo, recherche et filtre par catégorie,
-panier, demande de réservation avec choix du point de retrait, et espace vendeur
-(gestion des ruptures de stock et des demandes reçues).
+Site de réservation de Tout'zafer (articles du quotidien, La Réunion).
+Le client compose son panier et envoie sa demande par WhatsApp ou SMS ; paiement à la livraison.
 
-## Voir le site
-Ouvrir `index.html` dans un navigateur (tout est autonome : HTML, CSS, JS et images locales).
+## Contenu
+- `index.html` : la boutique (partie client uniquement). Elle lit le catalogue dans `catalogue.json`.
+- `catalogue.json` : la liste des articles (nom, prix, catégorie, description, caractéristiques, photos, rupture, masqué).
+- `img/w/` : photos des articles en 360 et 720 px (`aNN-nK` : catalogue d'origine ; `aNN-uK` : ajoutées depuis la gestion).
+- `gestion/` : page de gestion des articles (nouvel article, modification, rupture / retour en stock, masquer, supprimer).
+
+## Comment la gestion met le site à jour
+La page `gestion/` enregistre `catalogue.json` et les nouvelles photos dans ce dépôt (un commit par enregistrement).
+L'hébergeur republie alors le site automatiquement (environ 1 minute).
+
+- **Simulation (GitHub Pages)** : la page écrit directement dans le dépôt avec une clé GitHub « fine-grained »
+  limitée à ce dépôt (droit *Contents : Read and write*), saisie une fois et gardée sur l'appareil.
+- **Version finale (Cloudflare Pages)** : une petite fonction `/api` garde la clé GitHub côté serveur ;
+  l'entrepreneur se connecte avec un simple mot de passe.
 
 ## Vidéo de démonstration
 `media/Toutzafer_demo.mp4`
-
-## Statut
-Maquette : les données (stock, demandes) sont enregistrées dans le navigateur du visiteur.
-Avant la mise en ligne réelle : base de données partagée, accès vendeur protégé,
-vrais points de retrait et numéro WhatsApp, mentions légales complétées.
