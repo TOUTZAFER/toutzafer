@@ -253,6 +253,11 @@ footer button:hover{color:var(--fg);text-decoration:underline}
 .legal .back{background:none;border:0;padding:0;color:var(--brand-text);font-weight:600;font-size:14px}
 .legal h1{font-family:var(--font-display);font-weight:800;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;margin:16px 0 4px}
 .legal .upd{color:var(--muted);font-size:13px;margin:0 0 16px}
+.legal h3{font-size:16px;font-weight:700;margin:22px 0 10px}
+.legal .form-box{border:1px solid var(--line);border-radius:14px;padding:6px 18px;background:var(--bg-alt);font-size:14px}
+.legal .lnk{background:none;border:0;padding:0;color:var(--brand-text);font:inherit;text-decoration:underline;cursor:pointer}
+.cgvnote{font-size:12px;color:var(--muted);margin:2px 0 0}
+.cgvnote a{color:inherit}
 .legal h2{font-family:var(--font-display);font-size:19px;font-weight:700;margin:36px 0 12px;padding-top:20px;border-top:1px solid var(--line)}
 .legal p{line-height:1.6;margin:0 0 10px;max-width:68ch}
 .legal dl{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:10px 20px;margin:0}
@@ -419,6 +424,68 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
   </div>
 </main>
 
+<main id="cgvView" hidden>
+  <article class="wrap legal">
+    <p class="crumb"><button class="back" data-home>← Retour à la boutique</button></p>
+    <h1>Conditions générales de vente</h1>
+    <p class="upd">En vigueur au 21 novembre 2026</p>
+    <p class="todo-note">Les éléments <mark class="todo">surlignés</mark> sont à compléter ou à confirmer.</p>
+
+    <h2>1. Le vendeur</h2>
+    <p>Les ventes sont conclues avec Aiman CASSAM, entrepreneur individuel (EI), nom commercial Tout’zafer, SIRET <span class="tabnum">938 090 263 00014</span>, 132 rue Victor Le Vigoureux, appartement 7, 97410 Saint-Pierre, La Réunion. Contact : WhatsApp ou téléphone au <span class="tabnum" data-tel></span>, e-mail <a href="mailto:contact@toutzafer.re">contact@toutzafer.re</a>. Les présentes conditions s’appliquent aux ventes à des particuliers.</p>
+
+    <h2>2. Articles et prix</h2>
+    <p>Les caractéristiques essentielles de chaque article figurent sur sa fiche. Les photos le présentent le plus fidèlement possible. Les prix sont indiqués en euros, toutes taxes comprises <mark class="todo">(TVA non applicable, article 293 B du CGI, si l’entreprise est en franchise de TVA)</mark>. La livraison est offerte. Le prix applicable est celui confirmé lors de l’appel.</p>
+
+    <h2>3. Demande et conclusion de la vente</h2>
+    <p>L’envoi d’une demande depuis le site ne vous engage pas et ne vous oblige à aucun paiement. Tout’zafer vous rappelle pour confirmer la disponibilité des articles, le prix, la date et le point de livraison. La vente est conclue à cette confirmation, que nous vous adressons ensuite par écrit (WhatsApp ou SMS) avec le récapitulatif de votre achat et un lien vers les présentes conditions.</p>
+
+    <h2>4. Livraison</h2>
+    <p>La livraison est gratuite, à l’un de nos points de livraison, à la date convenue lors de l’appel : en général dans les 48 heures suivant la confirmation, et au plus tard dans les 30 jours. Si l’article n’est pas livré à la date convenue, vous pouvez annuler la vente après nous avoir demandé de livrer dans un délai supplémentaire raisonnable resté sans effet.</p>
+
+    <h2>5. Paiement</h2>
+    <p>Le paiement se fait uniquement à la livraison, lors de la remise des articles, <mark class="todo">en espèces ou par carte bancaire</mark>. Rien n’est payé sur le site.</p>
+
+    <h2>6. Droit de rétractation</h2>
+    <p>Vous disposez de 14 jours à compter de la réception d’un article pour vous rétracter, sans avoir à vous justifier. Pour cela, contactez-nous avant la fin de ce délai par WhatsApp, téléphone ou e-mail, ou utilisez le formulaire ci-dessous. Nous convenons alors avec vous de la remise de l’article à l’un de nos points de livraison, sans frais pour vous. L’article doit nous être rendu dans les 14 jours suivant votre demande, complet et dans son état d’origine.</p>
+    <p>Nous vous remboursons la totalité des sommes payées au plus tard 14 jours après votre demande, avec le même moyen de paiement que celui utilisé à l’achat. Nous pouvons attendre d’avoir récupéré l’article pour vous rembourser. Votre responsabilité peut être engagée si l’article a été déprécié par des manipulations autres que celles nécessaires pour en vérifier la nature, les caractéristiques et le bon fonctionnement.</p>
+    <p>Le droit de rétractation ne s’applique pas aux articles qui ne peuvent être rendus pour des raisons d’hygiène ou de protection de la santé une fois leur emballage scellé ouvert.</p>
+
+    <h3>Formulaire de rétractation</h3>
+    <div class="form-box">
+      <p><i>(Veuillez compléter et renvoyer le présent formulaire uniquement si vous souhaitez vous rétracter du contrat.)</i></p>
+      <p>À l’attention de Aiman CASSAM EI (Tout’zafer), 132 rue Victor Le Vigoureux, appartement 7, 97410 Saint-Pierre, La Réunion, contact@toutzafer.re :</p>
+      <p>Je/Nous (*) vous notifie/notifions (*) par la présente ma/notre (*) rétractation du contrat portant sur la vente du bien (*)/pour la prestation de services (*) ci-dessous :</p>
+      <p>Commandé le (*)/reçu le (*) :<br>Nom du (des) consommateur(s) :<br>Adresse du (des) consommateur(s) :<br>Signature du (des) consommateur(s) (uniquement en cas de notification du présent formulaire sur papier) :<br>Date :</p>
+      <p>(*) Rayez la mention inutile.</p>
+    </div>
+
+    <h2>7. Garanties</h2>
+    <p>Tout’zafer ne propose pas de garantie commerciale en plus des garanties légales ci-dessous, qui s’appliquent dans tous les cas. Pour les mettre en œuvre, contactez-nous par WhatsApp, téléphone ou e-mail.</p>
+    <div class="form-box">
+      <p>Le consommateur dispose d’un délai de deux ans à compter de la délivrance du bien pour obtenir la mise en œuvre de la garantie légale de conformité en cas d’apparition d’un défaut de conformité. Durant ce délai, le consommateur n’est tenu d’établir que l’existence du défaut de conformité et non la date d’apparition de celui-ci.</p>
+      <p>Lorsque le contrat de vente du bien prévoit la fourniture d’un contenu numérique ou d’un service numérique de manière continue pendant une durée supérieure à deux ans, la garantie légale est applicable à ce contenu numérique ou ce service numérique tout au long de la période de fourniture prévue. Durant ce délai, le consommateur n’est tenu d’établir que l’existence du défaut de conformité affectant le contenu numérique ou le service numérique et non la date d’apparition de celui-ci.</p>
+      <p>La garantie légale de conformité emporte obligation pour le professionnel, le cas échéant, de fournir toutes les mises à jour nécessaires au maintien de la conformité du bien.</p>
+      <p>La garantie légale de conformité donne au consommateur droit à la réparation ou au remplacement du bien dans un délai de trente jours suivant sa demande, sans frais et sans inconvénient majeur pour lui.</p>
+      <p>Si le bien est réparé dans le cadre de la garantie légale de conformité, le consommateur bénéficie d’une extension de six mois de la garantie initiale.</p>
+      <p>Si le consommateur demande la réparation du bien, mais que le vendeur impose le remplacement, la garantie légale de conformité est renouvelée pour une période de deux ans à compter de la date de remplacement du bien.</p>
+      <p>Le consommateur peut obtenir une réduction du prix d’achat en conservant le bien ou mettre fin au contrat en se faisant rembourser intégralement contre restitution du bien, si :<br>1° Le professionnel refuse de réparer ou de remplacer le bien ;<br>2° La réparation ou le remplacement du bien intervient après un délai de trente jours ;<br>3° La réparation ou le remplacement du bien occasionne un inconvénient majeur pour le consommateur, notamment lorsque le consommateur supporte définitivement les frais de reprise ou d’enlèvement du bien non conforme, ou s’il supporte les frais d’installation du bien réparé ou de remplacement ;<br>4° La non-conformité du bien persiste en dépit de la tentative de mise en conformité du vendeur restée infructueuse.</p>
+      <p>Le consommateur a également droit à une réduction du prix du bien ou à la résolution du contrat lorsque le défaut de conformité est si grave qu’il justifie que la réduction du prix ou la résolution du contrat soit immédiate. Le consommateur n’est alors pas tenu de demander la réparation ou le remplacement du bien au préalable.</p>
+      <p>Le consommateur n’a pas droit à la résolution de la vente si le défaut de conformité est mineur.</p>
+      <p>Toute période d’immobilisation du bien en vue de sa réparation ou de son remplacement suspend la garantie qui restait à courir jusqu’à la délivrance du bien remis en état.</p>
+      <p>Les droits mentionnés ci-dessus résultent de l’application des articles L. 217-1 à L. 217-32 du code de la consommation.</p>
+      <p>Le vendeur qui fait obstacle de mauvaise foi à la mise en œuvre de la garantie légale de conformité encourt une amende civile d’un montant maximal de 300 000 euros, qui peut être porté jusqu’à 10 % du chiffre d’affaires moyen annuel (article L. 241-5 du code de la consommation).</p>
+      <p>Le consommateur bénéficie également de la garantie légale des vices cachés en application des articles 1641 à 1649 du code civil, pendant une durée de deux ans à compter de la découverte du défaut. Cette garantie donne droit à une réduction de prix si le bien est conservé ou à un remboursement intégral contre restitution du bien.</p>
+    </div>
+
+    <h2>8. Réclamations et médiation</h2>
+    <p>Pour toute réclamation, contactez-nous par WhatsApp, téléphone ou e-mail : nous vous répondons rapidement. Si votre réclamation n’a pas abouti, vous pouvez recourir gratuitement au médiateur de la consommation : <mark class="todo">nom, site internet et adresse du médiateur auquel Tout’zafer adhère</mark>.</p>
+
+    <h2>9. Données personnelles</h2>
+    <p>Le traitement de vos coordonnées est décrit dans les <button class="lnk" data-legal>mentions légales</button>.</p>
+  </article>
+</main>
+
 <main id="legalView" hidden>
   <article class="wrap legal">
     <p class="crumb"><button class="back" data-home>← Retour à la boutique</button></p>
@@ -472,7 +539,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
 <footer>
   <div class="wrap">
     <div class="fcol"><img class="flogo" src="img/logo/badge.svg" alt="Tout’zafer" width="118" height="44"><span>Les articles du quotidien à petit prix</span><span>La Réunion · Livraison offerte · Paiement à la livraison</span></div>
-    <div class="fcol"><span class="fh">Informations</span><button id="legal">Mentions légales</button><button id="cgv">Conditions de réservation</button></div>
+    <div class="fcol"><span class="fh">Informations</span><button id="legal">Mentions légales</button><button id="cgv">Conditions générales de vente</button></div>
   </div>
 </footer>
 
@@ -562,7 +629,7 @@ function renderHero(){
   showSlide(heroIdx);
   const wa=WA_NUMBER;$("#waText").textContent="0"+wa.slice(3).replace(/(\d{3})(\d{2})(\d{2})(\d{2})/,"$1 $2 $3 $4");
   const waHref=`https://wa.me/${wa}?text=${encodeURIComponent("Bonjour Tout'zafer, j'ai une question sur un article.")}`;
-  $("#waLink").href=waHref;$("#legalTel").textContent=$("#waText").textContent;
+  $("#waLink").href=waHref;$("#legalTel").textContent=$("#waText").textContent;document.querySelectorAll("[data-tel]").forEach(e=>e.textContent=$("#waText").textContent);
   startHero();
 }
 function showSlide(i){
@@ -727,6 +794,7 @@ function renderDrawer(){
       <label class="fl">Téléphone<input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0692 12 34 56" value="${esc(d.tel||"")}" required><span class="err" id="eTel" hidden>Indiquez un numéro à 10 chiffres (ex. 0692 12 34 56) ou au format +262.</span></label>
       <label class="fl">Point de livraison<select id="fPick"><option value="">Choisir un point de livraison</option>${PICKUPS.map(p=>`<option${d.pick===p?" selected":""}>${esc(p)}</option>`).join("")}</select></label>
       <label class="consent"><input type="checkbox" id="fOk"> <span>J'accepte que Tout’zafer utilise mes coordonnées uniquement pour traiter cette demande et me rappeler. Elles ne sont ni revendues ni utilisées pour de la publicité.</span></label>
+      <p class="cgvnote">La vente est conclue lors de notre appel de confirmation, selon nos <a href="#cgv" data-cgvlink>conditions générales de vente</a>.</p>
     </form>
     <div class="sendbar"><a class="cta wa" id="send" data-ch="wa" href="#" target="_blank" rel="noopener" aria-disabled="true"><img src="img/ico/whatsapp.png" alt="" width="22" height="22">Envoyer ma demande sur WhatsApp</a>
       <a class="cta smsb" id="sendSms" data-ch="sms" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>Pas de WhatsApp ? Envoyer par SMS</a>
@@ -790,8 +858,8 @@ function bindDone(){
 }
 function selectRecap(){const r=document.createRange();r.selectNodeContents($("#recap"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Texte sélectionné, copiez-le")}
 
-function showView(v){curView=v;closeSheetRaw();closeCart();$("#shop").hidden=v!=="shop";$("#legalView").hidden=v!=="legal";if(v==="shop")renderGrid();scrollTo(0,0);setTimeout(renderCartBar,0)}
-function route(){const h=location.hash,m=h.match(/^#produit-(a\d+)$/),v=h==="#mentions-legales"?"legal":"shop";
+function showView(v){curView=v;closeSheetRaw();closeCart();$("#shop").hidden=v!=="shop";$("#legalView").hidden=v!=="legal";$("#cgvView").hidden=v!=="cgv";if(v==="shop")renderGrid();scrollTo(0,0);setTimeout(renderCartBar,0)}
+function route(){const h=location.hash,m=h.match(/^#produit-(a\d+)$/),v=h==="#mentions-legales"?"legal":h==="#cgv"?"cgv":"shop";
   if(curView!==v)showView(v);
   if(v==="shop"){if(m&&byId(m[1])){if(sheetId!==m[1])openSheetRaw(m[1])}else if(sheetId){closeSheetRaw()}}}
 
@@ -829,7 +897,8 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSheet();closeC
 $("#goHome").onclick=()=>{location.hash="";route()};
 $("#legal").onclick=()=>{location.hash="mentions-legales";route()};
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{location.hash="";route()});
-$("#cgv").onclick=()=>toast("Conditions de réservation à rédiger");
+$("#cgv").onclick=()=>{location.hash="cgv";route()};
+document.querySelectorAll("[data-legal]").forEach(b=>b.onclick=()=>{location.hash="mentions-legales";route()});
 addEventListener("hashchange",route);
 
 try{history.scrollRestoration="manual"}catch(e){}
