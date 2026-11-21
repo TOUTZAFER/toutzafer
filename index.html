@@ -645,7 +645,8 @@ function afterCartChange(){save();refreshQuick();renderCount();if($("#drawer").c
 
 /* ---------- Fiche produit ---------- */
 let sheetPushed=false,curView=null;
-const SITE_URL="https://souweyd.github.io/toutzafer/"; // à remplacer par le nom de domaine définitif
+// adresse du site pour les liens partagés : celle où la boutique est ouverte (toutzafer.re une fois le domaine branché)
+const SITE_URL=/^https?:$/.test(location.protocol)?location.origin+location.pathname.replace(/[^/]*$/,""):"https://toutzafer.re/";
 const productURL=p=>SITE_URL+"#produit-"+p.id;
 const shareWA=p=>"https://wa.me/?text="+encodeURIComponent(`${p.name} à ${eur(p.price)} chez Tout'zafer : ${productURL(p)}`);
 function similarHTML(p){
