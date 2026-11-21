@@ -1,0 +1,9 @@
+/catalogue.json
+  Cache-Control: no-cache
+/gestion/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-cache
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+/functions/*
+  X-Robots-Tag: noindex
