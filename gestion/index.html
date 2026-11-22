@@ -195,7 +195,6 @@ body:not(.t-articles) .status:not(.err){display:none!important}
 .iconbtn{width:44px;height:44px;padding:0;display:inline-grid;place-items:center;font-size:20px;line-height:1}
 .ocard .call{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-weight:700;font-size:15px;color:var(--fg);text-decoration:none;background:var(--bg-alt);border-radius:980px;padding:7px 14px 7px 10px}
 .ocard .call svg{color:var(--s3)}
-.ocard .rdv{font-size:13px;font-weight:700;color:var(--s2);background:var(--s2-bg);border-radius:8px;padding:4px 8px;align-self:flex-start}
 .ocard ul{margin:0;padding-left:18px;font-size:13px}
 .ocard .tot{font-weight:800;font-size:16px}
 .pills{display:flex;flex-wrap:wrap;gap:6px}
@@ -674,7 +673,6 @@ function orderCard(o){
     ${pills.length?`<div class="pills">${pills.join("")}</div>`:""}
     ${o.tel&&st!=="livree"&&st!=="annulee"?`<a class="call tabnum" href="tel:${esc(o.tel)}">${ICO_TEL}${fmtTel2(o.tel)}</a>`:o.tel?`<span class="meta2 tabnum">${fmtTel2(o.tel)}</span>`:""}
     <span class="meta2">Reçue le ${fmtDT(o.date)} · <span class="tabnum nw">n° ${esc(o.id)}</span>${o.pick?`<br>${esc(o.pick)}`:""}</span>
-    ${o.rdv&&st!=="annulee"?`<span class="rdv">Livraison : ${esc(o.rdv)}</span>`:""}
     <ul>${(o.lines||[]).map(l=>`<li>${l.q} × ${esc(l.name)}</li>`).join("")}</ul>
     <span class="tot tabnum">${eur(o.total)}</span>${act}</article>`;
 }
@@ -717,21 +715,19 @@ document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.datas
 $("#ordRefresh").onclick=()=>{loadOrders().then(()=>toast("Liste à jour"))};
 
 /* ---------- Confirmation écrite au client ---------- */
-function confirmText(o,rdv){
-  return `Bonjour ${o.prenom}, ici Tout’zafer. Je vous confirme votre commande n° ${o.id} :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name} : ${eur(l.q*l.price)}`).join("\n")}\nTotal : ${eur(o.total)} TTC, à régler à la livraison en espèces ou par carte bancaire.\nLivraison offerte${o.pick?` : ${o.pick}`:""}${rdv?`, ${rdv}`:""}.\nVous disposez de 14 jours après la réception pour vous rétracter. Conditions générales de vente : ${location.origin}/#cgv\nMerci pour votre confiance !`;
+function confirmText(o){
+  return `Bonjour ${o.prenom}, ici Tout’zafer. Je vous confirme votre commande n° ${o.id} :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name} : ${eur(l.q*l.price)}`).join("\n")}\nTotal : ${eur(o.total)} TTC, à régler à la livraison en espèces ou par carte bancaire.\nLivraison offerte${o.pick?` au point : ${o.pick}`:""}. Votre livreur vous contactera pour convenir du jour et de l’heure.\nVous disposez de 14 jours après la réception pour vous rétracter. Conditions générales de vente : ${location.origin}/#cgv\nMerci pour votre confiance !`;
 }
 function openConfirm(id){
   const o=orders.find(x=>x.id===id);if(!o)return;const d=$("#dlg");
   d.innerHTML=`<div class="dh"><h2 id="dlgT">Confirmer par écrit</h2><button class="x" data-close aria-label="Fermer">×</button></div>
   <div class="db"><p class="hint" style="font-size:13px;margin:0">Après l’appel, envoyez ce récapitulatif à ${esc(o.prenom)}. Il confirme la vente et vous garde une trace écrite.</p>
-    <label class="fld">Jour et heure de livraison<input class="inp" id="cRdv" value="${esc(o.rdv||"")}" placeholder="Ex. samedi 23/11 vers 10 h"></label>
     <label class="fld">Message <small>modifiable avant l’envoi</small><textarea class="ta" id="cTxt" rows="12"></textarea></label></div>
   <div class="df"><button class="btn" id="cCopy">Copier</button><span class="sp"></span><a class="btn" id="cSms">SMS</a><a class="btn wa" id="cWa" target="_blank" rel="noopener">WhatsApp</a></div>`;
-  let edited=false;const it=intlTel(o.tel);
+  const it=intlTel(o.tel);
   const links=()=>{const t=$("#cTxt").value;$("#cWa").href=it?`https://wa.me/${it}?text=${encodeURIComponent(t)}`:"#";$("#cSms").href=`sms:${o.tel}${isApple?"&":"?"}body=${encodeURIComponent(t)}`};
-  const upd=()=>{if(!edited)$("#cTxt").value=confirmText(o,$("#cRdv").value.trim());links()};
-  $("#cRdv").oninput=upd;$("#cTxt").oninput=()=>{edited=true;links()};upd();
-  const done=()=>{const p={confirmedAt:new Date().toISOString()},r=$("#cRdv").value.trim();if(r)p.rdv=r;if(o.status==="appeler")p.status="livraison";
+  $("#cTxt").value=confirmText(o);$("#cTxt").oninput=links;links();
+  const done=()=>{const p={confirmedAt:new Date().toISOString()};if(o.status==="appeler")p.status="livraison";
     d.close();patchOrder(o.id,p,o.status==="appeler"?`${o.prenom} : confirmation envoyée, demande passée en livraison`:"Confirmation envoyée")};
   $("#cWa").onclick=e=>{if(!it){e.preventDefault();toast("Ce numéro ne peut pas recevoir de message WhatsApp");return}setTimeout(done,150)};
   $("#cSms").onclick=()=>setTimeout(done,150);

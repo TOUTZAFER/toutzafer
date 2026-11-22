@@ -428,7 +428,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <section class="how" id="how" aria-label="Comment ça marche">
       <div><span class="num">1</span><h3>Composez votre panier</h3><p>Parcourez le catalogue et ajoutez les articles qui vous plaisent.</p></div>
       <div><span class="num">2</span><h3>Choisissez un point de livraison</h3><p>Votre commande y est livrée gratuitement, au plus près de chez vous.</p></div>
-      <div><span class="num">3</span><h3>On vous appelle</h3><p>Tout'zafer confirme la disponibilité et le créneau. Vous payez à la livraison.</p></div>
+      <div><span class="num">3</span><h3>On vous appelle</h3><p>Tout'zafer confirme votre commande, puis le livreur convient avec vous du jour et de l’heure. Vous payez à la livraison.</p></div>
     </section>
     <section class="toolbar" aria-label="Recherche et filtre">
       <div class="search">
@@ -469,11 +469,11 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <p>Les caractéristiques essentielles de chaque article figurent sur sa fiche. Les photos le présentent le plus fidèlement possible. Les prix sont indiqués en euros, toutes taxes comprises (TVA au taux en vigueur à La Réunion). La livraison est offerte. Le prix applicable est celui confirmé lors de l’appel.</p>
 
     <h2>3. Demande et conclusion de la vente</h2>
-    <p>L’envoi d’une demande depuis le site ne vous engage pas et ne vous oblige à aucun paiement. Tout’zafer vous rappelle pour confirmer la disponibilité des articles, le prix, la date et le point de livraison. La vente est conclue à cette confirmation, que nous vous adressons ensuite par écrit (WhatsApp ou SMS) avec le récapitulatif de votre achat et un lien vers les présentes conditions.</p>
+    <p>L’envoi d’une demande depuis le site ne vous engage pas et ne vous oblige à aucun paiement. Tout’zafer vous rappelle pour confirmer la disponibilité des articles, le prix et le point de livraison. La vente est conclue à cette confirmation, que nous vous adressons ensuite par écrit (WhatsApp ou SMS) avec le récapitulatif de votre achat et un lien vers les présentes conditions.</p>
     <p>Jusqu’à la remise des articles, vous pouvez annuler votre achat à tout moment, sans frais et sans justification, par simple message. Vous pouvez aussi refuser les articles au moment de la livraison. Vous ne payez qu’à la remise des articles.</p>
 
     <h2>4. Livraison</h2>
-    <p>La livraison est gratuite, à l’un de nos points de livraison, à la date convenue lors de l’appel : en général dans les 48 heures suivant la confirmation, et au plus tard dans les 30 jours. Si l’article n’est pas livré à la date convenue, vous pouvez annuler la vente après nous avoir demandé de livrer dans un délai supplémentaire raisonnable resté sans effet.</p>
+    <p>La livraison est gratuite, à l’un de nos points de livraison, au jour et à l’heure convenus avec le livreur, qui vous contacte après la confirmation : en général dans les 48 heures suivant la confirmation, et au plus tard dans les 30 jours. Si l’article n’est pas livré à la date convenue, vous pouvez annuler la vente après nous avoir demandé de livrer dans un délai supplémentaire raisonnable resté sans effet.</p>
 
     <h2>5. Paiement</h2>
     <p>Le paiement se fait uniquement à la livraison, lors de la remise des articles, en espèces ou par carte bancaire. Rien n’est payé sur le site.</p>
@@ -912,8 +912,8 @@ function showSent(o){
   lastDoneTitle="Demande envoyée";
   lastDoneHTML=`<div class="done"><div class="ck ok-ck">${ICO_CK}</div>
     <h3>Merci ${esc(o.prenom)}, c’est envoyé !</h3><p>Votre demande <b class="tabnum">${esc(o.id)}</b> est bien arrivée chez Tout’zafer.</p></div>
-    <ol class="nextsteps"><li><i>1</i><span>Nous vous appelons très vite au <b class="tabnum">${esc(fmtTel(o.tel))}</b> pour confirmer les articles, le jour et l’heure de livraison.</span></li>
-      <li><i>2</i><span>Vous recevez ensuite la confirmation par écrit.</span></li>
+    <ol class="nextsteps"><li><i>1</i><span>Nous vous appelons très vite au <b class="tabnum">${esc(fmtTel(o.tel))}</b> pour confirmer votre commande, puis vous la recevez par écrit.</span></li>
+      <li><i>2</i><span>Le livreur vous contacte pour convenir du jour et de l’heure de livraison.</span></li>
       <li><i>3</i><span>Vous payez à la livraison, en espèces ou par carte bancaire, au point choisi : ${esc(o.pick)}.</span></li></ol>
     <div class="recap tabnum" id="recap">${esc(recapOf(o))}</div>
     <div class="stack"><button class="cta" id="again">Continuer mes achats</button><button class="ghost" id="copy">Copier le récapitulatif</button>
