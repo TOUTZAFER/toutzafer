@@ -166,6 +166,21 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 
 .sendbar{position:sticky;bottom:-24px;z-index:3;background:var(--bg);margin:16px -22px -24px;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);box-shadow:0 -8px 20px -12px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px}
 .sendbar .mutedline{margin:0}
+.cta.send.dis{background:var(--bg-alt);color:var(--muted);cursor:not-allowed}
+.cta.send.busy{opacity:.75;cursor:progress}
+.cta.send.busy::before{content:"";width:16px;height:16px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+.ok-ck{background:#e3f6ea!important;color:#1f8a3e!important}
+.warn-ck{background:#fff1e3!important;color:#b25000!important;font-weight:800;font-size:26px}
+.done p b{color:var(--fg)}
+.qlink{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--fg);text-decoration:none;padding:10px}
+.qlink img{border-radius:50%}
+.qlink span{text-decoration:underline;text-underline-offset:3px}
+.nextsteps{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px;text-align:left}
+.nextsteps li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.4}
+.nextsteps b{white-space:nowrap}
+.nextsteps i{flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand-soft);color:var(--brand-text);font-style:normal;font-weight:800;font-size:13px;display:grid;place-items:center}
 .cta.wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#1fa855;color:#fff;text-decoration:none}
 .cta.wa img{flex:none;border-radius:50%;background:#fff}
 .cta.wa.dis{background:var(--bg-alt);color:var(--muted);cursor:not-allowed}
@@ -507,7 +522,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
   <article class="wrap legal">
     <p class="crumb"><button class="back" data-home>← Retour à la boutique</button></p>
     <h1>Mentions légales</h1>
-    <p class="upd">Dernière mise à jour : 21 novembre 2026</p>
+    <p class="upd">Dernière mise à jour : 22 novembre 2026</p>
 
     <h2>Éditeur du site</h2>
     <dl>
@@ -538,8 +553,8 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
       <dt>Données collectées</dt><dd>Nom, prénom, numéro de téléphone, point de livraison choisi et contenu de la demande.</dd>
       <dt>Finalités</dt><dd>Traiter votre demande de réservation, vous rappeler pour la confirmer et organiser la livraison.</dd>
       <dt>Base légale</dt><dd>Mesures précontractuelles prises à votre demande (article 6.1.b du RGPD). En cas de vente, respect des obligations comptables (article 6.1.c).</dd>
-      <dt>Durée de conservation</dt><dd>6 mois après la demande si elle n’aboutit pas. En cas de vente, les pièces comptables sont conservées 10 ans (article L.123-22 du Code de commerce).</dd>
-      <dt>Destinataires</dt><dd>Uniquement Tout’zafer et son hébergeur (Cloudflare, Inc., qui peut traiter des données hors de l’Union européenne dans le cadre de garanties contractuelles appropriées). Vos données ne sont ni vendues ni utilisées pour de la publicité sans votre accord.</dd>
+      <dt>Durée de conservation</dt><dd>6 mois après la demande si elle n’aboutit pas : vos nom et numéro sont alors effacés. En cas de vente, les pièces comptables sont conservées 10 ans (article L.123-22 du Code de commerce).</dd>
+      <dt>Destinataires</dt><dd>Uniquement Tout’zafer et son hébergeur (Cloudflare, Inc., qui héberge le site et la base de données où votre demande est enregistrée, et peut traiter des données hors de l’Union européenne dans le cadre de garanties contractuelles appropriées). Vos données ne sont ni vendues ni utilisées pour de la publicité sans votre accord.</dd>
       <dt>Vos droits</dt><dd>Vous pouvez demander l’accès, la rectification, l’effacement ou la limitation de vos données, et vous opposer à leur traitement, en écrivant aux coordonnées ci-dessus. En cas de difficulté, vous pouvez saisir la CNIL (cnil.fr).</dd>
       <dt>WhatsApp et Facebook</dt><dd>Si vous nous écrivez via WhatsApp ou Facebook, vos échanges sont aussi soumis aux conditions de ces services, édités par Meta.</dd>
     </dl>
@@ -795,7 +810,7 @@ function closeCart(){$("#drawer").classList.remove("on");setTimeout(renderCartBa
 
 function renderDrawer(){
   const b = $("#dBody");
-  if(drawerView==="done"){ $("#dTitle").textContent="Demande prête"; b.innerHTML=lastDoneHTML; bindDone(); return }
+  if(drawerView==="done"){ $("#dTitle").textContent=lastDoneTitle; b.innerHTML=lastDoneHTML; b.scrollTop=0; $("#drawer").scrollTop=0; bindDone(); return }
   $("#dTitle").textContent="Votre panier";
   if(catalogueState!=="ok"){b.innerHTML=`<div class="done"><p>${catalogueState==="error"?"Le catalogue n’a pas pu être chargé.":"Chargement du catalogue…"}</p></div>`;return}
   const ids = Object.keys(cart);
@@ -818,11 +833,12 @@ function renderDrawer(){
       <label class="fl">Téléphone<input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0692 12 34 56" value="${esc(d.tel||"")}" required><span class="err" id="eTel" hidden>Indiquez un numéro à 10 chiffres (ex. 0692 12 34 56) ou au format +262.</span></label>
       <label class="fl">Point de livraison<select id="fPick"><option value="">Choisir un point de livraison</option>${PICKUPS.map(p=>`<option${d.pick===p?" selected":""}>${esc(p)}</option>`).join("")}</select></label>
       <label class="consent"><input type="checkbox" id="fOk"> <span>J'accepte que Tout’zafer utilise mes coordonnées uniquement pour traiter cette demande et me rappeler. Elles ne sont ni revendues ni utilisées pour de la publicité.</span></label>
+      <input class="hp" id="fSite" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="cgvnote">La vente est conclue lors de notre appel de confirmation, selon nos <a href="#cgv" data-cgvlink>conditions générales de vente</a>.</p>
     </form>
-    <div class="sendbar"><a class="cta wa" id="send" data-ch="wa" href="#" target="_blank" rel="noopener" aria-disabled="true"><img src="img/ico/whatsapp.png" alt="" width="22" height="22">Envoyer ma demande sur WhatsApp</a>
-      <a class="cta smsb" id="sendSms" data-ch="sms" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>Pas de WhatsApp ? Envoyer par SMS</a>
-      <p class="mutedline">Sans engagement. Votre message s’ouvre déjà rédigé : appuyez simplement sur Envoyer.</p></div>`;
+    <div class="sendbar">
+      <button class="cta send dis" id="send" type="button" aria-disabled="true">Envoyer ma demande</button>
+      <p class="mutedline">Sans engagement et rien à payer maintenant : nous vous appelons pour confirmer.</p></div>`;
   bindForm();
 }
 function mode(){return "retrait"}
@@ -831,24 +847,23 @@ function bindForm(){
   const ok=()=>{
     const free=shipIsFree(),miss=FREE_SHIP_MIN-total();
     const valid=!!($("#fPrenom").value.trim()&&$("#fNom").value.trim()&&normTel($("#fTel").value)&&$("#fPick").value&&$("#fOk").checked);
-    ["#send","#sendSms"].forEach(id=>{const btn=$(id);btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid)});
-    $("#send").href=valid?waLink(buildOrder()):"#";$("#sendSms").href=valid?smsLink(buildOrder()):"#"};
+    const btn=$("#send");btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid)};
   const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,pick:$("#fPick").value});
 
   ["fPrenom","fNom","fTel","fPick","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
   ok();
   $("#f").addEventListener("submit",e=>e.preventDefault());
-  const onSend=e=>{const btn=e.currentTarget,ch=btn.dataset.ch;
+  const onSend=e=>{const btn=e.currentTarget;
+    if(btn.classList.contains("busy"))return;
     if(btn.classList.contains("dis")){e.preventDefault();
       const tel=$("#fTel").value.trim();$("#eTel").hidden=!tel||!!normTel(tel);
       const miss=[!$("#fPrenom").value.trim()&&"prénom",!$("#fNom").value.trim()&&"nom",!normTel($("#fTel").value)&&"téléphone",!$("#fPick").value&&"point de livraison",!$("#fOk").checked&&"case d'accord"].filter(Boolean);
       toast("À compléter : "+miss.join(", "));return}
     const gone=Object.keys(cart).filter(k=>outOfStock.has(kid(k)));
     if(gone.length){e.preventDefault();removedNotice=gone.map(lineName);gone.forEach(k=>delete cart[k]);save();renderGrid();renderCount();renderDrawer();removedNotice=[];return}
-    btn.href=ch==="sms"?smsLink(buildOrder()):waLink(buildOrder()); // le lien s'ouvre (WhatsApp ou SMS), puis on enregistre la demande
-    setTimeout(()=>submitOrder(ch),0);
+    sendOrder();
   };
-  $("#send").addEventListener("click",onSend);$("#sendSms").addEventListener("click",onSend);
+  $("#send").addEventListener("click",onSend);
 }
 const fmtTel=t=>String(t).replace(/(\d{4})(\d{2})(\d{2})(\d{2})/,"$1 $2 $3 $4");
 function newId(){const d=new Date(),z=n=>String(n).padStart(2,"0");return `TZ-${z(d.getDate())}${z(d.getMonth()+1)}${String(d.getFullYear()).slice(2)}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`}
@@ -862,23 +877,69 @@ const smsLink=o=>`sms:+${WA_NUMBER}${/iPhone|iPad|iPod|Macintosh/.test(navigator
 const waLink=o=>`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Bonjour Tout'zafer, voici ma demande :\n\n"+recapOf(o))}`;
 function normTel(t){const d=t.replace(/[^\d+]/g,"");if(/^0\d{9}$/.test(d))return d;if(/^\+262\d{9}$/.test(d))return "0"+d.slice(4);if(/^262\d{9}$/.test(d))return "0"+d.slice(3);return null}
 
-let lastDoneHTML="";
-function submitOrder(ch="wa"){
-  const o=buildOrder();o.canal=ch;
-  const recap=recapOf(o),wa=waLink(o),sms=smsLink(o),isSms=ch==="sms";
-  const tel=esc("0"+WA_NUMBER.slice(3).replace(/(\d{3})(\d{2})(\d{2})(\d{2})/,"$1 $2 $3 $4"));
-  lastDoneHTML = `<div class="done"><div class="ck ${isSms?"sms-ck":"wa-ck"}">${isSms?'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>':'<img src="img/ico/whatsapp.png" alt="" width="30" height="30">'}</div>
-    <h3>Plus qu’une étape, ${esc(o.prenom)}</h3><p>${isSms?"Votre application Messages":"WhatsApp"} s’est ouvert${isSms?"e":""} avec votre demande. Appuyez sur <b>Envoyer</b> pour la transmettre à Tout’zafer${isSms?` (${tel})`:""}, qui vous rappelle au ${esc(fmtTel(o.tel))}.</p></div>
-    <div class="recap tabnum" id="recap">${esc(recap)}</div>
-    <div class="stack">${isSms?`<a class="cta smsb" href="${sms}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>Le SMS ne s’est pas ouvert ? Réessayer</a><a class="cta wa" href="${wa}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="22" height="22">Envoyer plutôt sur WhatsApp</a>`
-      :`<a class="cta wa" href="${wa}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="22" height="22">WhatsApp ne s’est pas ouvert ? Réessayer</a><a class="cta smsb" href="${sms}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>Envoyer plutôt par SMS</a>`}
-    <button class="ghost" id="copy">Copier le récapitulatif</button><button class="ghost" id="again">Continuer mes achats</button></div>`;
-  cart={};store.set("draft",{});save();renderGrid();renderCount();
+let lastDoneHTML="",lastDoneTitle="Demande envoyée";
+const waQuestion=id=>`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Bonjour Tout'zafer, j'ai une question au sujet de ma demande ${id} : `)}`;
+const ICO_CK='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICO_SMS='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>';
+let lastSend=null;
+// La demande part directement dans la page Gestion (et l'entrepreneur reçoit une notification).
+// Si l'envoi échoue, le client peut la transmettre sur WhatsApp ou par SMS, message déjà rédigé.
+function sendOrder(){
+  const o=buildOrder();
+  const payload={prenom:o.prenom,nom:o.nom,tel:o.tel,pick:o.pick,consent:true,total:o.total,site:($("#fSite")||{}).value||"",
+    lines:Object.entries(cart).map(([k,q])=>({id:kid(k),v:kvar(k)||undefined,q}))};
+  postOrder(payload,o,$("#send"));
+}
+async function postOrder(payload,o,btn){
+  const label=btn?btn.textContent:"";
+  if(btn){btn.classList.add("busy");btn.textContent="Envoi en cours…"}
+  let r=null,j={};
+  try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),20000);
+    r=await fetch("api/demande",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:ctl.signal});clearTimeout(t);
+    j=await r.json().catch(()=>({}))}catch(e){r=null}
+  if(btn&&btn.isConnected){btn.classList.remove("busy");btn.textContent=label}
+  if(r&&r.ok&&j.id){showSent({...o,id:j.id,lines:j.lines||o.lines,total:j.total??o.total});return}
+  if(r&&r.status===409&&Array.isArray(j.gone)){
+    j.gone.forEach(id=>outOfStock.add(id));
+    const gone=Object.keys(cart).filter(k=>j.gone.includes(kid(k)));removedNotice=gone.map(lineName);gone.forEach(k=>delete cart[k]);
+    save();renderGrid();renderCount();drawerView="cart";renderDrawer();removedNotice=[];return}
+  if(r&&r.status===400&&drawerView==="cart"){toast(j.error||"Vérifiez les informations saisies");return}
+  showFallback(payload,o,r&&r.status===429?"Trop de demandes ont été envoyées depuis votre connexion.":"");
+}
+function clearCart(){cart={};store.set("draft",{});save();renderGrid();renderCount()}
+function showSent(o){
+  lastSend=null;
+  lastDoneTitle="Demande envoyée";
+  lastDoneHTML=`<div class="done"><div class="ck ok-ck">${ICO_CK}</div>
+    <h3>Merci ${esc(o.prenom)}, c’est envoyé !</h3><p>Votre demande <b class="tabnum">${esc(o.id)}</b> est bien arrivée chez Tout’zafer.</p></div>
+    <ol class="nextsteps"><li><i>1</i><span>Nous vous appelons très vite au <b class="tabnum">${esc(fmtTel(o.tel))}</b> pour confirmer les articles, le jour et l’heure de livraison.</span></li>
+      <li><i>2</i><span>Vous recevez ensuite la confirmation par écrit.</span></li>
+      <li><i>3</i><span>Vous payez à la livraison, en espèces ou par carte bancaire, au point choisi : ${esc(o.pick)}.</span></li></ol>
+    <div class="recap tabnum" id="recap">${esc(recapOf(o))}</div>
+    <div class="stack"><button class="cta" id="again">Continuer mes achats</button><button class="ghost" id="copy">Copier le récapitulatif</button>
+      <a class="qlink" href="${waQuestion(o.id)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="20" height="20"><span>Une question ? Écrivez-nous sur WhatsApp</span></a></div>`;
+  clearCart();drawerView="done";renderDrawer();
+}
+function showFallback(payload,o,msg){
+  lastSend={payload,o};
+  lastDoneTitle="Envoi à terminer";
+  lastDoneHTML=`<div class="done"><div class="ck warn-ck">!</div>
+    <h3>L’envoi n’a pas abouti</h3><p>${msg?esc(msg):"La connexion a échoué."} Transmettez votre demande sur WhatsApp ou par SMS : le message est déjà rédigé, appuyez simplement sur Envoyer.</p></div>
+    <div class="recap tabnum" id="recap">${esc(recapOf(o))}</div>
+    <div class="stack"><a class="cta wa" data-fb href="${waLink(o)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="22" height="22">Envoyer sur WhatsApp</a>
+      <a class="cta smsb" data-fb href="${smsLink(o)}">${ICO_SMS}Envoyer par SMS</a>
+      <button class="ghost" id="retry">Réessayer l’envoi par le site</button><button class="ghost" id="back">Revenir au panier</button></div>`;
   drawerView="done";renderDrawer();
 }
 function bindDone(){
-  $("#again").onclick=()=>{drawerView="cart";closeCart()};
-  $("#copy").onclick=()=>{const t=$("#recap").textContent;try{navigator.clipboard.writeText(t).then(()=>toast("Récapitulatif copié"),selectRecap)}catch(e){selectRecap()}};
+  const on=(id,f)=>{const el=$(id);if(el)el.onclick=f};
+  on("#again",()=>{drawerView="cart";closeCart()});
+  on("#back",()=>{drawerView="cart";renderDrawer()});
+  on("#retry",e=>{if(lastSend)postOrder(lastSend.payload,lastSend.o,e.currentTarget)});
+  document.querySelectorAll("#dBody [data-fb]").forEach(a=>a.addEventListener("click",()=>{setTimeout(()=>{clearCart();lastSend=null;
+    $("#dBody .done h3").textContent="Plus qu’une étape";$("#dBody .done p").textContent="Appuyez sur Envoyer dans WhatsApp ou Messages pour nous transmettre votre demande. Nous vous rappelons ensuite.";
+    const bk=$("#back");if(bk){bk.id="again";bk.textContent="Continuer mes achats";bk.onclick=()=>{drawerView="cart";closeCart()}}},300)}));
+  on("#copy",()=>{const t=$("#recap").textContent;try{navigator.clipboard.writeText(t).then(()=>toast("Récapitulatif copié"),selectRecap)}catch(e){selectRecap()}});
 }
 function selectRecap(){const r=document.createRange();r.selectNodeContents($("#recap"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Texte sélectionné, copiez-le")}
 

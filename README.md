@@ -1,28 +1,40 @@
-# Tout'zafer : boutique et gestion des articles
+# Tout'zafer : boutique, demandes et gestion
 
 Site de réservation de Tout'zafer (articles du quotidien, La Réunion).
-Le client compose son panier et envoie sa demande par WhatsApp ou SMS ; paiement à la livraison.
+Le client compose son panier et appuie sur « Envoyer ma demande » : la demande arrive dans la page Gestion
+et l'entrepreneur reçoit une notification. Il rappelle le client, confirme par écrit, livre ; paiement à la livraison.
+Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou par SMS (message déjà rédigé).
 
 ## Contenu
 - `index.html` : la boutique (partie client uniquement). Elle lit le catalogue dans `catalogue.json`.
-- `catalogue.json` : la liste des articles (nom, prix, catégorie, description, caractéristiques, photos, rupture, masqué).
+- `catalogue.json` : la liste des articles (nom, prix, promo, catégorie, description, caractéristiques, photos, rupture, masqué).
 - `img/w/` : photos des articles en 360 et 720 px (`aNN-nK` : catalogue d'origine ; `aNN-uK` : ajoutées depuis la gestion).
-- `gestion/` : page de gestion des articles (nouvel article, modification, rupture / retour en stock, masquer, supprimer).
+- `gestion/` : page de gestion, installable sur l'écran d'accueil du téléphone :
+  - **Demandes** : colonnes À appeler / En livraison / Livrée / Annulée, livreur, paiement espèces ou CB,
+    confirmation écrite au client (WhatsApp ou SMS), demandes collées depuis un message ou saisies à la main ;
+  - **Articles** : nouvel article, modification, promotion, rupture / retour en stock, masquer, supprimer ;
+  - **Synthèse** : chiffre d'affaires livré par paiement, livreur, article et mois ; annulations ;
+  - **Réglages** : livreurs, notifications sur l'appareil.
+- `gestion/sw.js`, `gestion/manifest.webmanifest` : notifications et installation de la page Gestion.
+- `functions/api/[[path]].js` : les fonctions serveur (Cloudflare Pages Functions), voir l'en-tête du fichier.
 
-## Comment la gestion met le site à jour
-La page `gestion/` enregistre `catalogue.json` et les nouvelles photos dans ce dépôt (un commit par enregistrement).
-L'hébergeur republie alors le site automatiquement (environ 1 minute).
+## Où sont les données
+- **Catalogue et photos** : dans ce dépôt GitHub. La page Gestion les enregistre via la fonction `/api/save`
+  (la clé GitHub reste côté serveur) ; Cloudflare republie le site en 1 à 2 minutes.
+- **Demandes des clients, livreurs, abonnements aux notifications** : dans la base Cloudflare D1 liée au projet
+  sous le nom `DB`. Les tables sont créées automatiquement au premier appel. Aucune donnée client dans GitHub.
+- Conservation : une demande non livrée perd nom et téléphone 6 mois après sa réception (montant et articles gardés
+  pour la synthèse). Les ventes livrées sont conservées.
+- Protection de l'envoi public : prix recalculés côté serveur depuis `catalogue.json`, articles en rupture refusés,
+  champ piège anti-robots, limite d'envois par connexion (adresse IP hachée, jamais stockée en clair).
 
-- **Simulation (GitHub Pages)** : la page écrit directement dans le dépôt avec une clé GitHub « fine-grained »
-  limitée à ce dépôt (droit *Contents : Read and write*), saisie une fois et gardée sur l'appareil.
-- **Version finale (Cloudflare Pages)** : une petite fonction `/api` garde la clé GitHub côté serveur ;
-  l'entrepreneur se connecte avec un simple mot de passe.
-
-## Hébergement
-- Boutique : https://toutzafer.pages.dev (Cloudflare Pages, projet « toutzafer », branche main, sans commande de build).
-- Gestion : https://toutzafer.pages.dev/gestion/
-- Secrets du projet Cloudflare (Paramètres → Variables et secrets, Production) : `ADMIN_PASSWORD`, `GITHUB_TOKEN`.
-  Après modification d'un secret, relancer un déploiement.
+## Hébergement (Cloudflare Pages, projet « toutzafer », branche main, sans commande de build)
+- Boutique : https://toutzafer.re · Gestion : https://toutzafer.re/gestion/
+- Secrets (Paramètres → Variables et secrets, Production) : `ADMIN_PASSWORD`, `GITHUB_TOKEN`.
+- Liaison (Paramètres → Liaisons) : base D1 `toutzafer` liée sous le nom **`DB`**.
+- Après modification d'un secret ou d'une liaison, relancer un déploiement.
+- Notifications : clés VAPID générées automatiquement et gardées dans la base. Sur iPhone (iOS 16.4 ou plus),
+  ajouter la page Gestion à l'écran d'accueil puis activer les notifications depuis l'icône.
 
 ## Vidéo de démonstration
 `media/Toutzafer_demo.mp4`
