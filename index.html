@@ -755,7 +755,7 @@ function renderSheet(){
       <span class="cat">${CATNAME[p.cat]}</span><h2 id="sTitle">${esc(p.name)}</h2>
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
       <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
-      ${p.was?`<p class="refnote">Promotion −${p.off} %${p.promoTo?` jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"})} inclus`:""}.</p>`:""}
+      ${p.was?`<p class="refnote">−${p.off}%${p.promoTo?` jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"})} inclus`:""}</p>`:""}
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
       ${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}
       ${p.specs.length?`<ul>${p.specs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
