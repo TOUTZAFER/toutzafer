@@ -736,16 +736,14 @@ function orderCard(o){
   if(o.source==="manuel")pills.push('<span class="st st-liv">Saisie à la main</span>');
   if(o.confirmedAt&&st!=="annulee")pills.push(`<span class="st st-ok">Confirmée par écrit</span>`);
   if(ln&&(st!=="annulee"||o.cancelFrom==="livraison"))pills.push(`<span class="st st-liv">${st==="appeler"?"Livreur prévu":"Livreur"} : ${esc(ln)}</span>`);
-  if(o.transmisAt&&st==="livraison")pills.push(`<span class="st st-ok">Transmise au livreur</span>`);
+  if(o.transmisAt&&st==="livraison")pills.push(`<span class="st st-ok">Envoyée au groupe livreurs</span>`);
   if(st==="livree")pills.push(o.paiement==="especes"?'<span class="st st-cash">Payé · Espèces</span>':o.paiement==="cb"?'<span class="st st-card">Payé · CB</span>':'<span class="st st-unpaid">Paiement à saisir</span>');
   if(st==="annulee"){pills.push(`<span class="st st-why">${o.cancelFrom==="livraison"?"À la livraison":"À l’appel"}</span>`);if(o.cancelReason)pills.push(`<span class="st st-why">${esc(o.cancelReason)}</span>`)}
   const cxUI=cancelOpen.has(o.id)?`<div class="cxbox"><label class="ofield">Motif d’annulation<select id="cxr_${esc(o.id)}">${motifs().map(r=>`<option>${esc(r)}</option>`).join("")}</select></label>
     <div class="oacts"><button class="bk" data-cxno="${esc(o.id)}">Garder la demande</button><button class="mv to-annulee" data-cxok="${esc(o.id)}">Confirmer l’annulation</button></div></div>`
     :`<button class="cx" data-cx="${esc(o.id)}">Annuler la demande</button>`;
   const conf=`<button class="bk conf" data-conf="${esc(o.id)}">${o.confirmedAt?"Renvoyer la confirmation":"Confirmer par écrit"}</button>`;
-  const lt=cur&&intlTel(cur.tel);
-  const tr=lt?`<a class="bk conf" data-tr="${esc(o.id)}" href="https://wa.me/${lt}?text=${encodeURIComponent(transmitText(o))}" target="_blank" rel="noopener">${o.transmisAt?"Renvoyer à":"Transmettre à"} ${esc(cur.prenom)}</a>`
-    :cur?`<span class="hint">Ajoutez le téléphone de ${esc(cur.prenom)} dans sa fiche (Réglages) pour lui transmettre la demande.</span>`:"";
+  const tr=`<button class="bk conf" data-tr="${esc(o.id)}">${o.transmisAt?"Copier à nouveau":"Copier pour le groupe livreurs"}</button>`;
   const opts=[...L];if(cur&&!opts.includes(cur))opts.push(cur);
   let act="";
   if(st==="appeler")act=`<div class="oacts">${o.tel?conf:""}<button class="mv to-livraison" data-move="${esc(o.id)}" data-to="livraison">En livraison →</button></div>${cxUI}`;
@@ -763,8 +761,22 @@ function orderCard(o){
     <ul>${(o.lines||[]).map(l=>`<li>${l.q} × ${esc(l.name)}</li>`).join("")}</ul>
     <span class="tot tabnum">${eur(o.total)}</span>${act}</article>`;
 }
+// copie dans le presse-papiers ; si le navigateur refuse, le texte s'affiche pour une copie à la main
+async function copyText(t){
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(t);return true}}catch(e){}
+  try{const ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);
+    const ok=document.execCommand("copy");ta.remove();return ok}catch(e){return false}
+}
+function showCopy(t,id){const d=$("#dlg");
+  d.innerHTML=`<div class="dh"><h2 id="dlgT">Message pour le groupe livreurs</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+  <div class="db"><p class="hint" style="font-size:13px;margin:0">Copie automatique impossible sur cet appareil : sélectionnez le texte, copiez-le, puis collez-le dans le groupe.</p><textarea class="ta" id="cpTxt" rows="14" readonly>${esc(t)}</textarea></div>
+  <div class="df"><span class="sp"></span><button class="btn pri" id="cpDone">C’est envoyé</button></div>`;
+  d.showModal();setTimeout(()=>{$("#cpTxt").focus();$("#cpTxt").select()},60);
+  $("#cpDone").onclick=()=>{d.close();patchOrder(id,{transmisAt:new Date().toISOString()},"Demande marquée envoyée au groupe")};
+}
 function transmitText(o){const pt=pointOf(o);
-  return `Livraison Tout’zafer · n° ${o.id}\n\nClient : ${o.prenom} ${o.nom}\nTéléphone : ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n\nArticles :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\n\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\n\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
+  const ln=livName(o);
+  return `Livraison Tout’zafer · n° ${o.id}${ln?`\nLivreur : ${ln}`:""}\n\nClient : ${o.prenom} ${o.nom}\nTéléphone : ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n\nArticles :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\n\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\n\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
 function renderOrders(){
   const todo=orders.filter(o=>o.status==="appeler").length;
   $("#ordBadge").textContent=todo;$("#ordBadge").hidden=!todo;
@@ -810,7 +822,8 @@ document.addEventListener("click",e=>{
     patchOrder(o.id,d,`${o.prenom} ${o.nom} : ${STEPNAME[to]}`);return}
   const pb=e.target.closest("[data-pay]");if(pb){patchOrder(pb.dataset.pay,{paiement:pb.dataset.mode},`Paiement enregistré : ${pb.dataset.mode==="cb"?"CB":"Espèces"}`);return}
   const cf=e.target.closest("[data-conf]");if(cf){openConfirm(cf.dataset.conf);return}
-  const tr=e.target.closest("[data-tr]");if(tr){const id=tr.dataset.tr;setTimeout(()=>patchOrder(id,{transmisAt:new Date().toISOString()},"Demande transmise au livreur"),150);return}
+  const tr=e.target.closest("[data-tr]");if(tr){const o=orders.find(x=>x.id===tr.dataset.tr);if(!o)return;
+    copyText(transmitText(o)).then(ok=>{if(ok)patchOrder(o.id,{transmisAt:new Date().toISOString()},"Message copié : collez-le dans le groupe des livreurs");else showCopy(transmitText(o),o.id)});return}
   const dl=e.target.closest("[data-del]");if(dl){
     if(!dl.dataset.armed){dl.dataset.armed="1";dl.textContent="Confirmer la suppression";setTimeout(()=>{if(dl.isConnected){delete dl.dataset.armed;dl.textContent="Supprimer définitivement"}},5000);return}
     const id=dl.dataset.del;API("order-delete",{id}).then(()=>{orders=orders.filter(o=>o.id!==id);renderOrders();toast("Demande supprimée")}).catch(err=>toast("Suppression impossible : "+(err.message||err)));return}
@@ -1061,7 +1074,7 @@ function openLivreur(id){
     ${st?statGrid([["Livraisons",st.liv],["CA livré",eur(st.ca)],["Espèces encaissées",eur(st.es)],["CB",eur(st.cb)],st.ns&&["Paiement non saisi",eur(st.ns)],["En cours",st.cours],["Annulées sur place",st.annulSur]]):""}
     ${l.tel?`<div class="oacts"><a class="btn sm" href="tel:${esc(l.tel)}">Appeler</a>${it?`<a class="btn sm wa" href="https://wa.me/${it}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div>`:""}
     <div class="frow"><label class="fld">Prénom <small>tel qu’il apparaît dans les demandes</small><input class="inp" id="lvP" value="${esc(l.prenom)}"></label>
-      <label class="fld">Téléphone <small>pour lui transmettre les demandes</small><input class="inp tabnum" id="lvT" inputmode="tel" value="${esc(fmtTel2(l.tel||""))}"></label></div>
+      <label class="fld">Téléphone <small>facultatif</small><input class="inp tabnum" id="lvT" inputmode="tel" value="${esc(fmtTel2(l.tel||""))}"></label></div>
     <div class="frow"><label class="fld">Statut<select class="sel" id="lvS"><option value="">À préciser</option>${Object.entries(STATUTS).map(([k,v])=>`<option value="${k}"${k===l.statut?" selected":""}>${v}</option>`).join("")}</select></label>
       <label class="fld" id="lvSirF">SIRET<input class="inp tabnum" id="lvSir" inputmode="numeric" value="${esc(l.siret||"")}" placeholder="14 chiffres"></label></div>
     <label class="fld">Note interne<textarea class="ta" id="lvN" rows="2" placeholder="Ex. véhicule, secteur, disponibilités">${esc(l.note||"")}</textarea></label>
