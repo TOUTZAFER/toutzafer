@@ -152,25 +152,24 @@ async function save(env, b) {
 
 /* ---------- Réglages publics : reglages.json (lu par la boutique) ---------- */
 const CONFIG_FILE = "reglages.json";
-const PT_ID = /^p-[a-z0-9-]{1,40}$/, LV_ID = /^l-[a-z0-9-]{1,30}$/;
+// Lieu de livraison : une ville (Nord, Ouest, Sud) puis un quartier de cette ville
+const PT_ID = /^[pv]-[a-z0-9-]{1,40}$/, LV_ID = /^l-[a-z0-9-]{1,30}$/;
 function validConfig(c) {
   if (!c || typeof c !== "object") throw new HttpError(400, "Réglages invalides.");
   const wa = String((c.contact && c.contact.whatsapp) || "").replace(/\D/g, "");
   if (!/^\d{11,15}$/.test(wa)) throw new HttpError(400, "Numéro WhatsApp invalide (format international, ex. 262693473945).");
-  if (!Array.isArray(c.points) || !c.points.length || c.points.length > 40) throw new HttpError(400, "Liste des points de livraison invalide.");
-  const ids = new Set();
-  const points = c.points.map(p => {
-    const id = String(p && p.id || ""), nom = clean(p && p.nom, 120);
-    if (!PT_ID.test(id) || ids.has(id)) throw new HttpError(400, "Identifiant de point de livraison invalide ou en double.");
-    if (nom.length < 2) throw new HttpError(400, "Chaque point de livraison doit avoir un nom.");
-    ids.add(id);
-    const o = { id, nom, consigne: clean(p.consigne, 200), actif: p.actif !== false };
-    if (p.court) o.court = clean(p.court, 40);
-    if (typeof p.lat === "number" && typeof p.lon === "number") { o.lat = p.lat; o.lon = p.lon; }
-    return o;
+  if (!Array.isArray(c.villes) || !c.villes.length || c.villes.length > 40) throw new HttpError(400, "Liste des villes invalide.");
+  const ids = new Set(), noms = new Set();
+  const villes = c.villes.map(v => {
+    const id = String(v && v.id || ""), nom = clean(v && v.nom, 60);
+    if (!/^v-[a-z0-9-]{1,40}$/.test(id) || ids.has(id)) throw new HttpError(400, "Identifiant de ville invalide ou en double.");
+    if (nom.length < 2 || noms.has(nom.toLowerCase())) throw new HttpError(400, "Chaque ville doit avoir un nom, différent des autres.");
+    ids.add(id); noms.add(nom.toLowerCase());
+    const quartiers = [...new Set((Array.isArray(v.quartiers) ? v.quartiers : []).map(q => clean(q, 60)).filter(Boolean))].slice(0, 120);
+    return { id, nom, actif: v.actif !== false, quartiers };
   });
-  if (!points.some(p => p.actif)) throw new HttpError(400, "Gardez au moins un point de livraison actif.");
-  return { contact: { whatsapp: wa }, points };
+  if (!villes.some(v => v.actif)) throw new HttpError(400, "Gardez au moins une ville proposée aux clients.");
+  return { contact: { whatsapp: wa }, villes };
 }
 async function loadConfig(env) {
   const { api, branch } = gh(env);
@@ -192,9 +191,21 @@ async function shopConfig(request, env) {   // version publiée, lue comme la bo
     return r.ok ? await r.json() : null;
   } catch (e) { return null; }
 }
-function findPoint(conf, pickId, pickName, activeOnly) {
-  const pts = conf && Array.isArray(conf.points) ? conf.points : [];
-  return pts.find(p => (!activeOnly || p.actif !== false) && (p.id === pickId || (pickName && p.nom === pickName))) || null;
+function findVille(conf, villeId, villeName, activeOnly) {
+  const vs = conf && Array.isArray(conf.villes) ? conf.villes : [];
+  const nom = String(villeName || "").split(" — ")[0].trim();       // accepte aussi « Ville — Quartier »
+  return vs.find(v => (!activeOnly || v.actif !== false) && (v.id === villeId || (nom && v.nom === nom))) || null;
+}
+// Ville + quartier -> {pick: « Ville — Quartier », pickId: id de la ville, ville, quartier}
+function placeOf(conf, src, activeOnly) {
+  const villeId = /^v-[a-z0-9-]{1,40}$/.test(String(src.villeId || "")) ? src.villeId : "";
+  const v = findVille(conf, villeId, src.ville || src.pick, activeOnly);
+  if (!v) return null;
+  let quartier = clean(src.quartier, 60);
+  if (!quartier && src.pick && String(src.pick).includes(" — ")) quartier = clean(String(src.pick).split(" — ").slice(1).join(" — "), 60);
+  const known = v.quartiers.find(q => q.toLowerCase() === quartier.toLowerCase());
+  if (known) quartier = known;
+  return { pick: quartier ? `${v.nom} — ${quartier}` : v.nom, pickId: v.id, ville: v.nom, quartier: quartier || undefined, quartierLibre: quartier && !known ? true : undefined };
 }
 
 /* =====================================================================
@@ -306,18 +317,21 @@ async function newDemande(request, env, ctx) {
   if (b.site) return json({ id: "TZ-" + Date.now().toString(36).toUpperCase(), ok: true }); // piège à robots : on fait comme si
   const D = await getDB(env);
   const prenom = clean(b.prenom, 60), nom = clean(b.nom, 60), tel = normTel(b.tel);
-  let pick = clean(b.pick, 120), pickId = PT_ID.test(String(b.pickId || "")) ? b.pickId : "";
-  const miss = [!prenom && "prénom", !nom && "nom", !tel && "téléphone", !pick && !pickId && "point de livraison", b.consent !== true && "accord"].filter(Boolean);
+  const miss = [!prenom && "prénom", !nom && "nom", !tel && "téléphone", !b.villeId && !b.ville && !b.pick && "ville", !clean(b.quartier, 60) && !String(b.pick || "").includes(" — ") && "quartier", b.consent !== true && "accord"].filter(Boolean);
   if (miss.length) throw new HttpError(400, "À compléter : " + miss.join(", ") + ".");
   if (!Array.isArray(b.lines) || !b.lines.length || b.lines.length > 60) throw new HttpError(400, "Panier vide ou invalide.");
   await rateLimit(D, request);
 
   const conf = await shopConfig(request, env);
-  if (conf && Array.isArray(conf.points) && conf.points.length) {
-    const pt = findPoint(conf, pickId, pick, true);
-    if (!pt) throw new HttpError(400, "Ce point de livraison n'est plus proposé : choisissez-en un autre.", { pickGone: true });
-    pick = pt.nom; pickId = pt.id;
+  let place;
+  if (conf && Array.isArray(conf.villes) && conf.villes.length) {
+    place = placeOf(conf, b, true);
+    if (!place) throw new HttpError(400, "Nous ne livrons pas (ou plus) dans cette ville : choisissez-en une autre.", { pickGone: true });
+  } else {
+    const v = clean(b.ville || b.pick, 60), q = clean(b.quartier, 60);
+    place = { pick: q ? `${v} — ${q}` : v, ville: v, quartier: q || undefined };
   }
+  const { pick, pickId } = place;
   const cat = await shopCatalogue(request, env), day = reunionDay();
   const byId = Object.fromEntries((Array.isArray(cat) ? cat : []).map(p => [p.id, p]));
   const merged = new Map(), gone = [];
@@ -338,7 +352,7 @@ async function newDemande(request, env, ctx) {
   const saved = round2(lines.reduce((a, l) => a + (l.was ? (l.was - l.price) * l.q : 0), 0));
   const r = reunion();
   const idBase = `TZ-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`;
-  const o = await insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, pickId: pickId || undefined, lines, total, saved, shipFree: true, status: "appeler", source: "site",
+  const o = await insertOrder(D, { date: nowIso(), prenom, nom, tel, ...place, lines, total, saved, shipFree: true, status: "appeler", source: "site",
     shownTotal: typeof b.total === "number" ? round2(b.total) : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 
   const n = (await D.prepare("SELECT COUNT(*) AS n FROM orders WHERE status = 'appeler'").first()).n;
@@ -432,20 +446,20 @@ function checkLines(lines) {
 async function createManual(D, b, conf) {
   const s = b.order || {};
   const prenom = clean(s.prenom, 60), nom = clean(s.nom, 60), tel = normTel(s.tel) || clean(s.tel, 20);
-  let pick = clean(s.pick, 120), pickId = PT_ID.test(String(s.pickId || "")) ? s.pickId : "";
-  const pt = findPoint(conf, pickId, pick, false); if (pt) { pick = pt.nom; pickId = pt.id; } else pickId = "";
+  const place = placeOf(conf, s, false) || { pick: clean(s.pick || [s.ville, s.quartier].filter(Boolean).join(" — "), 120) || undefined };
+  const pickId = place.pickId || "";
   if (!prenom || !tel) throw new HttpError(400, "Indiquez au moins le prénom et le téléphone.");
   const lines = checkLines(s.lines);
   const total = round2(lines.reduce((a, l) => a + l.q * l.price, 0));
   let idBase = clean(s.id, 40).replace(/[^A-Za-z0-9-]/g, "");
   if (!idBase) { const r = reunion(); idBase = `M-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`; }
-  return insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, pickId: pickId || undefined, lines, total, status: "appeler", source: s.id ? "message" : "manuel",
+  return insertOrder(D, { date: nowIso(), prenom, nom, tel, ...place, lines, total, status: "appeler", source: s.id ? "message" : "manuel",
     canal: ["sms", "wa"].includes(s.canal) ? s.canal : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 }
 
 /* Réglages internes (jamais publiés) :
    livreurs : [{id, prenom, tel, statut, siret, actif, note}]
-   points   : {idPoint: {livreurId, note}}   (le nom et la consigne sont dans reglages.json)
+   points   : {idVille: {livreurId, note}}   (le nom et les quartiers sont dans reglages.json)
    motifs   : motifs d'annulation ; modele : message de confirmation au client ("" = modèle par défaut) */
 const STATUTS = ["entrepreneur", "salarie", "auto", "autre"];
 const DEFAULT_MOTIFS = ["Ne souhaite plus l’article", "Injoignable", "Absent au rendez-vous", "Article indisponible", "Autre"];
@@ -495,7 +509,7 @@ async function settingsSet(D, b) {
   if ("modele" in b) s.modele = String(b.modele || "").replace(/\r/g, "").slice(0, 2000);
   await kvSet(D, "settings", s); return s;
 }
-async function habitualLivreur(D, pickId) {   // livreur habituel du point : attribué d'office, modifiable ensuite
+async function habitualLivreur(D, pickId) {   // livreur habituel de la ville : attribué d'office, modifiable ensuite
   if (!pickId) return {};
   const s = await settingsGet(D), v = s.points[pickId], l = v && s.livreurs.find(x => x.id === v.livreurId && x.actif !== false);
   return l ? { livreurId: l.id, livreur: l.prenom } : {};

@@ -7,7 +7,7 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
 
 ## Contenu
 - `index.html` : la boutique (partie client uniquement). Elle lit le catalogue dans `catalogue.json`.
-- `reglages.json` : réglages publics lus par la boutique (numéro WhatsApp, points de livraison) ; modifié depuis Gestion → Réglages.
+- `reglages.json` : réglages publics lus par la boutique (numéro WhatsApp, villes et quartiers de livraison) ; modifié depuis Gestion → Réglages.
 - `catalogue.json` : la liste des articles (nom, prix, promo, catégorie, description, caractéristiques, photos, rupture, masqué).
 - `img/w/` : photos des articles en 360 et 720 px (`aNN-nK` : catalogue d'origine ; `aNN-uK` : ajoutées depuis la gestion).
 - `gestion/` : page de gestion, installable sur l'écran d'accueil du téléphone :
@@ -16,7 +16,7 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
   - **Articles** : nouvel article, modification, promotion, rupture / retour en stock, masquer, supprimer ;
   - **Synthèse** : ventes (chiffre d'affaires livré par paiement, livreur, point, article et mois ; annulations) et
     fréquentation du site (visites, fiches vues, parcours d'achat, articles, recherches, provenance, appareils) ;
-  - **Réglages** : fiches des points de livraison (nom, consigne, livreur habituel, note interne, pause, ordre) et des
+  - **Réglages** : villes et quartiers de livraison (quartiers proposés, livreur habituel, note interne, pause, ordre) et des
     livreurs (téléphone, statut, SIRET, note, chiffres), motifs d'annulation, message de confirmation, numéro WhatsApp,
     notifications sur l'appareil.
 - `gestion/sw.js`, `gestion/manifest.webmanifest` : notifications et installation de la page Gestion.
@@ -28,7 +28,7 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
 ## Où sont les données
 - **Catalogue et photos** : dans ce dépôt GitHub. La page Gestion les enregistre via la fonction `/api/save`
   (la clé GitHub reste côté serveur) ; Cloudflare republie le site en 1 à 2 minutes.
-- **Demandes des clients, fiches livreurs, notes internes des points, abonnements aux notifications** : dans la base Cloudflare D1 liée au projet
+- **Demandes des clients, fiches livreurs, notes internes des villes, abonnements aux notifications** : dans la base Cloudflare D1 liée au projet
   sous le nom `DB`. Les tables sont créées automatiquement au premier appel. Aucune donnée client dans GitHub.
 - Conservation : une demande non livrée perd nom et téléphone 6 mois après sa réception (montant et articles gardés
   pour la synthèse). Les ventes livrées sont conservées.

@@ -2,33 +2,271 @@
  "contact": {
   "whatsapp": "262693473945"
  },
- "points": [
+ "villes": [
   {
-   "id": "p-saint-denis",
-   "nom": "Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",
-   "consigne": "",
+   "id": "v-les-avirons",
+   "nom": "Les Avirons",
    "actif": true,
-   "court": "St-Denis · Mosquée",
-   "lat": -20.87932,
-   "lon": 55.45233
+   "quartiers": [
+    "Centre-ville",
+    "Le Tévelave"
+   ]
   },
   {
-   "id": "p-saint-pierre",
-   "nom": "Saint-Pierre — Parking Kiabi",
-   "consigne": "",
+   "id": "v-entre-deux",
+   "nom": "Entre-Deux",
    "actif": true,
-   "court": "Kiabi St-Pierre",
-   "lat": -21.33944,
-   "lon": 55.47547
+   "quartiers": [
+    "Centre-ville",
+    "Le Bras Long",
+    "Grand Fond"
+   ]
   },
   {
-   "id": "p-saint-leu",
-   "nom": "Saint-Leu — Parking E.Leclerc Le Portail",
-   "consigne": "",
+   "id": "v-l-etang-sale",
+   "nom": "L’Étang-Salé",
    "actif": true,
-   "court": "Leclerc Le Portail",
-   "lat": -21.21845,
-   "lon": 55.30119
+   "quartiers": [
+    "Étang-Salé-les-Bains",
+    "Étang-Salé-les-Hauts",
+    "Le Maniron"
+   ]
+  },
+  {
+   "id": "v-petite-ile",
+   "nom": "Petite-Île",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Grande Anse",
+    "Piton des Goyaves"
+   ]
+  },
+  {
+   "id": "v-le-port",
+   "nom": "Le Port",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Ariste Bolon",
+    "Say Piscine",
+    "Titan"
+   ]
+  },
+  {
+   "id": "v-la-possession",
+   "nom": "La Possession",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Camp Magloire",
+    "Dos d’Âne",
+    "Halte-Là",
+    "Moulin-Joli",
+    "Pichette",
+    "Ravine à Malheur",
+    "Rivière des Galets",
+    "Saint-Laurent",
+    "Sainte-Thérèse"
+   ]
+  },
+  {
+   "id": "v-saint-denis",
+   "nom": "Saint-Denis",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Le Barachois",
+    "Bas de la Rivière",
+    "Bellepierre",
+    "Bois-de-Nèfles",
+    "La Bretagne",
+    "Le Brûlé",
+    "Le Butor",
+    "Les Camélias",
+    "Champ-Fleuri",
+    "Le Chaudron",
+    "Domenjod",
+    "La Montagne",
+    "Montgaillard",
+    "Moufia",
+    "Les Prairies",
+    "Primat",
+    "Providence",
+    "Saint-Bernard",
+    "Saint-François",
+    "Sainte-Clotilde",
+    "La Source",
+    "Vauban"
+   ]
+  },
+  {
+   "id": "v-saint-joseph",
+   "nom": "Saint-Joseph",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Grand Coude",
+    "Jean Petit",
+    "Langevin",
+    "Le Butor",
+    "Les Lianes",
+    "Manapany-les-Bains",
+    "Plaine des Grègues",
+    "Vincendo"
+   ]
+  },
+  {
+   "id": "v-saint-leu",
+   "nom": "Saint-Leu",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "La Chaloupe",
+    "Les Colimaçons",
+    "Piton Saint-Leu",
+    "Le Plate",
+    "Pointe des Châteaux",
+    "Le Portail",
+    "Stella"
+   ]
+  },
+  {
+   "id": "v-saint-louis",
+   "nom": "Saint-Louis",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Le Gol",
+    "Les Makes",
+    "Le Ouaki",
+    "La Rivière",
+    "Roches Maigres"
+   ]
+  },
+  {
+   "id": "v-saint-paul",
+   "nom": "Saint-Paul",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Bellemène",
+    "Bois-de-Nèfles",
+    "Boucan Canot",
+    "Cambaie",
+    "L’Éperon",
+    "L’Hermitage-les-Bains",
+    "Fleurimont",
+    "Grande Fontaine",
+    "Le Guillaume",
+    "La Saline",
+    "La Saline-les-Bains",
+    "Petite-France",
+    "Plateau Caillou",
+    "Saint-Gilles-les-Bains",
+    "Saint-Gilles-les-Hauts",
+    "Sans-Souci",
+    "Savannah",
+    "Tan Rouge",
+    "Villèle"
+   ]
+  },
+  {
+   "id": "v-saint-philippe",
+   "nom": "Saint-Philippe",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Le Baril",
+    "Basse Vallée",
+    "Mare Longue",
+    "Le Tremblet"
+   ]
+  },
+  {
+   "id": "v-saint-pierre",
+   "nom": "Saint-Pierre",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Basse Terre",
+    "Bassin Plat",
+    "Bois d’Olive",
+    "Grand Bois",
+    "Joli Fond",
+    "Les Casernes",
+    "Ligne des Bambous",
+    "Ligne Paradis",
+    "Montvert-les-Bas",
+    "Montvert-les-Hauts",
+    "Pierrefonds",
+    "Ravine Blanche",
+    "Ravine des Cabris",
+    "Terre Sainte"
+   ]
+  },
+  {
+   "id": "v-sainte-marie",
+   "nom": "Sainte-Marie",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Beauséjour",
+    "Duparc",
+    "Flacourt",
+    "Gillot",
+    "Grande-Montée",
+    "La Convenance",
+    "La Mare",
+    "Les Cafés",
+    "Ravine des Chèvres",
+    "Rivière des Pluies",
+    "Terrain-Élisa"
+   ]
+  },
+  {
+   "id": "v-sainte-suzanne",
+   "nom": "Sainte-Suzanne",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Bagatelle",
+    "Les Deux-Rives",
+    "Quartier-Français"
+   ]
+  },
+  {
+   "id": "v-le-tampon",
+   "nom": "Le Tampon",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "Bérive",
+    "Bourg-Murat",
+    "Bras Creux",
+    "Dassy",
+    "Le Grand Tampon",
+    "Le Petit Tampon",
+    "La Plaine des Cafres",
+    "Pont d’Yves",
+    "Terrain Fleury",
+    "Trois-Mares",
+    "12e km",
+    "14e km",
+    "17e km",
+    "19e km",
+    "23e km"
+   ]
+  },
+  {
+   "id": "v-trois-bassins",
+   "nom": "Trois-Bassins",
+   "actif": true,
+   "quartiers": [
+    "Centre-ville",
+    "La Grande Ravine",
+    "Souris Blanche"
+   ]
   }
  ]
 }

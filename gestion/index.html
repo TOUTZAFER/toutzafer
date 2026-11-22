@@ -306,6 +306,7 @@ a.btn.pri{color:#fff}
 .setp p{margin:0;font-size:14px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-alt);border-radius:980px;padding:6px 6px 6px 12px;font-size:14px;font-weight:600}
+.chip.addq{border:0;cursor:pointer;padding:4px 10px;font-size:12px;margin:2px 0}
 .chip button{border:0;background:var(--bg);border-radius:50%;width:24px;height:24px;color:var(--muted)}
 .addrow{display:flex;gap:8px}
 .pstate{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
@@ -383,8 +384,8 @@ a.btn.pri{color:#fff}
   <section id="vSettings" hidden>
     <h1>Réglages</h1>
     <div id="setWarn"></div>
-    <div class="setp"><div class="seth"><h3>Points de livraison</h3><button class="btn sm" id="ptAdd">+ Ajouter</button></div>
-      <p>Proposés aux clients dans le panier, dans cet ordre. Touchez un point pour modifier sa fiche.</p><div class="flist" id="ptList"></div></div>
+    <div class="setp"><div class="seth"><h3>Villes et quartiers de livraison</h3><button class="btn sm" id="ptAdd">+ Ajouter</button></div>
+      <p>Dans le panier, le client choisit sa ville puis son quartier, dans cet ordre. Touchez une ville pour modifier ses quartiers, son livreur habituel ou la mettre en pause.</p><div class="flist" id="ptList"></div></div>
     <div class="setp"><div class="seth"><h3>Livreurs</h3><button class="btn sm" id="lvAdd">+ Ajouter</button></div>
       <p>Fiches internes, jamais visibles sur le site. Ajoutez-vous si vous livrez vous-même.</p><div class="flist" id="lvList"></div></div>
     <div class="setp"><h3>Demandes</h3>
@@ -676,14 +677,15 @@ function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=ite
 const STEPS=[["appeler","À appeler"],["livraison","En livraison"],["livree","Livrée"],["annulee","Annulée"]];
 const STEPNAME=Object.fromEntries(STEPS);
 const DEFAULT_MOTIFS=["Ne souhaite plus l’article","Injoignable","Absent au rendez-vous","Article indisponible","Autre"];
-const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer.\n\nJe vous confirme votre commande n° {numero} :\n{articles}\n\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\n\nLivraison offerte au point : {point}.\nVotre livreur vous contactera pour convenir du jour et de l’heure.\n\nMerci pour votre confiance !";
+const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer.\n\nJe vous confirme votre commande n° {numero} :\n{articles}\n\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\n\nLivraison offerte : {point}.\nVotre livreur vous contactera pour convenir du lieu exact, du jour et de l’heure.\n\nMerci pour votre confiance !";
 const STATUTS={entrepreneur:"Entrepreneur (vous-même)",salarie:"Salarié",auto:"Auto-entrepreneur",autre:"Autre"};
-// Réglages publics (reglages.json : numéro, points de livraison) ; secours si le fichier n'a pas pu être lu
+// Réglages publics (reglages.json : numéro, villes et quartiers de livraison)
 let CONF=null,confSha=null,confErr="";
-const FALLBACK_POINTS=[{id:"p-saint-denis",nom:"Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",consigne:"",actif:true},{id:"p-saint-pierre",nom:"Saint-Pierre — Parking Kiabi",consigne:"",actif:true},{id:"p-saint-leu",nom:"Saint-Leu — Parking E.Leclerc Le Portail",consigne:"",actif:true}];
-const points=()=>CONF&&Array.isArray(CONF.points)?CONF.points:FALLBACK_POINTS;
-const pointById=id=>points().find(p=>p.id===id);
-const pointOf=o=>points().find(p=>p.id===o.pickId)||points().find(p=>o.pick&&p.nom===o.pick)||null;
+const villes=()=>CONF&&Array.isArray(CONF.villes)?CONF.villes:[];
+const points=villes; // (les « points » sont désormais les villes : livreur habituel, filtres, synthèse)
+const pointById=id=>villes().find(v=>v.id===id);
+const villeOfPick=pick=>{const n=String(pick||"").split(" — ")[0].trim();return villes().find(v=>v.nom===n)||null};
+const pointOf=o=>pointById(o.pickId)||(o.ville&&villes().find(v=>v.nom===o.ville))||villeOfPick(o.pick)||null;
 const ICO_TEL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>';
 const isApple=/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&"ontouchend" in document;
 let HASDB=false,tab="articles",orders=[],ordersLoaded=false,ordersErr="",settings={livreurs:[],points:{},motifs:DEFAULT_MOTIFS,modele:""},knownIds=null,freshIds=new Set();
@@ -806,9 +808,9 @@ function showCopy(t,id){const d=$("#dlg");
   d.showModal();setTimeout(()=>{$("#cpTxt").focus();$("#cpTxt").select()},60);
   $("#cpDone").onclick=()=>{d.close();patchOrder(id,{transmisAt:new Date().toISOString()},"Demande marquée envoyée au groupe")};
 }
-function transmitText(o){const pt=pointOf(o);
+function transmitText(o){
   const ln=livName(o);
-  return `Livraison Tout’zafer · n° ${o.id}${ln?`\nLivreur : ${ln}`:""}\n\nClient : ${o.prenom} ${o.nom}\nTéléphone : ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n\nArticles :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\n\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\n\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
+  return `Livraison Tout’zafer · n° ${o.id}${ln?`\nLivreur : ${ln}`:""}\n\nClient : ${o.prenom} ${o.nom}\nTéléphone : ${fmtTel2(o.tel)}\nLieu : ${o.pick||"à définir"}\n\nArticles :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\n\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\n\nMerci d’appeler le client pour convenir du lieu exact, du jour et de l’heure.`}
 function renderOrders(){
   const todo=orders.filter(o=>o.status==="appeler").length;
   $("#ordBadge").textContent=todo;$("#ordBadge").hidden=!todo;
@@ -833,7 +835,7 @@ function renderFilters(){
   const nmL=k=>k.startsWith("n:")?k.slice(2):(livById(k)||{}).prenom||k,nmP=k=>k.startsWith("n:")?k.slice(2):(pointById(k)||{}).nom||k;
   el.hidden=lk.length<2&&pk.length<2;
   el.innerHTML=`<select class="sel" id="fLiv" aria-label="Filtrer par livreur"><option value="">Tous les livreurs</option>${lk.map(k=>`<option value="${esc(k)}"${k===fLiv?" selected":""}>${esc(nmL(k))}</option>`).join("")}<option value="-"${fLiv==="-"?" selected":""}>Sans livreur</option></select>
-    <select class="sel" id="fPt" aria-label="Filtrer par point de livraison"><option value="">Tous les points</option>${pk.map(k=>`<option value="${esc(k)}"${k===fPt?" selected":""}>${esc(nmP(k))}</option>`).join("")}</select>
+    <select class="sel" id="fPt" aria-label="Filtrer par ville"><option value="">Toutes les villes</option>${pk.map(k=>`<option value="${esc(k)}"${k===fPt?" selected":""}>${esc(nmP(k))}</option>`).join("")}</select>
     ${fLiv||fPt?'<button class="lk2" data-fclear>Tout afficher</button>':""}`;
 }
 document.addEventListener("change",e=>{if(e.target.id==="fLiv"){fLiv=e.target.value;renderOrders()}if(e.target.id==="fPt"){fPt=e.target.value;renderOrders()}});
@@ -865,9 +867,9 @@ document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.datas
 $("#ordRefresh").onclick=()=>{loadOrders().then(()=>toast("Liste à jour"))};
 
 /* ---------- Confirmation écrite au client ---------- */
-function fillModele(t,o){const pt=pointOf(o);
+function fillModele(t,o){
   const v={prenom:o.prenom,nom:o.nom,numero:o.id,articles:(o.lines||[]).map(l=>`• ${l.q} × ${l.name} : ${eur(l.q*l.price)}`).join("\n"),total:eur(o.total),
-    point:(o.pick||"à définir")+(pt&&pt.consigne?` (${pt.consigne})`:""),livreur:livName(o)||"votre livreur"};
+    point:o.pick||"à définir",livreur:livName(o)||"votre livreur"};
   return String(t).replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m)}
 const confirmText=o=>fillModele(settings.modele||DEFAULT_MODELE,o);
 function openConfirm(id){
@@ -895,8 +897,9 @@ function parseRecap(t){
   const mw=t.match(/^\s*(.+?)\s*[·•|-]\s*((?:\+|00)?[\d .]{9,})\s*$/m);
   if(mw&&!/^Demande/.test(mw[1])){const parts=mw[1].trim().split(/\s+/);r.prenom=parts.shift()||"";r.nom=parts.join(" ");r.tel=normTel(mw[2])}
   else{const mt=t.match(/(?:\+262|0)\s?[67]\d(?:[ .]?\d{2}){4}/);if(mt)r.tel=normTel(mt[0])}
-  const mp=t.match(/Point de livraison\s*:\s*(.+)$/m);
-  if(mp){const raw=mp[1].replace(/\s*\(livraison[^)]*\)\s*$/,"").trim();const P=points(),pt=P.find(p=>p.nom===raw)||P.find(p=>raw&&p.nom.split(" — ")[0]===raw.split(" — ")[0]);r.pick=pt?pt.nom:raw;r.pickId=pt?pt.id:""}
+  const mp=t.match(/(?:Lieu|Point) de livraison\s*:\s*(.+)$/m);
+  if(mp){const raw=mp[1].replace(/\s*\(livraison[^)]*\)\s*$/,"").trim(),v=villeOfPick(raw),q=raw.split(" — ").slice(1).join(" — ").trim();
+    r.pick=raw;r.villeId=v?v.id:"";r.quartier=q}
   const re=/^\s*[•*\-–]\s*(\d+)\s*[×xX]\s*(.+?)\s*\(\s*([\d\s.,  ]+)\s*€\s*\)\s*$/gm;let m;
   while((m=re.exec(t))){const q=+m[1],lt=num(m[3]);r.lines.push({q,name:m[2].trim(),price:Math.round(lt/q*100)/100})}
   const mt2=t.match(/Total[^:\n]*:\s*([\d\s.,  ]+)\s*€/);r.total=mt2?num(mt2[1]):r.lines.reduce((a,l)=>a+l.q*l.price,0);
@@ -923,17 +926,23 @@ function fillPaste(r,manual){
   $("#pCanalF").hidden=!!manual;
   const dup=r.id&&orders.find(o=>o.id===r.id);
   const miss=[!r.prenom&&"le nom",!r.tel&&"le téléphone",!r.lines[0].name&&"les articles"].filter(Boolean);
-  const picks=points().filter(p=>p.actif!==false||p.id===r.pickId);
+  const vl=villes().filter(v=>v.actif!==false||v.id===r.villeId);
   $("#pForm").innerHTML=`${dup?`<div class="warnbox">Cette demande (${esc(r.id)}) est déjà enregistrée : ${esc(dup.prenom)} ${esc(dup.nom)}, ${STEPNAME[dup.status]}. L’ajouter créerait un doublon.</div>`:""}
   ${manual?"":miss.length?`<div class="warnbox">Je n’ai pas trouvé ${miss.join(", ")} dans le message. Complétez ci-dessous.</div>`:`<div class="okbox">Demande lue. Vérifiez puis ajoutez-la.</div>`}
   <div class="frow"><label class="fld">Prénom<input class="inp" id="fP" value="${esc(r.prenom)}"></label><label class="fld">Nom<input class="inp" id="fN" value="${esc(r.nom)}"></label></div>
   <div class="frow"><label class="fld">Téléphone<input class="inp tabnum" id="fT" inputmode="tel" value="${esc(fmtTel2(r.tel))}"></label>
-    <label class="fld">Point de livraison<select class="sel" id="fK"><option value="">À définir</option>${picks.map(p=>`<option value="${esc(p.id)}"${p.id===r.pickId?" selected":""}>${esc(p.nom)}</option>`).join("")}${r.pick&&!r.pickId?`<option value="" selected>${esc(r.pick)} (non reconnu)</option>`:""}</select></label></div>
+    <label class="fld">Ville<select class="sel" id="fK"><option value="">À définir</option>${vl.map(v=>`<option value="${esc(v.id)}"${v.id===r.villeId?" selected":""}>${esc(v.nom)}</option>`).join("")}</select></label></div>
+  <div class="frow"><label class="fld">Quartier<select class="sel" id="fQ"></select></label><label class="fld" id="fQaF">Autre quartier<input class="inp" id="fQa" value=""></label></div>
+  ${r.pick&&!r.villeId?`<div class="warnbox">Lieu indiqué dans le message : « ${esc(r.pick)} ». Ville non reconnue : choisissez-la ci-dessus.</div>`:""}
   <div class="fld">Articles <small>quantité · article · montant de la ligne</small><div class="lines" id="fL">${linesHTML(r.lines)}</div>
     <button class="btn sm" type="button" id="fAdd" style="align-self:flex-start">+ Ajouter une ligne</button></div>
   <div class="ltot"><span>Total</span><span class="tabnum" id="fTot"></span></div>
   <datalist id="artNames">${items.filter(p=>!p.hidden).map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist>`;
   bindTelFormat($("#fT"));
+  const fillQ=sel=>{const v=pointById($("#fK").value),L=v?v.quartiers||[]:[],known=L.find(x=>x.toLowerCase()===String(sel||"").toLowerCase());
+    $("#fQ").innerHTML=`<option value="">${v?"À définir":"Choisissez la ville"}</option>${L.map(x=>`<option${x===known?" selected":""}>${esc(x)}</option>`).join("")}<option value="__autre"${sel&&!known?" selected":""}>Autre quartier…</option>`;
+    $("#fQa").value=sel&&!known?sel:"";$("#fQaF").hidden=$("#fQ").value!=="__autre"};
+  fillQ(r.quartier);$("#fK").onchange=()=>fillQ("");$("#fQ").onchange=()=>{$("#fQaF").hidden=$("#fQ").value!=="__autre"};
   const sync=()=>{draft.lines=[...document.querySelectorAll("#fL .lrow")].map(row=>{const q=Math.max(1,parseInt(row.querySelector("[data-lq]").value)||1),lt=num(row.querySelector("[data-lp]").value);return {q,name:row.querySelector("[data-ln]").value.trim(),price:Math.round(lt/q*100)/100}});
     $("#fTot").textContent=eur(draft.lines.reduce((a,l)=>a+l.q*l.price,0));
     $("#pSave").disabled=!($("#fP").value.trim()&&$("#fT").value.trim()&&draft.lines.some(l=>l.name))};
@@ -948,7 +957,7 @@ function fillPaste(r,manual){
 }
 async function savePaste(){
   const lines=draft.lines.filter(l=>l.name);
-  const o={id:draft.manual?"":draft.id,prenom:$("#fP").value.trim(),nom:$("#fN").value.trim(),tel:normTel($("#fT").value),pickId:$("#fK").value,pick:$("#fK").value?(pointById($("#fK").value)||{}).nom:(draft.pick||""),lines,canal:draft.manual?"":$("#pCanal").value};
+  const o={id:draft.manual?"":draft.id,prenom:$("#fP").value.trim(),nom:$("#fN").value.trim(),tel:normTel($("#fT").value),villeId:$("#fK").value,quartier:$("#fQ").value==="__autre"?$("#fQa").value.trim():$("#fQ").value,pick:$("#fK").value?"":(draft.pick||""),lines,canal:draft.manual?"":$("#pCanal").value};
   $("#pSave").disabled=true;
   try{const r=await API("order-create",{order:o});orders.unshift(r.order);knownIds&&knownIds.add(r.order.id);freshIds.add(r.order.id);$("#dlg").close();renderOrders();toast(`Demande de ${r.order.prenom} ajoutée dans « À appeler »`)}
   catch(e){$("#pSave").disabled=false;if(e instanceof AuthError){$("#dlg").close();showLogin(e.message);return}toast("Enregistrement impossible : "+(e.message||e))}
@@ -993,7 +1002,7 @@ function renderSynth(){
   <div class="sgrid">
     <section class="spanel"><h3>Par moyen de paiement</h3>${nb?bars(pay):none}</section>
     <section class="spanel"><h3>Par livreur</h3>${nb?bars(liv):none}</section>
-    <section class="spanel" style="grid-column:1/-1"><h3>Par point de livraison</h3>${pts.length?bars(pts):none}</section>
+    <section class="spanel" style="grid-column:1/-1"><h3>Par ville de livraison</h3>${pts.length?bars(pts):none}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par article <small>${artN} article${artN>1?"s":""} vendus</small></h3>${artN?bars(arts):none}${artN>8?`<button class="more" data-symore>${symore?"Voir moins":`Voir les ${artN} articles`}</button>`:""}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par mois</h3>${mrows.length?`<div class="stable"><table><thead><tr><th>Mois</th><th>Ventes</th><th>CA TTC</th><th>Espèces</th><th>CB</th><th>Non saisi</th><th>Annulées</th></tr></thead><tbody>
       ${mrows.map(r=>`<tr><td class="m">${monthLabel(r.m)}</td><td>${r.n}</td><td>${eur(r.ca)}</td><td>${eur(r.es)}</td><td>${eur(r.cb)}</td><td>${eur(r.ns)}</td><td>${r.c}</td></tr>`).join("")}
@@ -1098,14 +1107,14 @@ document.addEventListener("pointerover",e=>{const c=e.target.closest&&e.target.c
 document.addEventListener("change",e=>{if(e.target.id==="auPeriod"){auDays=+e.target.value;auData=null;loadAudience()}});
 
 /* ---------- Réglages : points de livraison, livreurs, demandes, boutique ----------
-   Public (reglages.json, dans le dépôt) : numéro WhatsApp, points de livraison (nom, consigne, actif, ordre).
+   Public (reglages.json, dans le dépôt) : numéro WhatsApp, villes de livraison (nom, quartiers, active, ordre).
    Interne (base D1) : fiches livreurs, livreur habituel et note de chaque point, motifs, modèle de message. */
 const slug=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24)||"x";
 const plural=(n,w)=>`${n} ${w}${n>1?"s":""}`;
 const nat=w=>{w=String(w||"");return w.startsWith("262")?"0"+w.slice(3):w.startsWith("33")?"0"+w.slice(2):"+"+w};
 function toIntl(v){const n=normTel(v);if(/^0\d{9}$/.test(n))return intlTel(n);const d=String(v||"").replace(/\D/g,"");return /^\d{11,15}$/.test(d)?d:""}
 async function loadConf(){
-  try{const r=await API("config");CONF=r.config||{contact:{whatsapp:"262693473945"},points:FALLBACK_POINTS.map(p=>({...p}))};confSha=r.sha||null;confErr=""}
+  try{const r=await API("config");CONF=r.config&&Array.isArray(r.config.villes)?r.config:{contact:{whatsapp:(r.config&&r.config.contact&&r.config.contact.whatsapp)||"262693473945"},villes:[]};confSha=r.sha||null;confErr=""}
   catch(e){if(e instanceof AuthError){showLogin(e.message);return}confErr=e.message||String(e)}
   renderSettings();if(tab==="orders")renderOrders();
 }
@@ -1132,14 +1141,14 @@ function renderSettings(){
   const P=points();
   $("#ptList").innerHTML=P.map((p,i)=>{const v=ptInt(p.id),l=livById(v.livreurId),st=statsOf(o=>keyPt(o)===p.id);
     return `<div class="fitem${p.actif===false?" off":""}"><span class="fdot"></span><button class="fopen" data-pt="${esc(p.id)}"><b>${esc(p.nom)}</b>
-      <small>${p.actif===false?"En pause · ":""}${p.consigne?esc(p.consigne)+" · ":""}${l?"Livreur habituel : "+esc(l.prenom):"Pas de livreur habituel"}</small>
+      <small>${p.actif===false?"En pause · ":""}${plural((p.quartiers||[]).length,"quartier")} · ${l?"Livreur habituel : "+esc(l.prenom):"Pas de livreur habituel"}</small>
       <small class="tabnum">${plural(st.n,"demande")} · ${plural(st.liv,"livrée")} · ${eur(st.ca)}</small></button>
       <span class="fmv"><button data-ptmv="${i}" data-dir="-1" aria-label="Monter" ${i&&CONF?"":"disabled"}>↑</button><button data-ptmv="${i}" data-dir="1" aria-label="Descendre" ${i<P.length-1&&CONF?"":"disabled"}>↓</button></span></div>`}).join("")
-    ||'<p class="fempty">Aucun point de livraison.</p>';
+    ||'<p class="fempty">Aucune ville de livraison.</p>';
   $("#lvList").innerHTML=livreurs().map(l=>{const st=statsOf(o=>keyLiv(o)===l.id),pts=points().filter(p=>ptInt(p.id).livreurId===l.id);
     return `<div class="fitem${l.actif===false?" off":""}"><span class="fdot"></span><button class="fopen" data-lv="${esc(l.id)}"><b>${esc(l.prenom)}</b>
       <small>${l.actif===false?"Inactif · ":""}${STATUTS[l.statut]||"Statut à préciser"} · ${l.tel?fmtTel2(l.tel):"téléphone manquant"}</small>
-      <small class="tabnum">${plural(st.liv,"livraison")} · ${eur(st.ca)}${st.es?` dont ${eur(st.es)} en espèces`:""}${pts.length?" · "+pts.map(p=>esc(p.nom.split(" — ")[0])).join(", "):""}</small></button></div>`}).join("")
+      <small class="tabnum">${plural(st.liv,"livraison")} · ${eur(st.ca)}${st.es?` dont ${eur(st.es)} en espèces`:""}${pts.length?" · "+pts.map(p=>esc(p.nom)).join(", "):""}</small></button></div>`}).join("")
     ||`<p class="fempty">${HASDB?"Aucun livreur pour l’instant.":"Disponible une fois la base de données reliée."}</p>`;
   $("#mtChips").innerHTML=motifs().map(m=>`<span class="chip">${esc(m)}<button data-mtdel="${esc(m)}" aria-label="Retirer ${esc(m)}">✕</button></span>`).join("");
   if(document.activeElement!==$("#mdTxt"))$("#mdTxt").value=settings.modele||DEFAULT_MODELE;
@@ -1151,43 +1160,47 @@ function renderSettings(){
 const statGrid=c=>`<div class="fstats">${c.filter(Boolean).map(([k,v])=>`<div><span>${k}</span><b class="tabnum">${v}</b></div>`).join("")}</div>`;
 function armDelete(btn,go){btn.onclick=()=>{if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="Confirmer la suppression";setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent="Supprimer"}},5000);return}go()}}
 
-/* Fiche point de livraison */
+/* Fiche ville de livraison : nom, quartiers proposés, livreur habituel, note interne */
 function openPoint(id){
   if(!CONF){toast("Réglages de la boutique non chargés");return}
-  const isNew=!id,p=isNew?{id:"",nom:"",consigne:"",actif:true}:points().find(x=>x.id===id);if(!p)return;
+  const isNew=!id,p=isNew?{id:"",nom:"",quartiers:[],actif:true}:villes().find(x=>x.id===id);if(!p)return;
   const v=ptInt(p.id),st=isNew?null:statsOf(o=>keyPt(o)===p.id),used=!!(st&&st.n),d=$("#dlg");
-  d.innerHTML=`<div class="dh"><h2 id="dlgT">${isNew?"Nouveau point de livraison":"Point de livraison"}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+  const libres=isNew?[]:[...new Set(orders.filter(o=>keyPt(o)===p.id&&o.quartierLibre&&o.quartier).map(o=>o.quartier))];
+  d.innerHTML=`<div class="dh"><h2 id="dlgT">${isNew?"Nouvelle ville de livraison":esc(p.nom)}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
   <div class="db">
     ${st?statGrid([["Demandes",st.n],["Livrées",st.liv],["CA livré",eur(st.ca)],["Annulées",st.annul]]):""}
-    <label class="fld">Nom affiché aux clients<input class="inp" id="ptNom" value="${esc(p.nom)}" placeholder="Ex. Saint-Paul — Parking du marché forain"></label>
-    <label class="fld">Consigne pour le client <small>facultatif · affichée dans le panier et dans la confirmation</small><input class="inp" id="ptCons" value="${esc(p.consigne||"")}" placeholder="Ex. devant l’entrée principale"></label>
-    <label class="fld">Livreur habituel <small>attribué d’office aux nouvelles demandes de ce point</small><select class="sel" id="ptLiv"${HASDB?"":" disabled"}><option value="">Aucun</option>${livActifs().map(l=>`<option value="${esc(l.id)}"${l.id===v.livreurId?" selected":""}>${esc(l.prenom)}</option>`).join("")}</select></label>
-    <label class="fld">Note interne <small>jamais visible par les clients</small><textarea class="ta" id="ptNote" rows="2"${HASDB?"":" disabled"} placeholder="Ex. se garer au fond du parking">${esc(v.note||"")}</textarea></label>
-    <label class="tglrow"><input type="checkbox" id="ptOn" ${p.actif!==false?"checked":""}> Proposé aux clients</label>
-    ${used?`<p class="hint">Ce point a déjà servi : pour l’arrêter, décochez « Proposé aux clients ». Son historique reste dans la synthèse.</p>`:""}
+    <label class="fld">Nom de la ville<input class="inp" id="ptNom" value="${esc(p.nom)}" placeholder="Ex. Saint-Paul"></label>
+    <label class="fld">Quartiers proposés <small>un par ligne · le client peut aussi choisir « Autre quartier » et l’écrire</small><textarea class="ta" id="ptQ" rows="9">${esc((p.quartiers||[]).join("\n"))}</textarea></label>
+    ${libres.length?`<p class="hint">Quartiers écrits par des clients : ${libres.map(q=>`<button type="button" class="chip addq" data-addq="${esc(q)}">+ ${esc(q)}</button>`).join(" ")}</p>`:""}
+    <label class="fld">Livreur habituel <small>attribué d’office aux nouvelles demandes de cette ville</small><select class="sel" id="ptLiv"${HASDB?"":" disabled"}><option value="">Aucun</option>${livActifs().map(l=>`<option value="${esc(l.id)}"${l.id===v.livreurId?" selected":""}>${esc(l.prenom)}</option>`).join("")}</select></label>
+    <label class="fld">Note interne <small>jamais visible par les clients</small><textarea class="ta" id="ptNote" rows="2"${HASDB?"":" disabled"} placeholder="Ex. livraisons le mardi et le samedi">${esc(v.note||"")}</textarea></label>
+    <label class="tglrow"><input type="checkbox" id="ptOn" ${p.actif!==false?"checked":""}> Proposée aux clients</label>
+    ${used?`<p class="hint">Cette ville a déjà servi : pour l’arrêter, décochez « Proposée aux clients ». Son historique reste dans la synthèse.</p>`:""}
   </div>
   <div class="df">${!isNew&&!used?'<button class="btn sm danger" id="ptDel">Supprimer</button>':""}<span class="sp"></span><button class="btn" data-close>Annuler</button><button class="btn pri" id="ptSave">${isNew?"Ajouter":"Enregistrer"}</button></div>`;
   d.showModal();if(isNew)setTimeout(()=>$("#ptNom").focus(),60);
+  d.querySelectorAll("[data-addq]").forEach(b=>b.onclick=()=>{const t=$("#ptQ");t.value=(t.value.trim()?t.value.trim()+"\n":"")+b.dataset.addq;b.remove()});
   $("#ptSave").onclick=async()=>{
-    const nom=$("#ptNom").value.trim().replace(/\s+/g," "),cons=$("#ptCons").value.trim().replace(/\s+/g," "),on=$("#ptOn").checked;
-    if(nom.length<2){toast("Donnez un nom au point de livraison");$("#ptNom").focus();return}
-    if(points().some(x=>x.id!==p.id&&x.nom===nom)){toast("Un autre point porte déjà ce nom");return}
+    const nom=$("#ptNom").value.trim().replace(/\s+/g," "),on=$("#ptOn").checked;
+    const quartiers=[...new Set($("#ptQ").value.split("\n").map(q=>q.trim().replace(/\s+/g," ")).filter(Boolean))];
+    if(nom.length<2){toast("Donnez le nom de la ville");$("#ptNom").focus();return}
+    if(villes().some(x=>x.id!==p.id&&x.nom.toLowerCase()===nom.toLowerCase())){toast("Cette ville est déjà dans la liste");return}
     const next=JSON.parse(JSON.stringify(CONF));let pid=p.id;
-    if(isNew){const b="p-"+slug(nom);pid=b;for(let k=2;next.points.some(x=>x.id===pid);k++)pid=b+"-"+k;next.points.push({id:pid,nom,consigne:cons,actif:on})}
-    else Object.assign(next.points.find(x=>x.id===pid),{nom,consigne:cons,actif:on});
-    if(!next.points.some(x=>x.actif!==false)){toast("Gardez au moins un point proposé aux clients");return}
+    if(isNew){const b="v-"+slug(nom);pid=b;for(let k=2;next.villes.some(x=>x.id===pid);k++)pid=b+"-"+k;next.villes.push({id:pid,nom,actif:on,quartiers})}
+    else Object.assign(next.villes.find(x=>x.id===pid),{nom,actif:on,quartiers});
+    if(!next.villes.some(x=>x.actif!==false)){toast("Gardez au moins une ville proposée aux clients");return}
     const btn=$("#ptSave");btn.disabled=true;
     const pub=JSON.stringify(next)!==JSON.stringify(CONF);
-    if(pub&&!(await saveConf(next,isNew?`nouveau point de livraison ${nom}`:`point de livraison ${nom}${on?"":" en pause"}`))){btn.disabled=false;return}
+    if(pub&&!(await saveConf(next,isNew?`nouvelle ville de livraison ${nom}`:`ville de livraison ${nom}${on?"":" en pause"}`))){btn.disabled=false;return}
     if(HASDB){const lv=$("#ptLiv").value,note=$("#ptNote").value.trim(),P2={...(settings.points||{})};
       if(lv||note)P2[pid]={...(lv?{livreurId:lv}:{}),...(note?{note}:{})};else delete P2[pid];
       if(JSON.stringify(P2)!==JSON.stringify(settings.points||{})&&!(await saveSettings({points:P2}))){btn.disabled=false;return}}
-    d.close();renderSettings();toast(pub?"Point enregistré · visible sur la boutique d’ici 1 à 2 minutes":"Point enregistré");
+    d.close();renderSettings();toast(pub?"Ville enregistrée · visible sur la boutique d’ici 1 à 2 minutes":"Ville enregistrée");
   };
   const del=$("#ptDel");if(del)armDelete(del,async()=>{
-    const next=JSON.parse(JSON.stringify(CONF));next.points=next.points.filter(x=>x.id!==p.id);
-    if(!next.points.some(x=>x.actif!==false)){toast("Gardez au moins un point proposé aux clients");return}
-    if(await saveConf(next,`point de livraison ${p.nom} supprimé`)){if(HASDB&&settings.points&&settings.points[p.id]){const P2={...settings.points};delete P2[p.id];await saveSettings({points:P2})}d.close();renderSettings();toast("Point supprimé")}});
+    const next=JSON.parse(JSON.stringify(CONF));next.villes=next.villes.filter(x=>x.id!==p.id);
+    if(!next.villes.some(x=>x.actif!==false)){toast("Gardez au moins une ville proposée aux clients");return}
+    if(await saveConf(next,`ville de livraison ${p.nom} supprimée`)){if(HASDB&&settings.points&&settings.points[p.id]){const P2={...settings.points};delete P2[p.id];await saveSettings({points:P2})}d.close();renderSettings();toast("Ville supprimée")}});
 }
 
 /* Fiche livreur */
@@ -1234,9 +1247,9 @@ document.addEventListener("click",async e=>{
   const pt=e.target.closest("[data-pt]");if(pt){openPoint(pt.dataset.pt);return}
   const lv=e.target.closest("[data-lv]");if(lv){openLivreur(lv.dataset.lv);return}
   if(e.target.closest("[data-reconf]")){loadConf();return}
-  const mv=e.target.closest("[data-ptmv]");if(mv&&CONF){const i=+mv.dataset.ptmv,j=i+ +mv.dataset.dir,next=JSON.parse(JSON.stringify(CONF));if(j<0||j>=next.points.length)return;
-    [next.points[i],next.points[j]]=[next.points[j],next.points[i]];document.querySelectorAll("[data-ptmv]").forEach(b=>b.disabled=true);
-    if(await saveConf(next,"ordre des points de livraison"))toast("Ordre enregistré · visible sur la boutique d’ici 1 à 2 minutes");renderSettings();return}
+  const mv=e.target.closest("[data-ptmv]");if(mv&&CONF){const i=+mv.dataset.ptmv,j=i+ +mv.dataset.dir,next=JSON.parse(JSON.stringify(CONF));if(j<0||j>=next.villes.length)return;
+    [next.villes[i],next.villes[j]]=[next.villes[j],next.villes[i]];document.querySelectorAll("[data-ptmv]").forEach(b=>b.disabled=true);
+    if(await saveConf(next,"ordre des villes de livraison"))toast("Ordre enregistré · visible sur la boutique d’ici 1 à 2 minutes");renderSettings();return}
   const md=e.target.closest("[data-mtdel]");if(md){const m=motifs().filter(x=>x!==md.dataset.mtdel);if(!m.length){toast("Gardez au moins un motif");return}saveSettings({motifs:m},"Motif retiré");return}
 });
 $("#ptAdd").onclick=()=>openPoint(null);
