@@ -16,6 +16,10 @@
  *   GET  /api/config          -> {config, sha}  réglages publics (reglages.json : numéro, points de livraison)
  *   POST /api/config          <- {config, sha}  enregistre reglages.json dans le dépôt (409 si modifié ailleurs)
  *
+ * Mesure d'audience anonyme (compteurs par jour, sans cookie, sans identifiant, sans adresse IP conservée) :
+ *   POST /api/stat            public : {e:[[type, valeur?], ...]} -> 204
+ *   GET  /api/stats?from&to   (mot de passe) -> {first, daily:{jour:{visit,view,add,cart,form,sent}}, totals:{clé:n}}
+ *
  * Notifications (Web Push, clés VAPID créées automatiquement et gardées dans la base) :
  *   GET  /api/push-key        -> {key}
  *   POST /api/push-subscribe  <- {sub, label}      (mot de passe)
@@ -205,7 +209,8 @@ async function getDB(env) {
       env.DB.prepare("CREATE INDEX IF NOT EXISTS orders_created ON orders (created)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS push_subs (endpoint TEXT PRIMARY KEY, sub TEXT NOT NULL, label TEXT, created TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS hits (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)")
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS hits (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS stats (day TEXT NOT NULL, k TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, k))")
     ]);
     schemaReady = true;
   }
@@ -345,6 +350,59 @@ async function newDemande(request, env, ctx) {
   }).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(job); else await job;
   return json({ ok: true, id: o.id, lines: lines.map(({ name, q, price, was }) => ({ name, q, price, was })), total, saved });
+}
+
+/* ---------- Mesure d'audience anonyme ----------
+   Chaque clé est un compteur du jour (heure de La Réunion). Aucune donnée ne permet d'identifier un visiteur :
+   ni cookie, ni identifiant, ni adresse IP conservée (elle sert seulement, hachée, à limiter les envois abusifs).
+   Conservation : 25 mois (durée retenue par la CNIL pour les statistiques de fréquentation). */
+const STAT_RULES = { visit: 0, pv: 0, cart: 0, form: 0, sent: 0, fallback: 0, promo: 0, wa: 0, src: "word", dev: "word", land: "word", view: "art", add: "art", share: "art", cat: "word", search: "term", search0: "term" };
+const BOT_UA = /bot|crawl|spider|slurp|lighthouse|headless|facebookexternalhit|preview|monitor/i;
+function statKey(e) {
+  if (!Array.isArray(e) || typeof e[0] !== "string" || !(e[0] in STAT_RULES)) return null;
+  const rule = STAT_RULES[e[0]], v = e[1];
+  if (!rule) return e[0];
+  if (typeof v !== "string") return null;
+  if (rule === "word") return /^[a-z0-9-]{1,20}$/.test(v) ? e[0] + ":" + v : null;
+  if (rule === "art") return /^a\d{2,4}$/.test(v) ? e[0] + ":" + v : null;
+  const t = clean(v, 60).toLowerCase().slice(0, 40).trim();
+  if (t.length < 2 || /\d{5,}|@|https?:/.test(t)) return null;          // jamais de numéro, d'e-mail ni d'adresse web
+  return e[0] + ":" + t;
+}
+async function recordStats(request, env) {
+  if (BOT_UA.test(request.headers.get("User-Agent") || "")) return new Response(null, { status: 204 });
+  let b; try { b = JSON.parse((await request.text()).slice(0, 20000)); } catch (e) { return new Response(null, { status: 204 }); }
+  const list = Array.isArray(b && b.e) ? b.e.slice(0, 80) : [];
+  const counts = new Map();
+  for (const e of list) { const k = statKey(e); if (k) counts.set(k, (counts.get(k) || 0) + 1); }
+  if (!counts.size || !env.DB) return new Response(null, { status: 204 });
+  const D = await getDB(env);
+  const salt = await kvInit(D, "salt", () => b64u(crypto.getRandomValues(new Uint8Array(16))));
+  const h = (await sha256hex(salt + "|" + (request.headers.get("CF-Connecting-IP") || "?"))).slice(0, 24), now = Math.floor(Date.now() / 1000);
+  for (const [k, max, win] of [[`st:${h}:${Math.floor(now / 600)}`, 120, 600], [`stall:${Math.floor(now / 3600)}`, 20000, 3600]]) {
+    const r = await D.prepare("INSERT INTO hits (k, n, exp) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1 RETURNING n").bind(k, now + win).first();
+    if (r && r.n > max) return new Response(null, { status: 204 });
+  }
+  const day = reunionDay();
+  await D.batch([...counts].map(([k, n]) => D.prepare("INSERT INTO stats (day, k, n) VALUES (?, ?, ?) ON CONFLICT(day, k) DO UPDATE SET n = n + excluded.n").bind(day, k, n)));
+  if (Math.random() < 0.02) {
+    const old = new Date(Date.now() - 760 * 864e5).toISOString().slice(0, 10);
+    await D.prepare("DELETE FROM stats WHERE day < ?").bind(old).run();
+  }
+  return new Response(null, { status: 204 });
+}
+async function readStats(D, url) {
+  const day = s => /^\d{4}-\d{2}-\d{2}$/.test(s || "") ? s : null;
+  const to = day(url.searchParams.get("to")) || reunionDay(), from = day(url.searchParams.get("from")) || "2000-01-01";
+  const g = "CASE WHEN instr(k, ':') > 0 THEN substr(k, 1, instr(k, ':') - 1) ELSE k END";
+  const [first, daily, totals] = await Promise.all([
+    D.prepare("SELECT MIN(day) AS d FROM stats").first(),
+    D.prepare(`SELECT day, grp, SUM(n) AS n FROM (SELECT day, ${g} AS grp, n FROM stats WHERE day BETWEEN ? AND ?) WHERE grp IN ('visit','pv','view','add','cart','form','sent') GROUP BY day, grp`).bind(from, to).all(),
+    D.prepare("SELECT k, SUM(n) AS n FROM stats WHERE day BETWEEN ? AND ? GROUP BY k").bind(from, to).all()
+  ]);
+  const out = {};
+  for (const r of daily.results || []) (out[r.day] = out[r.day] || {})[r.grp] = r.n;
+  return { first: first && first.d, from, to, daily: out, totals: Object.fromEntries((totals.results || []).map(r => [r.k, r.n])) };
 }
 
 /* ---------- Demandes : page Gestion ---------- */
@@ -524,6 +582,7 @@ export async function onRequest(ctx) {
 
     // Demande d'un client (public)
     if (route === "demande" && M === "POST") return await newDemande(request, env, ctx);
+    if (route === "stat" && M === "POST") return await recordStats(request, env);
     if (route === "push-key" && M === "GET") { const D = await getDB(env); return json({ key: (await vapidKeys(D)).pub }); }
 
     // Page Gestion
@@ -531,7 +590,7 @@ export async function onRequest(ctx) {
     if (route === "config" && M === "POST") { await checkPassword(request, env, true); return json(await saveConfig(env, await body(request))); }
 
     const admin = { "GET orders": 1, "POST order-update": 1, "POST order-create": 1, "POST order-delete": 1, "GET settings": 1, "POST settings": 1,
-      "POST push-subscribe": 1, "POST push-unsubscribe": 1, "POST push-test": 1 };
+      "POST push-subscribe": 1, "POST push-unsubscribe": 1, "POST push-test": 1, "GET stats": 1 };
     if (!admin[M + " " + route]) return json({ error: "Introuvable" }, 404);
     await checkPassword(request, env);
     const D = await getDB(env);
@@ -540,6 +599,7 @@ export async function onRequest(ctx) {
       const { results } = await D.prepare("SELECT * FROM orders ORDER BY created DESC LIMIT 3000").all();
       return json({ orders: (results || []).map(rowToOrder), now: nowIso() });
     }
+    if (route === "stats") return json(await readStats(D, new URL(request.url)));
     const b = await body(request);
     if (route === "order-update") {
       const o = await getOrder(D, String(b.id || ""));

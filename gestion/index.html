@@ -265,6 +265,24 @@ a.btn.pri{color:#fff}
 .stable tr:last-child td{border-bottom:0;font-weight:800}
 .stable td.m{font-weight:700}
 .sempty{color:var(--muted);font-size:13px;margin:0}
+.seg{display:inline-flex;gap:4px;background:var(--bg-alt);border-radius:12px;padding:4px;margin:0 0 16px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 14px;font-size:14px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sy-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.vchart{display:grid;grid-template-columns:1fr;gap:6px}
+.vgrid{position:relative;height:0;border-top:1px dashed var(--line)}.vgrid span{position:absolute;right:0;top:-18px;font-size:11px;color:var(--muted)}
+.vcols{display:flex;align-items:flex-end;gap:2px;height:150px;border-bottom:1px solid var(--line);margin-top:-1px}
+.vcol{flex:1;min-width:0;height:100%;border:0;background:none;padding:0;display:flex;align-items:flex-end;cursor:pointer}
+.vcol i{display:block;width:100%;background:var(--brand);border-radius:4px 4px 0 0;opacity:.85}
+.vcol:hover i,.vcol.on i{opacity:1;background:#0019c4}
+.vlabs{display:flex;gap:2px}.vlabs span{flex:1;min-width:0;font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:visible}
+.vread{margin:4px 0 0;font-size:13px;color:var(--muted);min-height:18px}
+.atable td:first-child{max-width:260px}
+.stable .atable tr:last-child td{font-weight:400}
+.lnk2{border:0;background:none;padding:0;color:var(--fg);font-weight:600;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;font-size:13px}
+.alist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.alist li{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:baseline}.alist li>span:last-child{color:var(--muted);white-space:nowrap}
+.zero{font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:980px;padding:1px 7px;margin-left:4px}
 
 /* Réglages */
 .seth{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -356,8 +374,9 @@ a.btn.pri{color:#fff}
   <!-- Synthèse -->
   <section id="vSynth" hidden>
     <h1>Synthèse</h1>
-    <p class="sub">Ventes livrées, par période. Les demandes en cours et annulées sont comptées à part.</p>
+    <div class="seg" role="group" aria-label="Affichage"><button data-syn="ventes" aria-pressed="true">Ventes</button><button data-syn="audience" aria-pressed="false">Fréquentation du site</button></div>
     <div class="synth" id="synth"></div>
+    <div class="synth" id="audience" hidden></div>
   </section>
 
   <!-- Réglages -->
@@ -982,6 +1001,100 @@ function renderSynth(){
 document.addEventListener("click",e=>{if(e.target.closest("[data-symore]")){symore=!symore;renderSynth()}});
 document.addEventListener("change",e=>{if(e.target.id==="syPeriod"){synthPeriod=e.target.value;renderSynth()}});
 
+/* ---------- Synthèse : Fréquentation (mesure d'audience anonyme) ---------- */
+let synView="ventes",auDays=30,auData=null,auErr="",auMore=false,auLoading=false;
+const isoDay=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const nf=n=>(+n||0).toLocaleString("fr-FR");
+const pctOf=(a,b)=>b?(Math.round(a/b*1000)/10).toLocaleString("fr-FR")+" %":"–";
+function setSyn(v){synView=v;document.querySelectorAll("[data-syn]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.syn===v)));
+  $("#synth").hidden=v!=="ventes";$("#audience").hidden=v!=="audience";if(v==="audience")loadAudience();else renderSynth()}
+async function loadAudience(){
+  if(!HASDB){renderAudience();return}
+  const to=new Date(),from=new Date();from.setDate(from.getDate()-(auDays-1));
+  auLoading=true;renderAudience();
+  try{auData=await API(`stats?from=${isoDay(from)}&to=${isoDay(to)}`);auErr=""}catch(e){if(e instanceof AuthError){showLogin(e.message);return}auErr=e.message||String(e)}
+  auLoading=false;renderAudience();
+}
+function cbars(rows){const max=Math.max(1,...rows.map(r=>r.v));return rows.map(r=>`<div class="brow"><span class="lb">${r.label}${r.sub?`<small>${r.sub}</small>`:""}</span><div class="bar"><i class="${r.cls||""}" style="width:${(r.v/max*100).toFixed(1)}%"></i></div><span class="vl">${nf(r.v)}</span></div>`).join("")}
+function auSeries(){ // regroupe par jour (≤ 31 j), par semaine (≤ 92 j) ou par mois
+  const days=[];for(let i=auDays-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(isoDay(d))}
+  const D=auData.daily||{},g=k=>D[k]||{};
+  const fmt=(s,o)=>new Date(s+"T12:00:00").toLocaleDateString("fr-FR",o);
+  if(auDays<=31)return days.map(k=>({k,label:fmt(k,{day:"numeric"}),title:fmt(k,{weekday:"short",day:"numeric",month:"short"}),visit:g(k).visit||0,view:g(k).view||0}));
+  const out=[],byMonth=auDays>92;
+  for(const k of days){const key=byMonth?k.slice(0,7):(()=>{const d=new Date(k+"T12:00:00");d.setDate(d.getDate()-((d.getDay()+6)%7));return isoDay(d)})();
+    let b=out[out.length-1];if(!b||b.k!==key){b={k:key,visit:0,view:0,label:byMonth?fmt(key+"-15",{month:"short"}):fmt(key,{day:"numeric",month:"numeric"}),
+      title:byMonth?fmt(key+"-15",{month:"long",year:"numeric"}):"semaine du "+fmt(key,{day:"numeric",month:"long"})};out.push(b)}
+    b.visit+=g(k).visit||0;b.view+=g(k).view||0}
+  return out;
+}
+function renderAudience(){
+  const el=$("#audience");
+  const top=`<div class="sy-top"><select id="auPeriod" aria-label="Période"><option value="7"${auDays===7?" selected":""}>7 derniers jours</option><option value="30"${auDays===30?" selected":""}>30 derniers jours</option><option value="90"${auDays===90?" selected":""}>3 derniers mois</option><option value="365"${auDays===365?" selected":""}>12 derniers mois</option></select>
+    <span class="hint">${auData&&auData.first?`Mesure depuis le ${new Date(auData.first+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})} · `:""}anonyme, sans cookie</span></div>`;
+  if(!HASDB){el.innerHTML=`<p class="empty">La fréquentation s’affichera quand la base de données sera reliée au site.</p>`;return}
+  if(!auData){el.innerHTML=top+`<p class="empty">${auErr?esc(auErr):"Chargement…"}</p>`;return}
+  const T=auData.totals||{},v=k=>T[k]||0,sum=pre=>Object.entries(T).filter(([k])=>k.startsWith(pre+":")).reduce((a,[,n])=>a+n,0);
+  const visits=v("visit");
+  if(!Object.keys(T).length){el.innerHTML=top+`<p class="empty">Pas encore de visite enregistrée sur la période. Les compteurs démarrent à la mise en ligne de cette version : revenez après quelques visites.</p>`;return}
+  // série
+  const S=auSeries(),mx=Math.max(1,...S.map(x=>x.visit));
+  const chart=`<div class="vchart" role="img" aria-label="Visites par ${auDays<=31?"jour":auDays<=92?"semaine":"mois"}">
+    <div class="vgrid"><span class="tabnum">${nf(mx)}</span></div>
+    <div class="vcols">${S.map((x,i)=>`<button class="vcol" data-au="${i}" aria-label="${esc(x.title)} : ${x.visit} visite${x.visit>1?"s":""}"><i style="height:${x.visit?Math.max(2,x.visit/mx*100):0}%"></i></button>`).join("")}</div>
+    <div class="vlabs">${S.map((x,i)=>`<span>${S.length<=12||i%Math.ceil(S.length/8)===0?esc(x.label):""}</span>`).join("")}</div></div>
+    <p class="vread" id="auRead">Touchez une barre pour voir le détail.</p>`;
+  // articles : vues, ajouts, demandes sur la période
+  const fromD=new Date(auData.from+"T00:00:00"),toD=new Date(auData.to+"T23:59:59");
+  const inP=orders.filter(o=>{const d=new Date(o.date);return d>=fromD&&d<=toD});
+  const ordBy={};inP.forEach(o=>{const seen=new Set();(o.lines||[]).forEach(l=>{const p=l.id?items.find(x=>x.id===l.id):items.find(x=>l.name===x.name||String(l.name).startsWith(x.name+" — "));if(p&&!seen.has(p.id)){seen.add(p.id);ordBy[p.id]=(ordBy[p.id]||0)+1}})});
+  const arts=items.filter(p=>!p.hidden).map(p=>({p,views:v("view:"+p.id),adds:v("add:"+p.id),ords:ordBy[p.id]||0})).sort((a,b)=>b.views-a.views||b.adds-a.adds||a.p.name.localeCompare(b.p.name,"fr"));
+  const shown=auMore?arts:arts.slice(0,10);
+  const lowConv=arts.filter(a=>a.views>=5&&a.ords/a.views<0.05).slice(0,5);
+  const lowViews=arts.filter(a=>!a.p.oos).slice().sort((a,b)=>a.views-b.views).slice(0,5);
+  const aname=a=>`<button class="lnk2" data-edit="${a.p.id}">${esc(a.p.name)}</button>`;
+  // recherches
+  const searches=Object.entries(T).filter(([k])=>k.startsWith("search:")).map(([k,n])=>({t:k.slice(7),n,zero:v("search0:"+k.slice(7))})).sort((a,b)=>b.n-a.n);
+  const zero=searches.filter(x=>x.zero);
+  const SRC={direct:"Accès direct",facebook:"Facebook",instagram:"Instagram",google:"Google","autre-moteur":"Autre moteur de recherche",whatsapp:"WhatsApp","autre-site":"Autre site"};
+  const src=Object.entries(T).filter(([k])=>k.startsWith("src:")).map(([k,n])=>({label:esc(SRC[k.slice(4)]||k.slice(4)),v:n})).sort((a,b)=>b.v-a.v);
+  const dev=[["mobile","Téléphone"],["ordinateur","Ordinateur"]].map(([k,l])=>({label:l,sub:pctOf(v("dev:"+k),visits),v:v("dev:"+k)})).filter(r=>r.v);
+  const land=[["accueil","Page d’accueil"],["article","Fiche d’un article (lien partagé, Google)"]].map(([k,l])=>({label:l,sub:pctOf(v("land:"+k),visits),v:v("land:"+k)})).filter(r=>r.v);
+  const cats=CATS.map(([k,l])=>({label:l,v:v("cat:"+k)})).filter(r=>r.v).sort((a,b)=>b.v-a.v);
+  const funnel=[["Visites",visits],["Paniers ouverts",v("cart")],["Formulaires commencés",v("form")],["Demandes envoyées",v("sent")]].map(([l,n],i)=>({label:l,sub:i?pctOf(n,visits)+" des visites":"",v:n}));
+  const none='<p class="sempty">Rien sur la période.</p>';
+  el.innerHTML=top+`<div class="kpis">
+    <div class="kpi main"><span>Visites</span><b class="tabnum">${nf(visits)}</b><small>${nf(v("pv"))} pages chargées</small></div>
+    <div class="kpi"><span>Fiches articles vues</span><b class="tabnum">${nf(sum("view"))}</b><small>${visits?(sum("view")/visits).toFixed(1).replace(".",","):"–"} par visite</small></div>
+    <div class="kpi"><span>Ajouts au panier</span><b class="tabnum">${nf(sum("add"))}</b><small>${nf(v("cart"))} paniers ouverts</small></div>
+    <div class="kpi"><span>Demandes envoyées</span><b class="tabnum">${nf(v("sent"))}</b><small>${pctOf(v("sent"),visits)} des visites</small></div>
+    <div class="kpi"><span>Recherches</span><b class="tabnum">${nf(searches.reduce((a,x)=>a+x.n,0))}</b><small>${zero.length} terme${zero.length>1?"s":""} sans résultat</small></div>
+  </div>
+  <section class="spanel"><h3>Visites par ${auDays<=31?"jour":auDays<=92?"semaine":"mois"}</h3>${chart}</section>
+  <div class="sgrid">
+    <section class="spanel"><h3>Parcours d’achat</h3>${cbars(funnel)}<p class="hint">Chaque étape est comptée une fois par visite.</p></section>
+    <section class="spanel"><h3>Provenance des visites</h3>${src.length?cbars(src):none}<p class="hint">« Accès direct » : lien ouvert depuis WhatsApp ou un SMS, favori, adresse tapée.</p></section>
+    <section class="spanel" style="grid-column:1/-1"><h3>Articles <small>vues · ajouts au panier · demandes sur la période</small></h3>
+      <div class="stable"><table class="atable"><thead><tr><th>Article</th><th>Vues</th><th>Ajouts</th><th>Demandes</th><th>Vues → demande</th></tr></thead><tbody>
+      ${shown.map(a=>`<tr><td>${aname(a)}</td><td>${nf(a.views)}</td><td>${nf(a.adds)}</td><td>${nf(a.ords)}</td><td>${a.views?pctOf(a.ords,a.views):"–"}</td></tr>`).join("")}</tbody></table></div>
+      ${arts.length>10?`<button class="more" data-aumore>${auMore?"Voir moins":`Voir les ${arts.length} articles`}</button>`:""}</section>
+    <section class="spanel"><h3>Souvent vus, peu demandés</h3>${lowConv.length?`<ul class="alist">${lowConv.map(a=>`<li>${aname(a)}<span class="tabnum">${nf(a.views)} vues · ${nf(a.ords)} demande${a.ords>1?"s":""}</span></li>`).join("")}</ul><p class="hint">Prix, photos ou description à revoir ?</p>`:'<p class="sempty">Aucun article vu au moins 5 fois sans être demandé.</p>'}</section>
+    <section class="spanel"><h3>Les moins vus</h3><ul class="alist">${lowViews.map(a=>`<li>${aname(a)}<span class="tabnum">${nf(a.views)} vue${a.views>1?"s":""}</span></li>`).join("")}</ul><p class="hint">À mettre en avant : promotion, publication Facebook, première photo.</p></section>
+    <section class="spanel"><h3>Recherches des clients</h3>${searches.length?`<ul class="alist">${searches.slice(0,15).map(x=>`<li><span>« ${esc(x.t)} »${x.zero?' <b class="zero">aucun résultat</b>':""}</span><span class="tabnum">${nf(x.n)}</span></li>`).join("")}</ul>${zero.length?'<p class="hint">« Aucun résultat » : un article que les clients cherchent et que la boutique n’a pas, ou un mot à ajouter dans une description.</p>':""}`:none}</section>
+    <section class="spanel"><h3>Appareils et arrivée</h3>${dev.length?cbars(dev):none}${land.length?cbars(land):""}</section>
+    <section class="spanel"><h3>Catégories consultées</h3>${cats.length?cbars(cats):none}</section>
+    <section class="spanel"><h3>Autres actions</h3>${cbars([{label:"Filtre « % Promo » utilisé",v:v("promo")},{label:"Clics vers WhatsApp (question)",v:v("wa")},{label:"Fiches partagées",v:sum("share")},{label:"Envois de secours WhatsApp/SMS",v:v("fallback")}])}</section>
+  </div>`;
+}
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-syn]");if(s){setSyn(s.dataset.syn);return}
+  const c=e.target.closest("[data-au]");if(c&&auData){const x=auSeries()[+c.dataset.au];document.querySelectorAll(".vcol").forEach(b=>b.classList.toggle("on",b===c));
+    $("#auRead").textContent=`${x.title[0].toUpperCase()+x.title.slice(1)} : ${nf(x.visit)} visite${x.visit>1?"s":""} · ${nf(x.view)} fiche${x.view>1?"s":""} vue${x.view>1?"s":""}`;return}
+  if(e.target.closest("[data-aumore]")){auMore=!auMore;renderAudience()}
+});
+document.addEventListener("pointerover",e=>{const c=e.target.closest&&e.target.closest("[data-au]");if(c&&e.pointerType==="mouse")c.click()});
+document.addEventListener("change",e=>{if(e.target.id==="auPeriod"){auDays=+e.target.value;auData=null;loadAudience()}});
+
 /* ---------- Réglages : points de livraison, livreurs, demandes, boutique ----------
    Public (reglages.json, dans le dépôt) : numéro WhatsApp, points de livraison (nom, consigne, actif, ordre).
    Interne (base D1) : fiches livreurs, livreur habituel et note de chaque point, motifs, modèle de message. */
@@ -1211,7 +1324,7 @@ function setTab(t){
   document.body.classList.toggle("wide",t==="orders"||t==="synth");document.body.classList.toggle("t-articles",t==="articles");
   try{history.replaceState(null,"","#"+TAB_HASH[t])}catch(e){}
   ls.set("tab",t);
-  if(t==="orders")renderOrders();if(t==="synth")renderSynth();if(t==="settings")renderSettings();if(t==="articles")render();
+  if(t==="orders")renderOrders();if(t==="synth"){if(synView==="audience")loadAudience();else renderSynth()}if(t==="settings")renderSettings();if(t==="articles")render();
 }
 const tabFromHash=()=>{const h=location.hash.slice(1);return Object.keys(TAB_HASH).find(k=>TAB_HASH[k]===h)};
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){setTab(b.dataset.tab);scrollTo(0,0)}});

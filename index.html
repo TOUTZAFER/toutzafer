@@ -572,8 +572,9 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
       <dt>WhatsApp et Facebook</dt><dd>Si vous nous écrivez via WhatsApp ou Facebook, vos échanges sont aussi soumis aux conditions de ces services, édités par Meta.</dd>
     </dl>
 
-    <h2>Cookies</h2>
-    <p>Le site n’utilise ni cookie publicitaire ni outil de mesure d’audience. Votre panier et le brouillon de votre demande sont mémorisés dans votre navigateur, uniquement pour le fonctionnement du site. Ce stockage est strictement nécessaire et ne demande donc pas de consentement.</p>
+    <h2>Cookies et mesure d’audience</h2>
+    <p>Le site n’utilise aucun cookie. Votre panier et le brouillon de votre demande sont mémorisés dans votre navigateur, uniquement pour le fonctionnement du site : ce stockage est strictement nécessaire et ne demande donc pas de consentement.</p>
+    <p>Pour améliorer le catalogue, le site compte de façon anonyme les visites et ce qui est consulté (articles vus, ajouts au panier, recherches, provenance du type « Facebook » ou « Google », téléphone ou ordinateur). Ces compteurs sont regroupés par jour, sans identifiant, sans cookie et sans conservation de votre adresse IP : ils ne permettent pas de vous reconnaître. Ils sont conservés 25 mois.</p>
 
   </article>
 </main>
@@ -771,7 +772,7 @@ function renderCartBar(){const n=count(),bar=$("#cartBar"),hide=!n||$("#shop").h
   bar.hidden=hide;$("#cbN").textContent=`${n} article${n>1?"s":""}`;$("#cbT").textContent=eur(total())}
 function bump(){[$("#cartCount"),$("#cbT")].forEach(el=>{el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump")})}
 
-function inc(k){if(outOfStock.has(kid(k)))return;cart[k]=(cart[k]||0)+1;if(cart[k]===1)toast("Ajouté au panier");afterCartChange();bump()}
+function inc(k){if(outOfStock.has(kid(k)))return;stat("add",kid(k));cart[k]=(cart[k]||0)+1;if(cart[k]===1)toast("Ajouté au panier");afterCartChange();bump()}
 function dec(id){if(!cart[id])return;cart[id]--;if(!cart[id])delete cart[id];afterCartChange()}
 function afterCartChange(){save();refreshQuick();renderCount();if($("#drawer").classList.contains("on"))renderDrawer();if(sheetId)refreshSheetAct()}
 
@@ -799,7 +800,7 @@ function openSheet(id){const p=byId(id);if(!p)return;
   openSheetRaw(id)}
 function closeSheet(){const was=!!sheetId;closeSheetRaw();if(was&&pathArticle()){if(sheetPushed){sheetPushed=false;history.back()}else{try{history.replaceState(null,"","/")}catch(e){}}}}
 function go(url){try{history.pushState(null,"",url)}catch(e){location.href=url;return}sheetPushed=false;route()}
-function openSheetRaw(id){sheetId=id;sheetImg=0;sheetVar=byId(id)?.variants?.[0].name||"";document.title=`${byId(id).name} · Tout’zafer`;renderSheet();$("#sheet").classList.add("on");$("#scrim").classList.add("on");$("#sheet").setAttribute("aria-hidden","false");$("#sheet .x")?.focus()}
+function openSheetRaw(id){stat("view",id);sheetId=id;sheetImg=0;sheetVar=byId(id)?.variants?.[0].name||"";document.title=`${byId(id).name} · Tout’zafer`;renderSheet();$("#sheet").classList.add("on");$("#scrim").classList.add("on");$("#sheet").setAttribute("aria-hidden","false");$("#sheet .x")?.focus()}
 function closeSheetRaw(){sheetId=null;document.title=HOME_TITLE;const sh=$("#sheet");sh.style.transform="";sh.style.transition="";$("#scrim").style.opacity="";sh.classList.remove("on");$("#sheet").setAttribute("aria-hidden","true");if(!$("#drawer").classList.contains("on"))$("#scrim").classList.remove("on")}
 function renderSheet(){
   const p=byId(sheetId);if(!p)return;const out=outOfStock.has(p.id);
@@ -835,7 +836,7 @@ function goImg(i){const p=byId(sheetId);if(!p)return;sheetImg=Math.max(0,Math.mi
 
 /* ---------- Panier ---------- */
 let removedNotice = [];
-function openCart(){closeSheet();renderDrawer();$("#cartBar").hidden=true;$("#drawer").classList.add("on");$("#scrim").classList.add("on");$("#drawer").setAttribute("aria-hidden","false")}
+function openCart(){statOnce("cart");closeSheet();renderDrawer();$("#cartBar").hidden=true;$("#drawer").classList.add("on");$("#scrim").classList.add("on");$("#drawer").setAttribute("aria-hidden","false")}
 function closeCart(){$("#drawer").classList.remove("on");setTimeout(renderCartBar,0);$("#scrim").classList.remove("on");$("#drawer").setAttribute("aria-hidden","true");if(drawerView==="done")drawerView="cart"}
 
 function renderDrawer(){
@@ -883,7 +884,7 @@ function bindForm(){
   const hint=()=>{const pt=pointById($("#fPick").value),h=$("#pkHint");h.hidden=!(pt&&pt.consigne);h.textContent=pt&&pt.consigne?pt.consigne:""};
   $("#fPick").addEventListener("change",hint);hint();
 
-  ["fPrenom","fNom","fTel","fPick","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
+  ["fPrenom","fNom","fTel","fPick","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{statOnce("form");ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
   ok();
   $("#f").addEventListener("submit",e=>e.preventDefault());
   const onSend=e=>{const btn=e.currentTarget;
@@ -977,7 +978,7 @@ async function postOrder(payload,o,btn){
 }
 function clearCart(){cart={};store.set("draft",{});save();renderGrid();renderCount()}
 function showSent(o){
-  lastSend=null;
+  lastSend=null;stat("sent");flushStat();
   lastDoneTitle="Demande envoyée";
   lastDoneHTML=`<div class="done"><div class="ck ok-ck">${ICO_CK}</div>
     <h3>Merci ${esc(o.prenom)}, c’est envoyé !</h3><p>Votre demande <b class="tabnum">${esc(o.id)}</b> est bien arrivée chez Tout’zafer.</p></div>
@@ -1074,6 +1075,39 @@ async function loadCatalogue(){
   renderHero();renderCatSelect();renderCount();if(curView==="shop")renderGrid();
   route();
 }
+/* ---------- Mesure d'audience anonyme ----------
+   Compte ce qui est consulté (fiches, paniers, recherches…) pour améliorer le catalogue.
+   Aucun cookie, aucun identifiant : rien n'est lu ni écrit sur l'appareil ; le serveur ne garde que des totaux par jour. */
+var STAT={q:[],t:null,once:new Set(),off:/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)||!/^https?:$/.test(location.protocol)};
+function stat(k,v){if(!STAT||STAT.off)return;STAT.q.push(v===undefined?[k]:[k,String(v)]);clearTimeout(STAT.t);STAT.t=setTimeout(flushStat,6000)}
+function statOnce(k){if(!STAT.once.has(k)){STAT.once.add(k);stat(k)}}
+function flushStat(){clearTimeout(STAT.t);if(!STAT.q.length)return;const body=JSON.stringify({e:STAT.q.splice(0,80)});
+  try{if(navigator.sendBeacon&&navigator.sendBeacon("/api/stat",new Blob([body],{type:"application/json"})))return}catch(e){}
+  try{fetch("/api/stat",{method:"POST",body,headers:{"Content-Type":"application/json"},keepalive:true}).catch(()=>{})}catch(e){}}
+addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushStat()});
+addEventListener("pagehide",flushStat);
+(function(){ // une visite = une arrivée depuis l'extérieur du site
+  let ref="";try{ref=document.referrer?new URL(document.referrer).hostname:""}catch(e){}
+  const ua=navigator.userAgent,utm=new URLSearchParams(location.search).get("utm_source");
+  stat("pv");if(ref===location.hostname)return;
+  const src=utm?String(utm).toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,20)||"autre"
+    :/FBAN|FBAV|FB_IAB/.test(ua)||/facebook\.|fb\.me/.test(ref)?"facebook":/Instagram/.test(ua)||/instagram\./.test(ref)?"instagram"
+    :/google\./.test(ref)?"google":/bing\.|duckduckgo|qwant|yahoo|ecosia/.test(ref)?"autre-moteur":/whatsapp|wa\.me/.test(ref)?"whatsapp":ref?"autre-site":"direct";
+  stat("visit");stat("src",src);stat("dev",matchMedia("(pointer:coarse)").matches||/Mobi|Android/.test(ua)?"mobile":"ordinateur");stat("land",pathArticle()?"article":"accueil");
+})();
+// recherches : envoyées après une pause de frappe, avec le signal « aucun résultat »
+let statSearchT=null;
+$("#q").addEventListener("input",()=>{clearTimeout(statSearchT);statSearchT=setTimeout(()=>{const t=query.trim();if(t.length<2)return;
+  stat("search",t);if(/^0 article/.test($("#resultLine").textContent))stat("search0",t)},1500)});
+$("#catSel").addEventListener("change",e=>{if(e.target.value!=="all")stat("cat",e.target.value)});
+document.addEventListener("click",e=>{
+  const j=e.target.closest("[data-jump]");if(j)stat("cat",j.dataset.jump);
+  if(e.target.closest("[data-promo]")&&promoOnly)stat("promo");
+  if(e.target.closest("#waLink,.qlink"))stat("wa");
+  const sh=e.target.closest(".shbtn");if(sh&&sheetId)stat("share",sheetId);
+  if(e.target.closest("[data-fb]"))stat("fallback");
+},true);
+
 loadCatalogue();loadReglages();
 </script>
 
