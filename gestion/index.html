@@ -323,7 +323,7 @@ a.btn.pri{color:#fff}
   <div class="wrap">
     <img class="logo" src="../img/logo/wordmark.svg" alt="Tout’zafer" width="86" height="27"><span class="tag">Gestion</span>
     <span class="sp"></span>
-    <a href="../" target="_blank" rel="noopener">Boutique ↗</a>
+    <a href="../?equipe=1" target="_blank" rel="noopener">Boutique ↗</a>
     <button class="lk" id="logout" hidden>Déconnexion</button>
   </div>
 </header>
@@ -396,7 +396,9 @@ a.btn.pri{color:#fff}
       <label class="fld">Numéro WhatsApp et téléphone affichés sur le site<input class="inp tabnum" id="waIn" inputmode="tel" autocomplete="off"></label>
       <p class="hint" style="font-size:13px">Sert aussi pour les demandes envoyées par WhatsApp ou SMS quand le site n’arrive pas à les enregistrer. Visible sur la boutique 1 à 2 minutes après l’enregistrement.</p>
       <div class="oacts"><button class="btn pri" id="waSave">Enregistrer le numéro</button></div>
-      <p class="hint" style="font-size:13px">Livraison offerte et délai de livraison : fixés dans les conditions générales de vente, à modifier ensemble si besoin.</p></div>
+      <p class="hint" style="font-size:13px">Livraison offerte et délai de livraison : fixés dans les conditions générales de vente, à modifier ensemble si besoin.</p>
+      <label class="tglrow"><input type="checkbox" id="teamOn"> Ne pas compter mes visites sur cet appareil</label>
+      <p class="hint" style="font-size:13px">Pour les statistiques. Activé d’office sur les appareils où Gestion est ouverte. Sur iPhone, ouvrez la boutique avec le lien « Boutique ↗ » en haut de Gestion pour que Safari soit aussi exclu.</p></div>
     <div class="setp" id="pushPanel"></div>
   </section>
 </main>  </section>
@@ -1244,6 +1246,9 @@ $("#mtIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("#mtAdd").click()
 $("#mdSave").onclick=()=>{const t=$("#mdTxt").value.trim();if(!t){toast("Le message est vide");return}saveSettings({modele:t===DEFAULT_MODELE?"":t},"Message enregistré")};
 $("#mdReset").onclick=()=>{$("#mdTxt").value=DEFAULT_MODELE;saveSettings({modele:""},"Message d’origine rétabli")};
 bindTelFormat($("#waIn"));
+// visites de l'équipe exclues des statistiques (réglage propre à chaque appareil et navigateur)
+try{if(localStorage.getItem("tz_equipe")===null)localStorage.setItem("tz_equipe","1");$("#teamOn").checked=localStorage.getItem("tz_equipe")==="1"}catch(e){}
+$("#teamOn").onchange=e=>{try{localStorage.setItem("tz_equipe",e.target.checked?"1":"0")}catch(x){}toast(e.target.checked?"Vos visites ne seront plus comptées sur cet appareil":"Vos visites seront de nouveau comptées sur cet appareil")};
 $("#waSave").onclick=async()=>{const wa=toIntl($("#waIn").value);if(!wa){toast("Numéro invalide");$("#waIn").focus();return}
   if(!CONF||CONF.contact.whatsapp===wa){toast("Numéro inchangé");return}
   const next=JSON.parse(JSON.stringify(CONF));next.contact={...next.contact,whatsapp:wa};$("#waSave").disabled=true;

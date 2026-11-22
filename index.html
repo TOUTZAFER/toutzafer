@@ -1078,7 +1078,11 @@ async function loadCatalogue(){
 /* ---------- Mesure d'audience anonyme ----------
    Compte ce qui est consulté (fiches, paniers, recherches…) pour améliorer le catalogue.
    Aucun cookie, aucun identifiant : rien n'est lu ni écrit sur l'appareil ; le serveur ne garde que des totaux par jour. */
-var STAT={q:[],t:null,once:new Set(),off:/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)||!/^https?:$/.test(location.protocol)};
+// Appareils de l'équipe (ouverts depuis Gestion, lien « Boutique ↗ » avec ?equipe=1) : leurs visites ne sont pas comptées
+function isTeam(){try{const q=new URLSearchParams(location.search);
+  if(q.has("equipe")){localStorage.setItem("tz_equipe","1");q.delete("equipe");history.replaceState(history.state,"",location.pathname+(q.toString()?"?"+q:"")+location.hash)}
+  return localStorage.getItem("tz_equipe")==="1"}catch(e){return false}}
+var STAT={q:[],t:null,once:new Set(),off:/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)||!/^https?:$/.test(location.protocol)||isTeam()};
 function stat(k,v){if(!STAT||STAT.off)return;STAT.q.push(v===undefined?[k]:[k,String(v)]);clearTimeout(STAT.t);STAT.t=setTimeout(flushStat,6000)}
 function statOnce(k){if(!STAT.once.has(k)){STAT.once.add(k);stat(k)}}
 function flushStat(){clearTimeout(STAT.t);if(!STAT.q.length)return;const body=JSON.stringify({e:STAT.q.splice(0,80)});
