@@ -369,7 +369,7 @@ a.btn.pri{color:#fff}
     <div class="setp"><h3>Demandes</h3>
       <div class="fld">Motifs d’annulation<div class="chips" id="mtChips"></div>
         <div class="addrow"><input class="inp" id="mtIn" placeholder="Nouveau motif" aria-label="Nouveau motif d’annulation"><button class="btn" id="mtAdd">Ajouter</button></div></div>
-      <label class="fld">Message de confirmation au client <small>repères remplacés automatiquement : {prenom} {nom} {numero} {articles} {total} {point} {livreur}</small><textarea class="ta" id="mdTxt" rows="8"></textarea></label>
+      <label class="fld">Message de confirmation au client <small>repères remplacés automatiquement : {prenom} {nom} {numero} {articles} {total} {point} {livreur}</small><textarea class="ta" id="mdTxt" rows="12"></textarea></label>
       <div class="oacts"><button class="btn pri" id="mdSave">Enregistrer le message</button><button class="btn" id="mdReset">Revenir au message d’origine</button></div></div>
     <div class="setp"><h3>Boutique</h3>
       <label class="fld">Numéro WhatsApp et téléphone affichés sur le site<input class="inp tabnum" id="waIn" inputmode="tel" autocomplete="off"></label>
@@ -644,7 +644,7 @@ function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=ite
 const STEPS=[["appeler","À appeler"],["livraison","En livraison"],["livree","Livrée"],["annulee","Annulée"]];
 const STEPNAME=Object.fromEntries(STEPS);
 const DEFAULT_MOTIFS=["Ne souhaite plus l’article","Injoignable","Absent au rendez-vous","Article indisponible","Autre"];
-const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer. Je vous confirme votre commande n° {numero} :\n{articles}\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\nLivraison offerte au point : {point}. Votre livreur vous contactera pour convenir du jour et de l’heure.\nMerci pour votre confiance !";
+const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer.\n\nJe vous confirme votre commande n° {numero} :\n{articles}\n\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\n\nLivraison offerte au point : {point}.\nVotre livreur vous contactera pour convenir du jour et de l’heure.\n\nMerci pour votre confiance !";
 const STATUTS={entrepreneur:"Entrepreneur (vous-même)",salarie:"Salarié",auto:"Auto-entrepreneur",autre:"Autre"};
 // Réglages publics (reglages.json : numéro, points de livraison) ; secours si le fichier n'a pas pu être lu
 let CONF=null,confSha=null,confErr="";
@@ -764,7 +764,7 @@ function orderCard(o){
     <span class="tot tabnum">${eur(o.total)}</span>${act}</article>`;
 }
 function transmitText(o){const pt=pointOf(o);
-  return `Livraison Tout’zafer · n° ${o.id}\nClient : ${o.prenom} ${o.nom} · ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
+  return `Livraison Tout’zafer · n° ${o.id}\n\nClient : ${o.prenom} ${o.nom}\nTéléphone : ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n\nArticles :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\n\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\n\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
 function renderOrders(){
   const todo=orders.filter(o=>o.status==="appeler").length;
   $("#ordBadge").textContent=todo;$("#ordBadge").hidden=!todo;
@@ -829,7 +829,7 @@ function openConfirm(id){
   const o=orders.find(x=>x.id===id);if(!o)return;const d=$("#dlg");
   d.innerHTML=`<div class="dh"><h2 id="dlgT">Confirmer par écrit</h2><button class="x" data-close aria-label="Fermer">×</button></div>
   <div class="db"><p class="hint" style="font-size:13px;margin:0">Après l’appel, envoyez ce récapitulatif à ${esc(o.prenom)}. Il confirme la vente et vous garde une trace écrite.</p>
-    <label class="fld">Message <small>modifiable avant l’envoi</small><textarea class="ta" id="cTxt" rows="12"></textarea></label></div>
+    <label class="fld">Message <small>modifiable avant l’envoi</small><textarea class="ta" id="cTxt" rows="15"></textarea></label></div>
   <div class="df"><button class="btn" id="cCopy">Copier</button><span class="sp"></span><a class="btn" id="cSms">SMS</a><a class="btn wa" id="cWa" target="_blank" rel="noopener">WhatsApp</a></div>`;
   const it=intlTel(o.tel);
   const links=()=>{const t=$("#cTxt").value;$("#cWa").href=it?`https://wa.me/${it}?text=${encodeURIComponent(t)}`:"#";$("#cSms").href=`sms:${o.tel}${isApple?"&":"?"}body=${encodeURIComponent(t)}`};
