@@ -1,0 +1,34 @@
+{
+ "contact": {
+  "whatsapp": "262693473945"
+ },
+ "points": [
+  {
+   "id": "p-saint-denis",
+   "nom": "Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",
+   "consigne": "",
+   "actif": true,
+   "court": "St-Denis · Mosquée",
+   "lat": -20.87932,
+   "lon": 55.45233
+  },
+  {
+   "id": "p-saint-pierre",
+   "nom": "Saint-Pierre — Parking Kiabi",
+   "consigne": "",
+   "actif": true,
+   "court": "Kiabi St-Pierre",
+   "lat": -21.33944,
+   "lon": 55.47547
+  },
+  {
+   "id": "p-saint-leu",
+   "nom": "Saint-Leu — Parking E.Leclerc Le Portail",
+   "consigne": "",
+   "actif": true,
+   "court": "Leclerc Le Portail",
+   "lat": -21.21845,
+   "lon": 55.30119
+  }
+ ]
+}

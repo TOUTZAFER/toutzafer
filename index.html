@@ -375,6 +375,7 @@ form.f{display:flex;flex-direction:column;gap:14px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:400px){.row2{grid-template-columns:1fr}}
 label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500}
+.pkhint{font-size:12px;color:var(--brand-text);background:var(--brand-soft);border-radius:10px;padding:8px 10px;font-weight:500}
 .fl input,.fl select{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:11px 12px;font:inherit;font-weight:400;width:100%}
 .fl .err{color:var(--warn);font-size:12px;font-weight:400}
 .consent{display:flex;gap:10px;font-size:12px;color:var(--muted);align-items:flex-start}
@@ -582,16 +583,30 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const WA_NUMBER = "262693473945"; // numéro WhatsApp de l'entreprise : +262 693 47 39 45
+// Numéro WhatsApp et points de livraison : lus dans reglages.json (modifiables depuis Gestion → Réglages).
+// Les valeurs ci-dessous servent seulement si ce fichier ne se charge pas.
+let WA_NUMBER = "262693473945";
+let PICKUP_POINTS = [
+  {id:"p-saint-denis",nom:"Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",consigne:""},
+  {id:"p-saint-pierre",nom:"Saint-Pierre — Parking Kiabi",consigne:""},
+  {id:"p-saint-leu",nom:"Saint-Leu — Parking E.Leclerc Le Portail",consigne:""}
+];
 const FREE_SHIP_MIN = 0; // livraison offerte, sans minimum
 function shipIsFree(){return total()>=FREE_SHIP_MIN}
-// Points de livraison : nom affiché + coordonnées GPS (ajouter une ligne par nouveau point)
-const PICKUP_POINTS = [
-  {name:"Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",short:"St-Denis · Mosquée",lat:-20.87932,lon:55.45233},
-  {name:"Saint-Pierre — Parking Kiabi",short:"Kiabi St-Pierre",lat:-21.33944,lon:55.47547},
-  {name:"Saint-Leu — Parking E.Leclerc Le Portail",short:"Leclerc Le Portail",lat:-21.21845,lon:55.30119}
-];
-const PICKUPS = PICKUP_POINTS.map(p=>p.name);
+const pointById=id=>PICKUP_POINTS.find(p=>p.id===id);
+async function loadReglages(){
+  try{const r=await fetch("reglages.json?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);const c=await r.json();
+    const wa=String(c.contact&&c.contact.whatsapp||"");if(/^\d{11,15}$/.test(wa))WA_NUMBER=wa;
+    const pts=(Array.isArray(c.points)?c.points:[]).filter(p=>p&&p.actif!==false&&p.id&&p.nom);if(pts.length)PICKUP_POINTS=pts}
+  catch(e){console.warn("réglages",e)}
+  applyContact();if(!$("#drawer").classList.contains("on"))renderDrawer();
+}
+function waNational(){const w=WA_NUMBER;return fmtTelInput(w.startsWith("262")?"0"+w.slice(3):w.startsWith("33")?"0"+w.slice(2):"+"+w)}
+function applyContact(){
+  const t=waNational();$("#waText").textContent=t;
+  $("#waLink").href=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Bonjour Tout'zafer, j'ai une question sur un article.")}`;
+  $("#legalTel").textContent=t;document.querySelectorAll("[data-tel]").forEach(e=>e.textContent=t);
+}
 const CATS = [["all","Tout"],["cuisine","Cuisine"],["rangement","Rangement"],["maison","Maison"],["enfants","Bébé & enfants"],["animaux","Animaux"]];
 const CATNAME = Object.fromEntries(CATS);
 
@@ -664,9 +679,7 @@ function renderHero(){
   $("#slides").innerHTML=heroList.map(([src],i)=>{const b=src.split("/").pop().replace(".jpg","");return `<div class="slide${i===heroIdx?" on":""}"><img src="img/w/${b}-1296.webp" srcset="img/w/${b}-800.webp 800w, img/w/${b}-1296.webp 1296w" sizes="100vw" alt="" ${i?'loading="lazy"':""} width="1296" height="777"></div>`}).join("");
   $("#dots").innerHTML=heroList.map((_,i)=>`<button data-slide="${i}" aria-label="Image ${i+1}" aria-current="${i===heroIdx}"></button>`).join("");
   showSlide(heroIdx);
-  const wa=WA_NUMBER;$("#waText").textContent="0"+wa.slice(3).replace(/(\d{3})(\d{2})(\d{2})(\d{2})/,"$1 $2 $3 $4");
-  const waHref=`https://wa.me/${wa}?text=${encodeURIComponent("Bonjour Tout'zafer, j'ai une question sur un article.")}`;
-  $("#waLink").href=waHref;$("#legalTel").textContent=$("#waText").textContent;document.querySelectorAll("[data-tel]").forEach(e=>e.textContent=$("#waText").textContent);
+  applyContact();
   startHero();
 }
 function showSlide(i){
@@ -831,7 +844,7 @@ function renderDrawer(){
         <label class="fl">Nom<input id="fNom" autocomplete="family-name" value="${esc(d.nom||"")}" required></label>
       </div>
       <label class="fl">Téléphone<input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0692 12 34 56" value="${esc(d.tel||"")}" required><span class="err" id="eTel" hidden>Indiquez un numéro à 10 chiffres (ex. 0692 12 34 56) ou au format +262.</span></label>
-      <label class="fl">Point de livraison<select id="fPick"><option value="">Choisir un point de livraison</option>${PICKUPS.map(p=>`<option${d.pick===p?" selected":""}>${esc(p)}</option>`).join("")}</select></label>
+      <label class="fl">Point de livraison<select id="fPick"><option value="">Choisir un point de livraison</option>${PICKUP_POINTS.map(p=>`<option value="${esc(p.id)}"${d.pickId===p.id||(!d.pickId&&d.pick===p.nom)?" selected":""}>${esc(p.nom)}</option>`).join("")}</select><span class="pkhint" id="pkHint" hidden></span></label>
       <label class="consent"><input type="checkbox" id="fOk"> <span>J'accepte que Tout’zafer utilise mes coordonnées uniquement pour traiter cette demande et me rappeler. Elles ne sont ni revendues ni utilisées pour de la publicité.</span></label>
       <input class="hp" id="fSite" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="cgvnote">La vente est conclue lors de notre appel de confirmation, selon nos <a href="#cgv" data-cgvlink>conditions générales de vente</a>.</p>
@@ -849,7 +862,9 @@ function bindForm(){
     const free=shipIsFree(),miss=FREE_SHIP_MIN-total();
     const valid=!!($("#fPrenom").value.trim()&&$("#fNom").value.trim()&&normTel($("#fTel").value)&&$("#fPick").value&&$("#fOk").checked);
     const btn=$("#send");btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid)};
-  const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,pick:$("#fPick").value});
+  const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,pickId:$("#fPick").value});
+  const hint=()=>{const pt=pointById($("#fPick").value),h=$("#pkHint");h.hidden=!(pt&&pt.consigne);h.textContent=pt&&pt.consigne?pt.consigne:""};
+  $("#fPick").addEventListener("change",hint);hint();
 
   ["fPrenom","fNom","fTel","fPick","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
   ok();
@@ -904,7 +919,7 @@ function bindTelFormat(el){
 const fmtTel=t=>fmtTelInput(t);
 function newId(){const d=new Date(),z=n=>String(n).padStart(2,"0");return `TZ-${z(d.getDate())}${z(d.getMonth()+1)}${String(d.getFullYear()).slice(2)}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`}
 function buildOrder(){
-  return {id:newId(),date:new Date().toISOString(),prenom:$("#fPrenom").value.trim(),nom:$("#fNom").value.trim(),tel:normTel($("#fTel").value),mode:"retrait",pick:$("#fPick").value,shipFree:shipIsFree(),
+  return {id:newId(),date:new Date().toISOString(),prenom:$("#fPrenom").value.trim(),nom:$("#fNom").value.trim(),tel:normTel($("#fTel").value),mode:"retrait",pickId:$("#fPick").value,pick:(pointById($("#fPick").value)||{}).nom||"",shipFree:shipIsFree(),
     lines:Object.entries(cart).map(([k,q])=>({name:lineName(k),q,price:byId(kid(k)).price})),total:total(),status:"appeler"};
 }
 const recapOf=o=>`Demande ${o.id}\n${o.prenom} ${o.nom} · ${fmtTel(o.tel)}\nPoint de livraison : ${o.pick} (livraison ${o.shipFree?"offerte":"frais à confirmer"})\n\n${o.lines.map(l=>`• ${l.q} × ${l.name} (${eur(l.price*l.q)})`).join("\n")}\n\nTotal indicatif : ${eur(o.total)}`;
@@ -922,7 +937,7 @@ let lastSend=null;
 // Si l'envoi échoue, le client peut la transmettre sur WhatsApp ou par SMS, message déjà rédigé.
 function sendOrder(){
   const o=buildOrder();
-  const payload={prenom:o.prenom,nom:o.nom,tel:o.tel,pick:o.pick,consent:true,total:o.total,site:($("#fSite")||{}).value||"",
+  const payload={prenom:o.prenom,nom:o.nom,tel:o.tel,pickId:o.pickId,pick:o.pick,consent:true,total:o.total,site:($("#fSite")||{}).value||"",
     lines:Object.entries(cart).map(([k,q])=>({id:kid(k),v:kvar(k)||undefined,q}))};
   postOrder(payload,o,$("#send"));
 }
@@ -939,6 +954,7 @@ async function postOrder(payload,o,btn){
     j.gone.forEach(id=>outOfStock.add(id));
     const gone=Object.keys(cart).filter(k=>j.gone.includes(kid(k)));removedNotice=gone.map(lineName);gone.forEach(k=>delete cart[k]);
     save();renderGrid();renderCount();drawerView="cart";renderDrawer();removedNotice=[];return}
+  if(r&&r.status===400&&j.pickGone){await loadReglages();drawerView="cart";renderDrawer();toast(j.error);return}
   if(r&&r.status===400&&drawerView==="cart"){toast(j.error||"Vérifiez les informations saisies");return}
   showFallback(payload,o,r&&r.status===429?"Trop de demandes ont été envoyées depuis votre connexion.":"");
 }
@@ -950,7 +966,7 @@ function showSent(o){
     <h3>Merci ${esc(o.prenom)}, c’est envoyé !</h3><p>Votre demande <b class="tabnum">${esc(o.id)}</b> est bien arrivée chez Tout’zafer.</p></div>
     <ol class="nextsteps"><li><i>1</i><span>Nous vous appelons très vite au <b class="tabnum">${esc(fmtTel(o.tel))}</b> pour confirmer votre commande, puis vous la recevez par écrit.</span></li>
       <li><i>2</i><span>Le livreur vous contacte pour convenir du jour et de l’heure de livraison.</span></li>
-      <li><i>3</i><span>Vous payez à la livraison, en espèces ou par carte bancaire, au point choisi : ${esc(o.pick)}.</span></li></ol>
+      <li><i>3</i><span>Vous payez à la livraison, en espèces ou par carte bancaire, au point choisi : ${esc(o.pick)}${(pointById(o.pickId)||{}).consigne?` (${esc(pointById(o.pickId).consigne)})`:""}.</span></li></ol>
     <div class="recap tabnum" id="recap">${esc(recapOf(o))}</div>
     <div class="stack"><button class="cta" id="again">Continuer mes achats</button><button class="ghost" id="copy">Copier le récapitulatif</button>
       <a class="qlink" href="${waQuestion(o.id)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="20" height="20"><span>Une question ? Écrivez-nous sur WhatsApp</span></a></div>`;
@@ -1034,7 +1050,7 @@ async function loadCatalogue(){
   renderHero();renderCatSelect();renderCount();if(curView==="shop")renderGrid();
   const m=location.hash.match(/^#produit-(a\d+)$/);if(m&&byId(m[1])&&sheetId!==m[1])openSheetRaw(m[1]);
 }
-loadCatalogue();
+loadCatalogue();loadReglages();
 </script>
 
 </body>

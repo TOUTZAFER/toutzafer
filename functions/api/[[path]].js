@@ -11,7 +11,10 @@
  *   POST /api/order-update    <- {id, patch}       -> {order}                     (mot de passe)
  *   POST /api/order-create    <- {order}           -> {order}  (demande collée ou saisie à la main)
  *   POST /api/order-delete    <- {id}              -> {ok}
- *   GET  /api/settings        -> {livreurs:[...]}  ·  POST /api/settings <- {livreurs:[...]}
+ *   GET  /api/settings        -> réglages internes (fiches livreurs, notes des points, motifs, modèle de message)
+ *   POST /api/settings        <- une partie de ces réglages (clés absentes inchangées)
+ *   GET  /api/config          -> {config, sha}  réglages publics (reglages.json : numéro, points de livraison)
+ *   POST /api/config          <- {config, sha}  enregistre reglages.json dans le dépôt (409 si modifié ailleurs)
  *
  * Notifications (Web Push, clés VAPID créées automatiquement et gardées dans la base) :
  *   GET  /api/push-key        -> {key}
@@ -71,15 +74,17 @@ function gh(env) {
   const repo = env.GITHUB_REPO || "TOUTZAFER/toutzafer", branch = env.GITHUB_BRANCH || "main";
   const base = (env.GITHUB_API || "https://api.github.com") + "/repos/" + repo;
   async function api(path, opt = {}) {
+    const { allow404, what, ...o2 } = opt; // allow404 : renvoie null si le fichier n'existe pas
     const r = await fetch(base + path, {
-      ...opt,
+      ...o2,
       headers: {
         "Accept": "application/vnd.github+json", "Authorization": "Bearer " + env.GITHUB_TOKEN,
         "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "toutzafer-gestion",
         ...(opt.body ? { "Content-Type": "application/json" } : {})
       }
     });
-    if (r.status === 409 || r.status === 422) throw new HttpError(409, "Le catalogue a été modifié ailleurs.");
+    if (r.status === 404 && allow404) return null;
+    if (r.status === 409 || r.status === 422) throw new HttpError(409, what || "Le catalogue a été modifié ailleurs.");
     if (r.status === 401 || r.status === 403) throw new HttpError(502, "GitHub refuse la clé du relais (expirée ou sans droit d'écriture).");
     if (!r.ok) throw new HttpError(502, "GitHub a répondu " + r.status + ".");
     return r.status === 204 ? null : r.json();
@@ -139,6 +144,53 @@ async function save(env, b) {
   const c = await api("/git/commits", { method: "POST", body: JSON.stringify({ message: msg, tree: t.sha, parents: [head] }) });
   await api(`/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: c.sha, force: false }) });
   return { sha: cat.sha };
+}
+
+/* ---------- Réglages publics : reglages.json (lu par la boutique) ---------- */
+const CONFIG_FILE = "reglages.json";
+const PT_ID = /^p-[a-z0-9-]{1,40}$/, LV_ID = /^l-[a-z0-9-]{1,30}$/;
+function validConfig(c) {
+  if (!c || typeof c !== "object") throw new HttpError(400, "Réglages invalides.");
+  const wa = String((c.contact && c.contact.whatsapp) || "").replace(/\D/g, "");
+  if (!/^\d{11,15}$/.test(wa)) throw new HttpError(400, "Numéro WhatsApp invalide (format international, ex. 262693473945).");
+  if (!Array.isArray(c.points) || !c.points.length || c.points.length > 40) throw new HttpError(400, "Liste des points de livraison invalide.");
+  const ids = new Set();
+  const points = c.points.map(p => {
+    const id = String(p && p.id || ""), nom = clean(p && p.nom, 120);
+    if (!PT_ID.test(id) || ids.has(id)) throw new HttpError(400, "Identifiant de point de livraison invalide ou en double.");
+    if (nom.length < 2) throw new HttpError(400, "Chaque point de livraison doit avoir un nom.");
+    ids.add(id);
+    const o = { id, nom, consigne: clean(p.consigne, 200), actif: p.actif !== false };
+    if (p.court) o.court = clean(p.court, 40);
+    if (typeof p.lat === "number" && typeof p.lon === "number") { o.lat = p.lat; o.lon = p.lon; }
+    return o;
+  });
+  if (!points.some(p => p.actif)) throw new HttpError(400, "Gardez au moins un point de livraison actif.");
+  return { contact: { whatsapp: wa }, points };
+}
+async function loadConfig(env) {
+  const { api, branch } = gh(env);
+  const j = await api(`/contents/${CONFIG_FILE}?ref=${branch}`, { allow404: true });
+  return j ? { config: JSON.parse(b64ToText(j.content)), sha: j.sha } : { config: null, sha: null };
+}
+async function saveConfig(env, b) {
+  const config = validConfig(b && b.config), { api, branch } = gh(env);
+  const msg = String((b && b.message) || "Gestion : réglages de la boutique").replace(/[\r\n]+/g, " ").slice(0, 300);
+  const body = { message: msg, content: textToB64(JSON.stringify(config, null, 1) + "\n"), branch };
+  if (b && typeof b.sha === "string" && b.sha) body.sha = b.sha;
+  const j = await api(`/contents/${CONFIG_FILE}`, { method: "PUT", body: JSON.stringify(body), what: "Les réglages ont été modifiés ailleurs : rechargez la page." });
+  return { config, sha: j.content.sha };
+}
+async function shopConfig(request, env) {   // version publiée, lue comme la boutique la lit
+  try {
+    if (!env.ASSETS) return null;
+    const r = await env.ASSETS.fetch(new Request(new URL("/" + CONFIG_FILE, request.url), { headers: { "Cache-Control": "no-cache" } }));
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+function findPoint(conf, pickId, pickName, activeOnly) {
+  const pts = conf && Array.isArray(conf.points) ? conf.points : [];
+  return pts.find(p => (!activeOnly || p.actif !== false) && (p.id === pickId || (pickName && p.nom === pickName))) || null;
 }
 
 /* =====================================================================
@@ -248,12 +300,19 @@ async function newDemande(request, env, ctx) {
   const b = await body(request, 30_000);
   if (b.site) return json({ id: "TZ-" + Date.now().toString(36).toUpperCase(), ok: true }); // piège à robots : on fait comme si
   const D = await getDB(env);
-  const prenom = clean(b.prenom, 60), nom = clean(b.nom, 60), tel = normTel(b.tel), pick = clean(b.pick, 120);
-  const miss = [!prenom && "prénom", !nom && "nom", !tel && "téléphone", !pick && "point de livraison", b.consent !== true && "accord"].filter(Boolean);
+  const prenom = clean(b.prenom, 60), nom = clean(b.nom, 60), tel = normTel(b.tel);
+  let pick = clean(b.pick, 120), pickId = PT_ID.test(String(b.pickId || "")) ? b.pickId : "";
+  const miss = [!prenom && "prénom", !nom && "nom", !tel && "téléphone", !pick && !pickId && "point de livraison", b.consent !== true && "accord"].filter(Boolean);
   if (miss.length) throw new HttpError(400, "À compléter : " + miss.join(", ") + ".");
   if (!Array.isArray(b.lines) || !b.lines.length || b.lines.length > 60) throw new HttpError(400, "Panier vide ou invalide.");
   await rateLimit(D, request);
 
+  const conf = await shopConfig(request, env);
+  if (conf && Array.isArray(conf.points) && conf.points.length) {
+    const pt = findPoint(conf, pickId, pick, true);
+    if (!pt) throw new HttpError(400, "Ce point de livraison n'est plus proposé : choisissez-en un autre.", { pickGone: true });
+    pick = pt.nom; pickId = pt.id;
+  }
   const cat = await shopCatalogue(request, env), day = reunionDay();
   const byId = Object.fromEntries((Array.isArray(cat) ? cat : []).map(p => [p.id, p]));
   const merged = new Map(), gone = [];
@@ -274,8 +333,8 @@ async function newDemande(request, env, ctx) {
   const saved = round2(lines.reduce((a, l) => a + (l.was ? (l.was - l.price) * l.q : 0), 0));
   const r = reunion();
   const idBase = `TZ-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`;
-  const o = await insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, lines, total, saved, shipFree: true, status: "appeler", source: "site",
-    shownTotal: typeof b.total === "number" ? round2(b.total) : undefined }, idBase);
+  const o = await insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, pickId: pickId || undefined, lines, total, saved, shipFree: true, status: "appeler", source: "site",
+    shownTotal: typeof b.total === "number" ? round2(b.total) : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 
   const n = (await D.prepare("SELECT COUNT(*) AS n FROM orders WHERE status = 'appeler'").first()).n;
   const nb = lines.reduce((a, l) => a + l.q, 0);
@@ -299,6 +358,8 @@ function checkPatch(p) {
   if ("cancelReason" in p) out.cancelReason = p.cancelReason == null ? null : clean(p.cancelReason, 80);
   if ("deliveredAt" in p) { if (p.deliveredAt != null && isNaN(Date.parse(p.deliveredAt))) throw new HttpError(400, "Date de livraison invalide."); out.deliveredAt = p.deliveredAt || null; }
   if ("confirmedAt" in p) { if (p.confirmedAt != null && isNaN(Date.parse(p.confirmedAt))) throw new HttpError(400, "Date invalide."); out.confirmedAt = p.confirmedAt || null; }
+  if ("livreurId" in p) { if (p.livreurId != null && p.livreurId !== "" && !LV_ID.test(p.livreurId)) throw new HttpError(400, "Livreur inconnu."); out.livreurId = p.livreurId || null; }
+  if ("transmisAt" in p) { if (p.transmisAt != null && isNaN(Date.parse(p.transmisAt))) throw new HttpError(400, "Date invalide."); out.transmisAt = p.transmisAt || null; }
   if ("note" in p) out.note = clean(p.note, 500) || null;
   return out;
 }
@@ -310,22 +371,76 @@ function checkLines(lines) {
     return { name, q, price };
   });
 }
-async function createManual(D, b) {
+async function createManual(D, b, conf) {
   const s = b.order || {};
-  const prenom = clean(s.prenom, 60), nom = clean(s.nom, 60), tel = normTel(s.tel) || clean(s.tel, 20), pick = clean(s.pick, 120);
+  const prenom = clean(s.prenom, 60), nom = clean(s.nom, 60), tel = normTel(s.tel) || clean(s.tel, 20);
+  let pick = clean(s.pick, 120), pickId = PT_ID.test(String(s.pickId || "")) ? s.pickId : "";
+  const pt = findPoint(conf, pickId, pick, false); if (pt) { pick = pt.nom; pickId = pt.id; } else pickId = "";
   if (!prenom || !tel) throw new HttpError(400, "Indiquez au moins le prénom et le téléphone.");
   const lines = checkLines(s.lines);
   const total = round2(lines.reduce((a, l) => a + l.q * l.price, 0));
   let idBase = clean(s.id, 40).replace(/[^A-Za-z0-9-]/g, "");
   if (!idBase) { const r = reunion(); idBase = `M-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`; }
-  return insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, lines, total, status: "appeler", source: s.id ? "message" : "manuel", canal: ["sms", "wa"].includes(s.canal) ? s.canal : undefined }, idBase);
+  return insertOrder(D, { date: nowIso(), prenom, nom, tel, pick, pickId: pickId || undefined, lines, total, status: "appeler", source: s.id ? "message" : "manuel",
+    canal: ["sms", "wa"].includes(s.canal) ? s.canal : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 }
 
-async function settingsGet(D) { return (await kvGet(D, "settings")) || { livreurs: [] }; }
+/* Réglages internes (jamais publiés) :
+   livreurs : [{id, prenom, tel, statut, siret, actif, note}]
+   points   : {idPoint: {livreurId, note}}   (le nom et la consigne sont dans reglages.json)
+   motifs   : motifs d'annulation ; modele : message de confirmation au client ("" = modèle par défaut) */
+const STATUTS = ["entrepreneur", "salarie", "auto", "autre"];
+const DEFAULT_MOTIFS = ["Ne souhaite plus l’article", "Injoignable", "Absent au rendez-vous", "Article indisponible", "Autre"];
+const slug = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24) || "x";
+async function settingsGet(D) {
+  const s = (await kvGet(D, "settings")) || {};
+  const seen = new Set();
+  const livreurs = (Array.isArray(s.livreurs) ? s.livreurs : []).map(x => {   // anciennes listes de prénoms -> fiches
+    const o = typeof x === "string" ? { id: "l-" + slug(x), prenom: x, actif: true } : x;
+    let id = o.id; for (let k = 2; seen.has(id); k++) id = o.id + "-" + k; seen.add(id);
+    return { ...o, id };
+  });
+  return { livreurs, points: s.points && typeof s.points === "object" ? s.points : {}, motifs: Array.isArray(s.motifs) && s.motifs.length ? s.motifs : DEFAULT_MOTIFS, modele: typeof s.modele === "string" ? s.modele : "" };
+}
 async function settingsSet(D, b) {
-  const L = Array.isArray(b.livreurs) ? [...new Set(b.livreurs.map(x => clean(x, 40)).filter(Boolean))].slice(0, 30) : null;
-  if (!L) throw new HttpError(400, "Liste de livreurs invalide.");
-  const s = { ...(await settingsGet(D)), livreurs: L }; await kvSet(D, "settings", s); return s;
+  const s = await settingsGet(D);
+  if ("livreurs" in b) {
+    if (!Array.isArray(b.livreurs) || b.livreurs.length > 50) throw new HttpError(400, "Liste de livreurs invalide.");
+    const ids = new Set();
+    s.livreurs = b.livreurs.map(l => {
+      const id = String(l && l.id || ""), prenom = clean(l && l.prenom, 40);
+      if (!LV_ID.test(id) || ids.has(id) || !prenom) throw new HttpError(400, "Fiche livreur invalide (prénom manquant ?).");
+      ids.add(id);
+      const o = { id, prenom, actif: l.actif !== false }; if (STATUTS.includes(l.statut)) o.statut = l.statut;
+      const tel = normTel(l.tel) || clean(l.tel, 20); if (tel) o.tel = tel;
+      const siret = String(l.siret || "").replace(/\D/g, "").slice(0, 14); if (siret) o.siret = siret;
+      const note = clean(l.note, 500); if (note) o.note = note;
+      return o;
+    });
+  }
+  if ("points" in b) {
+    if (!b.points || typeof b.points !== "object" || Array.isArray(b.points)) throw new HttpError(400, "Fiches des points invalides.");
+    const out = {};
+    for (const [id, v] of Object.entries(b.points).slice(0, 60)) {
+      if (!PT_ID.test(id) || !v || typeof v !== "object") continue;
+      const o = {}; if (LV_ID.test(String(v.livreurId || ""))) o.livreurId = v.livreurId;
+      const note = clean(v.note, 500); if (note) o.note = note;
+      if (Object.keys(o).length) out[id] = o;
+    }
+    s.points = out;
+  }
+  if ("motifs" in b) {
+    const m = Array.isArray(b.motifs) ? [...new Set(b.motifs.map(x => clean(x, 60)).filter(Boolean))].slice(0, 15) : [];
+    if (!m.length) throw new HttpError(400, "Gardez au moins un motif d'annulation.");
+    s.motifs = m;
+  }
+  if ("modele" in b) s.modele = String(b.modele || "").replace(/\r/g, "").slice(0, 2000);
+  await kvSet(D, "settings", s); return s;
+}
+async function habitualLivreur(D, pickId) {   // livreur habituel du point : attribué d'office, modifiable ensuite
+  if (!pickId) return {};
+  const s = await settingsGet(D), v = s.points[pickId], l = v && s.livreurs.find(x => x.id === v.livreurId && x.actif !== false);
+  return l ? { livreurId: l.id, livreur: l.prenom } : {};
 }
 
 /* =====================================================================
@@ -412,6 +527,9 @@ export async function onRequest(ctx) {
     if (route === "push-key" && M === "GET") { const D = await getDB(env); return json({ key: (await vapidKeys(D)).pub }); }
 
     // Page Gestion
+    if (route === "config" && M === "GET") { await checkPassword(request, env, true); return json(await loadConfig(env)); }
+    if (route === "config" && M === "POST") { await checkPassword(request, env, true); return json(await saveConfig(env, await body(request))); }
+
     const admin = { "GET orders": 1, "POST order-update": 1, "POST order-create": 1, "POST order-delete": 1, "GET settings": 1, "POST settings": 1,
       "POST push-subscribe": 1, "POST push-unsubscribe": 1, "POST push-test": 1 };
     if (!admin[M + " " + route]) return json({ error: "Introuvable" }, 404);
@@ -430,7 +548,7 @@ export async function onRequest(ctx) {
       for (const [k, v] of Object.entries(patch)) { if (v === null) delete o[k]; else o[k] = v; }
       return json({ order: await putOrder(D, o) });
     }
-    if (route === "order-create") return json({ order: await createManual(D, b) });
+    if (route === "order-create") return json({ order: await createManual(D, b, await shopConfig(request, env)) });
     if (route === "order-delete") { await D.prepare("DELETE FROM orders WHERE id = ?").bind(String(b.id || "")).run(); return json({ ok: true }); }
     if (route === "settings") return json(M === "GET" ? await settingsGet(D) : await settingsSet(D, b));
     if (route === "push-subscribe") {

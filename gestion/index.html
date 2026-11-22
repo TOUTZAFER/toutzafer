@@ -213,6 +213,7 @@ body:not(.t-articles) .status:not(.err){display:none!important}
 .mv:disabled{opacity:.4;cursor:not-allowed}
 .bk{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600;color:var(--muted)}
 .bk.conf{color:var(--s3);border-color:var(--s3);flex:1}
+a.bk{text-decoration:none;text-align:center;display:inline-flex;align-items:center;justify-content:center}
 .cx{border:0;background:none;color:var(--s4);font-size:12px;font-weight:700;padding:6px 2px;text-decoration:underline;text-underline-offset:2px;align-self:flex-start}
 .cxbox{display:flex;flex-direction:column;gap:8px;background:var(--s4-bg);border-radius:10px;padding:10px}
 .cxbox .ofield{color:var(--s4)}
@@ -264,6 +265,22 @@ a.btn.pri{color:#fff}
 .sempty{color:var(--muted);font-size:13px;margin:0}
 
 /* Réglages */
+.seth{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.flist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+.fitem:last-child{border-bottom:0}
+.fitem.off{background:var(--bg-alt)} .fitem.off b{color:var(--muted)}
+.fopen{flex:1;min-width:0;border:0;background:none;text-align:left;padding:2px 0;display:flex;flex-direction:column;gap:2px}
+.fopen b{font-size:15px;overflow-wrap:anywhere}
+.fopen small{font-size:12px;color:var(--muted)}
+.fdot{width:10px;height:10px;border-radius:50%;background:var(--ok);flex:none}.fitem.off .fdot{background:var(--line)}
+.fmv{display:flex;gap:4px}.fmv button{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:32px;height:32px;color:var(--muted)}.fmv button:disabled{opacity:.3}
+.fempty{padding:14px;font-size:13px;color:var(--muted)}
+.fstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.fstats div{background:var(--bg-alt);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fstats span{font-size:11px;color:var(--muted);font-weight:600}.fstats b{font-size:16px;font-variant-numeric:tabular-nums}
+.tglrow{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}.tglrow input{width:20px;height:20px;accent-color:var(--brand)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 14px}.filters .sel{width:auto;flex:1 1 160px;background:var(--bg-alt);padding:9px 12px;font-size:14px}
 .setp{border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
 .setp h3{margin:0;font-family:var(--font-display);font-size:17px}
 .setp p{margin:0;font-size:14px;color:var(--muted)}
@@ -330,6 +347,7 @@ a.btn.pri{color:#fff}
     <p class="sub">Les demandes envoyées depuis la boutique arrivent dans « À appeler ». Appelez le client, confirmez par écrit, puis suivez la livraison.</p>
     <div id="ordBanner"></div>
     <div class="tools"><button class="btn" id="pasteBtn">+ Coller ou saisir une demande</button><span class="sp"></span><button class="btn iconbtn" id="ordRefresh" aria-label="Actualiser" title="Actualiser">↻</button></div>
+    <div class="filters" id="ordFilters" hidden></div>
     <div class="board" id="board"></div>
   </section>
 
@@ -343,11 +361,24 @@ a.btn.pri{color:#fff}
   <!-- Réglages -->
   <section id="vSettings" hidden>
     <h1>Réglages</h1>
+    <div id="setWarn"></div>
+    <div class="setp"><div class="seth"><h3>Points de livraison</h3><button class="btn sm" id="ptAdd">+ Ajouter</button></div>
+      <p>Proposés aux clients dans le panier, dans cet ordre. Touchez un point pour modifier sa fiche.</p><div class="flist" id="ptList"></div></div>
+    <div class="setp"><div class="seth"><h3>Livreurs</h3><button class="btn sm" id="lvAdd">+ Ajouter</button></div>
+      <p>Fiches internes, jamais visibles sur le site. Ajoutez-vous si vous livrez vous-même.</p><div class="flist" id="lvList"></div></div>
+    <div class="setp"><h3>Demandes</h3>
+      <div class="fld">Motifs d’annulation<div class="chips" id="mtChips"></div>
+        <div class="addrow"><input class="inp" id="mtIn" placeholder="Nouveau motif" aria-label="Nouveau motif d’annulation"><button class="btn" id="mtAdd">Ajouter</button></div></div>
+      <label class="fld">Message de confirmation au client <small>repères remplacés automatiquement : {prenom} {nom} {numero} {articles} {total} {point} {livreur}</small><textarea class="ta" id="mdTxt" rows="8"></textarea></label>
+      <div class="oacts"><button class="btn pri" id="mdSave">Enregistrer le message</button><button class="btn" id="mdReset">Revenir au message d’origine</button></div></div>
+    <div class="setp"><h3>Boutique</h3>
+      <label class="fld">Numéro WhatsApp et téléphone affichés sur le site<input class="inp tabnum" id="waIn" inputmode="tel" autocomplete="off"></label>
+      <p class="hint" style="font-size:13px">Sert aussi pour les demandes envoyées par WhatsApp ou SMS quand le site n’arrive pas à les enregistrer. Visible sur la boutique 1 à 2 minutes après l’enregistrement.</p>
+      <div class="oacts"><button class="btn pri" id="waSave">Enregistrer le numéro</button></div>
+      <p class="hint" style="font-size:13px">Livraison offerte et délai de livraison : fixés dans les conditions générales de vente, à modifier ensemble si besoin.</p></div>
     <div class="setp" id="pushPanel"></div>
-    <div class="setp"><h3>Livreurs</h3><p>Ils apparaissent dans la liste « Livreur » des demandes en livraison. Ajoutez-vous si vous livrez vous-même.</p>
-      <div class="chips" id="livChips"></div>
-      <div class="addrow"><input class="inp" id="livIn" placeholder="Prénom du livreur" aria-label="Prénom du livreur"><button class="btn" id="livAdd">Ajouter</button></div></div>
   </section>
+</main>  </section>
 </main>
 
 <dialog id="dlg" aria-labelledby="dlgT"></dialog>
@@ -612,14 +643,29 @@ function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=ite
    ===================================================================== */
 const STEPS=[["appeler","À appeler"],["livraison","En livraison"],["livree","Livrée"],["annulee","Annulée"]];
 const STEPNAME=Object.fromEntries(STEPS);
-const CANCEL_REASONS=["Ne souhaite plus l’article","Injoignable","Absent au rendez-vous","Article indisponible","Autre"];
-// mêmes points que dans la boutique (index.html, PICKUP_POINTS)
-const PICKUPS=["Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)","Saint-Pierre — Parking Kiabi","Saint-Leu — Parking E.Leclerc Le Portail"];
+const DEFAULT_MOTIFS=["Ne souhaite plus l’article","Injoignable","Absent au rendez-vous","Article indisponible","Autre"];
+const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer. Je vous confirme votre commande n° {numero} :\n{articles}\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\nLivraison offerte au point : {point}. Votre livreur vous contactera pour convenir du jour et de l’heure.\nMerci pour votre confiance !";
+const STATUTS={entrepreneur:"Entrepreneur (vous-même)",salarie:"Salarié",auto:"Auto-entrepreneur",autre:"Autre"};
+// Réglages publics (reglages.json : numéro, points de livraison) ; secours si le fichier n'a pas pu être lu
+let CONF=null,confSha=null,confErr="";
+const FALLBACK_POINTS=[{id:"p-saint-denis",nom:"Saint-Denis — Rue du Maréchal Leclerc (près de la mosquée)",consigne:"",actif:true},{id:"p-saint-pierre",nom:"Saint-Pierre — Parking Kiabi",consigne:"",actif:true},{id:"p-saint-leu",nom:"Saint-Leu — Parking E.Leclerc Le Portail",consigne:"",actif:true}];
+const points=()=>CONF&&Array.isArray(CONF.points)?CONF.points:FALLBACK_POINTS;
+const pointById=id=>points().find(p=>p.id===id);
+const pointOf=o=>points().find(p=>p.id===o.pickId)||points().find(p=>o.pick&&p.nom===o.pick)||null;
 const ICO_TEL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>';
 const isApple=/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&"ontouchend" in document;
-let HASDB=false,tab="articles",orders=[],ordersLoaded=false,ordersErr="",settings={livreurs:[]},knownIds=null,freshIds=new Set();
+let HASDB=false,tab="articles",orders=[],ordersLoaded=false,ordersErr="",settings={livreurs:[],points:{},motifs:DEFAULT_MOTIFS,modele:""},knownIds=null,freshIds=new Set();
 const cancelOpen=new Set(),showOld=new Set();
-const livreurs=()=>settings.livreurs||[];
+let fLiv="",fPt="";
+const livreurs=()=>Array.isArray(settings.livreurs)?settings.livreurs:[];
+const livActifs=()=>livreurs().filter(l=>l.actif!==false);
+const livById=id=>livreurs().find(l=>l.id===id);
+const livOf=o=>livById(o.livreurId)||(o.livreur?livreurs().find(l=>l.prenom===o.livreur):null)||null;
+const livName=o=>(livOf(o)||{}).prenom||o.livreur||"";
+const motifs=()=>settings.motifs&&settings.motifs.length?settings.motifs:DEFAULT_MOTIFS;
+function habitual(o){const pt=pointOf(o),v=pt&&settings.points&&settings.points[pt.id],l=v&&livById(v.livreurId);return l&&l.actif!==false?l:null}
+const keyLiv=o=>{const l=livOf(o);return l?l.id:(o.livreur?"n:"+o.livreur:"")};
+const keyPt=o=>{const p=pointOf(o);return p?p.id:(o.pick?"n:"+o.pick:"")};
 const API=(path,data)=>RELAY.call(path,data===undefined?{}:{method:"POST",body:JSON.stringify(data)});
 /* ---------- Numéro de téléphone : espaces ajoutés pendant la saisie ----------
    0692 12 34 56 (Réunion, Mayotte) · 06 12 34 56 78 (métropole) · +262 692 12 34 56 · +33 6 12 34 56 78 */
@@ -685,21 +731,27 @@ async function patchOrder(id,patch,msg){
 }
 
 function orderCard(o){
-  const st=o.status,L=livreurs(),pills=[];
+  const st=o.status,L=livActifs(),cur=livOf(o),pills=[],ln=livName(o);
   if(o.source==="message")pills.push(`<span class="st st-liv">Collée${o.canal==="sms"?" · SMS":o.canal==="wa"?" · WhatsApp":""}</span>`);
   if(o.source==="manuel")pills.push('<span class="st st-liv">Saisie à la main</span>');
   if(o.confirmedAt&&st!=="annulee")pills.push(`<span class="st st-ok">Confirmée par écrit</span>`);
-  if(o.livreur&&st!=="appeler")pills.push(`<span class="st st-liv">Livreur : ${esc(o.livreur)}</span>`);
+  if(ln&&(st!=="annulee"||o.cancelFrom==="livraison"))pills.push(`<span class="st st-liv">${st==="appeler"?"Livreur prévu":"Livreur"} : ${esc(ln)}</span>`);
+  if(o.transmisAt&&st==="livraison")pills.push(`<span class="st st-ok">Transmise au livreur</span>`);
   if(st==="livree")pills.push(o.paiement==="especes"?'<span class="st st-cash">Payé · Espèces</span>':o.paiement==="cb"?'<span class="st st-card">Payé · CB</span>':'<span class="st st-unpaid">Paiement à saisir</span>');
   if(st==="annulee"){pills.push(`<span class="st st-why">${o.cancelFrom==="livraison"?"À la livraison":"À l’appel"}</span>`);if(o.cancelReason)pills.push(`<span class="st st-why">${esc(o.cancelReason)}</span>`)}
-  const cxUI=cancelOpen.has(o.id)?`<div class="cxbox"><label class="ofield">Motif d’annulation<select id="cxr_${esc(o.id)}">${CANCEL_REASONS.map(r=>`<option>${esc(r)}</option>`).join("")}</select></label>
+  const cxUI=cancelOpen.has(o.id)?`<div class="cxbox"><label class="ofield">Motif d’annulation<select id="cxr_${esc(o.id)}">${motifs().map(r=>`<option>${esc(r)}</option>`).join("")}</select></label>
     <div class="oacts"><button class="bk" data-cxno="${esc(o.id)}">Garder la demande</button><button class="mv to-annulee" data-cxok="${esc(o.id)}">Confirmer l’annulation</button></div></div>`
     :`<button class="cx" data-cx="${esc(o.id)}">Annuler la demande</button>`;
   const conf=`<button class="bk conf" data-conf="${esc(o.id)}">${o.confirmedAt?"Renvoyer la confirmation":"Confirmer par écrit"}</button>`;
+  const lt=cur&&intlTel(cur.tel);
+  const tr=lt?`<a class="bk conf" data-tr="${esc(o.id)}" href="https://wa.me/${lt}?text=${encodeURIComponent(transmitText(o))}" target="_blank" rel="noopener">${o.transmisAt?"Renvoyer à":"Transmettre à"} ${esc(cur.prenom)}</a>`
+    :cur?`<span class="hint">Ajoutez le téléphone de ${esc(cur.prenom)} dans sa fiche (Réglages) pour lui transmettre la demande.</span>`:"";
+  const opts=[...L];if(cur&&!opts.includes(cur))opts.push(cur);
   let act="";
   if(st==="appeler")act=`<div class="oacts">${o.tel?conf:""}<button class="mv to-livraison" data-move="${esc(o.id)}" data-to="livraison">En livraison →</button></div>${cxUI}`;
-  if(st==="livraison")act=`<label class="ofield">Livreur<select data-livreur="${esc(o.id)}"><option value="">${L.length?"Choisir un livreur":"Aucun livreur (voir Réglages)"}</option>${[...new Set([...L,...(o.livreur?[o.livreur]:[])])].map(n=>`<option${o.livreur===n?" selected":""}>${esc(n)}</option>`).join("")}</select></label>
-    <div class="oacts"><button class="bk" data-move="${esc(o.id)}" data-to="appeler">← À appeler</button><button class="mv to-livree" data-move="${esc(o.id)}" data-to="livree"${o.livreur||!L.length?"":" disabled"}>Marquer livrée ✓</button></div>
+  if(st==="livraison")act=`<label class="ofield">Livreur<select data-livreur="${esc(o.id)}"><option value="">${L.length?"Choisir un livreur":"Aucun livreur (voir Réglages)"}</option>${opts.map(l=>`<option value="${esc(l.id)}"${cur===l?" selected":""}>${esc(l.prenom)}</option>`).join("")}${!cur&&o.livreur?`<option value="" selected>${esc(o.livreur)}</option>`:""}</select></label>
+    ${tr?`<div class="oacts">${tr}</div>`:""}
+    <div class="oacts"><button class="bk" data-move="${esc(o.id)}" data-to="appeler">← À appeler</button><button class="mv to-livree" data-move="${esc(o.id)}" data-to="livree"${ln||!L.length?"":" disabled"}>Marquer livrée ✓</button></div>
     ${o.tel?`<div class="oacts">${conf}</div>`:""}${cxUI}`;
   if(st==="livree")act=`<div class="ofield">Mode de paiement<div class="paysel"><button class="pc" data-pay="${esc(o.id)}" data-mode="especes" aria-pressed="${o.paiement==="especes"}">Espèces</button><button class="pb" data-pay="${esc(o.id)}" data-mode="cb" aria-pressed="${o.paiement==="cb"}">CB</button></div></div>
     <div class="oacts"><button class="bk" data-move="${esc(o.id)}" data-to="livraison">← En livraison</button></div>`;
@@ -711,6 +763,8 @@ function orderCard(o){
     <ul>${(o.lines||[]).map(l=>`<li>${l.q} × ${esc(l.name)}</li>`).join("")}</ul>
     <span class="tot tabnum">${eur(o.total)}</span>${act}</article>`;
 }
+function transmitText(o){const pt=pointOf(o);
+  return `Livraison Tout’zafer · n° ${o.id}\nClient : ${o.prenom} ${o.nom} · ${fmtTel2(o.tel)}\nPoint : ${o.pick||"à définir"}${pt&&pt.consigne?` (${pt.consigne})`:""}\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name}`).join("\n")}\nÀ encaisser : ${eur(o.total)} (espèces ou CB)\nMerci d’appeler le client pour convenir du jour et de l’heure.`}
 function renderOrders(){
   const todo=orders.filter(o=>o.status==="appeler").length;
   $("#ordBadge").textContent=todo;$("#ordBadge").hidden=!todo;
@@ -719,14 +773,27 @@ function renderOrders(){
   renderPushBanner();
   if(!HASDB){$("#board").innerHTML=`<p class="empty">Le suivi des demandes n’est pas encore activé : la base de données doit être reliée au site (Cloudflare → projet toutzafer → Paramètres → Liaisons → base D1 nommée <b>DB</b>).</p>`;return}
   const recent=o=>Date.now()-saleDate(o).getTime()<7*864e5;
+  renderFilters();
+  const shown=orders.filter(o=>(!fLiv||(fLiv==="-"?!keyLiv(o):keyLiv(o)===fLiv))&&(!fPt||keyPt(o)===fPt));
   $("#board").innerHTML=(ordersErr?`<div class="banner warn" style="grid-column:1/-1"><p>Liste non actualisée : ${esc(ordersErr)}</p></div>`:"")+STEPS.map(([k,label])=>{
-    const all=orders.filter(o=>o.status===k).sort((a,b)=>saleDate(b)-saleDate(a)),sum=all.reduce((a,o)=>a+(+o.total||0),0);
+    const all=shown.filter(o=>o.status===k).sort((a,b)=>saleDate(b)-saleDate(a)),sum=all.reduce((a,o)=>a+(+o.total||0),0);
     const folded=(k==="livree"||k==="annulee")&&!showOld.has(k),list=folded?all.filter(recent):all,hiddenN=all.length-list.length;
     return `<section class="col c-${k}" aria-label="${label}"><div class="colh"><span class="dot"></span><b>${label}</b><span class="n tabnum">${all.length}</span><span class="sum tabnum">${eur(sum)}</span></div>
     ${list.length?list.map(orderCard).join(""):`<p class="colempty">${!ordersLoaded?"Chargement…":k==="appeler"?"Aucune demande à appeler":k==="livraison"?"Aucune livraison en cours":k==="livree"?"Aucune livraison ces 7 derniers jours":"Aucune annulation ces 7 derniers jours"}</p>`}
     ${hiddenN?`<button class="oldtoggle" data-old="${k}">Voir les ${hiddenN} plus anciennes</button>`:(k==="livree"||k==="annulee")&&showOld.has(k)?`<button class="oldtoggle" data-old="${k}">Masquer les plus anciennes</button>`:""}</section>`}).join("");
   setTimeout(()=>freshIds.clear(),1700);
 }
+function renderFilters(){
+  const el=$("#ordFilters");if(!el)return;
+  const lk=[...new Set([...livreurs().map(l=>l.id),...orders.map(keyLiv).filter(Boolean)])],pk=[...new Set([...points().map(p=>p.id),...orders.map(keyPt).filter(Boolean)])];
+  const nmL=k=>k.startsWith("n:")?k.slice(2):(livById(k)||{}).prenom||k,nmP=k=>k.startsWith("n:")?k.slice(2):(pointById(k)||{}).nom||k;
+  el.hidden=lk.length<2&&pk.length<2;
+  el.innerHTML=`<select class="sel" id="fLiv" aria-label="Filtrer par livreur"><option value="">Tous les livreurs</option>${lk.map(k=>`<option value="${esc(k)}"${k===fLiv?" selected":""}>${esc(nmL(k))}</option>`).join("")}<option value="-"${fLiv==="-"?" selected":""}>Sans livreur</option></select>
+    <select class="sel" id="fPt" aria-label="Filtrer par point de livraison"><option value="">Tous les points</option>${pk.map(k=>`<option value="${esc(k)}"${k===fPt?" selected":""}>${esc(nmP(k))}</option>`).join("")}</select>
+    ${fLiv||fPt?'<button class="lk2" data-fclear>Tout afficher</button>':""}`;
+}
+document.addEventListener("change",e=>{if(e.target.id==="fLiv"){fLiv=e.target.value;renderOrders()}if(e.target.id==="fPt"){fPt=e.target.value;renderOrders()}});
+document.addEventListener("click",e=>{if(e.target.closest("[data-fclear]")){fLiv="";fPt="";renderOrders()}});
 document.addEventListener("click",e=>{
   const od=e.target.closest("[data-old]");if(od){const k=od.dataset.old;showOld.has(k)?showOld.delete(k):showOld.add(k);renderOrders();return}
   const cx=e.target.closest("[data-cx]"),cxno=e.target.closest("[data-cxno]"),cxok=e.target.closest("[data-cxok]");
@@ -736,23 +803,28 @@ document.addEventListener("click",e=>{
     patchOrder(o.id,{cancelFrom:o.status==="livraison"?"livraison":"appeler",cancelReason:r,status:"annulee"},`${o.prenom} ${o.nom} : demande annulée`);return}
   const m=e.target.closest("[data-move]");
   if(m){const o=orders.find(x=>x.id===m.dataset.move);if(!o)return;const to=m.dataset.to;
-    if(to==="livree"&&!o.livreur&&livreurs().length){toast("Choisissez d’abord un livreur");return}
-    const d={status:to};if(o.status==="annulee"){d.cancelFrom=null;d.cancelReason=null}
+    if(to==="livree"&&!livName(o)&&livActifs().length){toast("Choisissez d’abord un livreur");return}
+    const d={status:to};
+    if(to==="livraison"&&!livName(o)){const h=habitual(o);if(h){d.livreurId=h.id;d.livreur=h.prenom}}if(o.status==="annulee"){d.cancelFrom=null;d.cancelReason=null}
     if(to!=="livree"){d.paiement=null;d.deliveredAt=null}else d.deliveredAt=new Date().toISOString();
     patchOrder(o.id,d,`${o.prenom} ${o.nom} : ${STEPNAME[to]}`);return}
   const pb=e.target.closest("[data-pay]");if(pb){patchOrder(pb.dataset.pay,{paiement:pb.dataset.mode},`Paiement enregistré : ${pb.dataset.mode==="cb"?"CB":"Espèces"}`);return}
   const cf=e.target.closest("[data-conf]");if(cf){openConfirm(cf.dataset.conf);return}
+  const tr=e.target.closest("[data-tr]");if(tr){const id=tr.dataset.tr;setTimeout(()=>patchOrder(id,{transmisAt:new Date().toISOString()},"Demande transmise au livreur"),150);return}
   const dl=e.target.closest("[data-del]");if(dl){
     if(!dl.dataset.armed){dl.dataset.armed="1";dl.textContent="Confirmer la suppression";setTimeout(()=>{if(dl.isConnected){delete dl.dataset.armed;dl.textContent="Supprimer définitivement"}},5000);return}
     const id=dl.dataset.del;API("order-delete",{id}).then(()=>{orders=orders.filter(o=>o.id!==id);renderOrders();toast("Demande supprimée")}).catch(err=>toast("Suppression impossible : "+(err.message||err)));return}
 });
-document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.dataset.livreur;if(id)patchOrder(id,{livreur:e.target.value||null},e.target.value?`Livreur : ${e.target.value}`:"")});
+document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.dataset.livreur;if(!id)return;const l=livById(e.target.value);
+  patchOrder(id,{livreurId:l?l.id:null,livreur:l?l.prenom:null,transmisAt:null},l?`Livreur : ${l.prenom}`:"Livreur retiré")});
 $("#ordRefresh").onclick=()=>{loadOrders().then(()=>toast("Liste à jour"))};
 
 /* ---------- Confirmation écrite au client ---------- */
-function confirmText(o){
-  return `Bonjour ${o.prenom}, ici Tout’zafer. Je vous confirme votre commande n° ${o.id} :\n${(o.lines||[]).map(l=>`• ${l.q} × ${l.name} : ${eur(l.q*l.price)}`).join("\n")}\nTotal : ${eur(o.total)} TTC, à régler à la livraison en espèces ou par carte bancaire.\nLivraison offerte${o.pick?` au point : ${o.pick}`:""}. Votre livreur vous contactera pour convenir du jour et de l’heure.\nMerci pour votre confiance !`;
-}
+function fillModele(t,o){const pt=pointOf(o);
+  const v={prenom:o.prenom,nom:o.nom,numero:o.id,articles:(o.lines||[]).map(l=>`• ${l.q} × ${l.name} : ${eur(l.q*l.price)}`).join("\n"),total:eur(o.total),
+    point:(o.pick||"à définir")+(pt&&pt.consigne?` (${pt.consigne})`:""),livreur:livName(o)||"votre livreur"};
+  return String(t).replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m)}
+const confirmText=o=>fillModele(settings.modele||DEFAULT_MODELE,o);
 function openConfirm(id){
   const o=orders.find(x=>x.id===id);if(!o)return;const d=$("#dlg");
   d.innerHTML=`<div class="dh"><h2 id="dlgT">Confirmer par écrit</h2><button class="x" data-close aria-label="Fermer">×</button></div>
@@ -779,7 +851,7 @@ function parseRecap(t){
   if(mw&&!/^Demande/.test(mw[1])){const parts=mw[1].trim().split(/\s+/);r.prenom=parts.shift()||"";r.nom=parts.join(" ");r.tel=normTel(mw[2])}
   else{const mt=t.match(/(?:\+262|0)\s?[67]\d(?:[ .]?\d{2}){4}/);if(mt)r.tel=normTel(mt[0])}
   const mp=t.match(/Point de livraison\s*:\s*(.+)$/m);
-  if(mp){const raw=mp[1].replace(/\s*\(livraison[^)]*\)\s*$/,"").trim();r.pick=PICKUPS.find(p=>p===raw)||PICKUPS.find(p=>raw&&p.split(" — ")[0]===raw.split(" — ")[0])||raw}
+  if(mp){const raw=mp[1].replace(/\s*\(livraison[^)]*\)\s*$/,"").trim();const P=points(),pt=P.find(p=>p.nom===raw)||P.find(p=>raw&&p.nom.split(" — ")[0]===raw.split(" — ")[0]);r.pick=pt?pt.nom:raw;r.pickId=pt?pt.id:""}
   const re=/^\s*[•*\-–]\s*(\d+)\s*[×xX]\s*(.+?)\s*\(\s*([\d\s.,  ]+)\s*€\s*\)\s*$/gm;let m;
   while((m=re.exec(t))){const q=+m[1],lt=num(m[3]);r.lines.push({q,name:m[2].trim(),price:Math.round(lt/q*100)/100})}
   const mt2=t.match(/Total[^:\n]*:\s*([\d\s.,  ]+)\s*€/);r.total=mt2?num(mt2[1]):r.lines.reduce((a,l)=>a+l.q*l.price,0);
@@ -806,12 +878,12 @@ function fillPaste(r,manual){
   $("#pCanalF").hidden=!!manual;
   const dup=r.id&&orders.find(o=>o.id===r.id);
   const miss=[!r.prenom&&"le nom",!r.tel&&"le téléphone",!r.lines[0].name&&"les articles"].filter(Boolean);
-  const picks=[...new Set([...PICKUPS,r.pick].filter(Boolean))];
+  const picks=points().filter(p=>p.actif!==false||p.id===r.pickId);
   $("#pForm").innerHTML=`${dup?`<div class="warnbox">Cette demande (${esc(r.id)}) est déjà enregistrée : ${esc(dup.prenom)} ${esc(dup.nom)}, ${STEPNAME[dup.status]}. L’ajouter créerait un doublon.</div>`:""}
   ${manual?"":miss.length?`<div class="warnbox">Je n’ai pas trouvé ${miss.join(", ")} dans le message. Complétez ci-dessous.</div>`:`<div class="okbox">Demande lue. Vérifiez puis ajoutez-la.</div>`}
   <div class="frow"><label class="fld">Prénom<input class="inp" id="fP" value="${esc(r.prenom)}"></label><label class="fld">Nom<input class="inp" id="fN" value="${esc(r.nom)}"></label></div>
   <div class="frow"><label class="fld">Téléphone<input class="inp tabnum" id="fT" inputmode="tel" value="${esc(fmtTel2(r.tel))}"></label>
-    <label class="fld">Point de livraison<select class="sel" id="fK"><option value="">À définir</option>${picks.map(p=>`<option${p===r.pick?" selected":""}>${esc(p)}</option>`).join("")}</select></label></div>
+    <label class="fld">Point de livraison<select class="sel" id="fK"><option value="">À définir</option>${picks.map(p=>`<option value="${esc(p.id)}"${p.id===r.pickId?" selected":""}>${esc(p.nom)}</option>`).join("")}${r.pick&&!r.pickId?`<option value="" selected>${esc(r.pick)} (non reconnu)</option>`:""}</select></label></div>
   <div class="fld">Articles <small>quantité · article · montant de la ligne</small><div class="lines" id="fL">${linesHTML(r.lines)}</div>
     <button class="btn sm" type="button" id="fAdd" style="align-self:flex-start">+ Ajouter une ligne</button></div>
   <div class="ltot"><span>Total</span><span class="tabnum" id="fTot"></span></div>
@@ -831,7 +903,7 @@ function fillPaste(r,manual){
 }
 async function savePaste(){
   const lines=draft.lines.filter(l=>l.name);
-  const o={id:draft.manual?"":draft.id,prenom:$("#fP").value.trim(),nom:$("#fN").value.trim(),tel:normTel($("#fT").value),pick:$("#fK").value,lines,canal:draft.manual?"":$("#pCanal").value};
+  const o={id:draft.manual?"":draft.id,prenom:$("#fP").value.trim(),nom:$("#fN").value.trim(),tel:normTel($("#fT").value),pickId:$("#fK").value,pick:$("#fK").value?(pointById($("#fK").value)||{}).nom:(draft.pick||""),lines,canal:draft.manual?"":$("#pCanal").value};
   $("#pSave").disabled=true;
   try{const r=await API("order-create",{order:o});orders.unshift(r.order);knownIds&&knownIds.add(r.order.id);freshIds.add(r.order.id);$("#dlg").close();renderOrders();toast(`Demande de ${r.order.prenom} ajoutée dans « À appeler »`)}
   catch(e){$("#pSave").disabled=false;if(e instanceof AuthError){$("#dlg").close();showLogin(e.message);return}toast("Enregistrement impossible : "+(e.message||e))}
@@ -853,9 +925,12 @@ function renderSynth(){
   const enCours=orders.filter(o=>o.status==="appeler"||o.status==="livraison");
   const pct=(a,b)=>b?Math.round(a/b*100)+" %":"–";
   const pay=[["especes","Espèces","cash"],["cb","CB","cb"],[undefined,"Non saisi","none"]].map(([k,l,c])=>{const S=sold.filter(o=>(o.paiement||undefined)===k),v=S.reduce((a,o)=>a+o.total,0);return {label:l,sub:`${S.length} vente${S.length>1?"s":""} · ${pct(v,ca)}`,v,cls:c}}).filter(r=>r.v>0||r.label!=="Non saisi");
-  const liv=[...new Set([...livreurs(),...sold.map(o=>o.livreur).filter(Boolean)])].map(n=>{const S=sold.filter(o=>o.livreur===n),cx=canc.filter(o=>o.livreur===n&&o.cancelFrom==="livraison").length;
-    return {label:esc(n),sub:`${S.length} livraison${S.length>1?"s":""}${cx?` · ${cx} annulée${cx>1?"s":""} sur place`:""}`,v:S.reduce((a,o)=>a+o.total,0)}}).sort((a,b)=>b.v-a.v);
-  const noLiv=sold.filter(o=>!o.livreur);if(noLiv.length)liv.push({label:"Sans livreur",sub:`${noLiv.length} livraison${noLiv.length>1?"s":""}`,v:noLiv.reduce((a,o)=>a+o.total,0),cls:"none"});
+  const nmL=k=>k.startsWith("n:")?k.slice(2):(livById(k)||{}).prenom||k,nmP=k=>k.startsWith("n:")?k.slice(2):(pointById(k)||{}).nom||k;
+  const liv=[...new Set([...livActifs().map(l=>l.id),...sold.map(keyLiv).filter(Boolean)])].map(k=>{const S=sold.filter(o=>keyLiv(o)===k),cx=canc.filter(o=>keyLiv(o)===k&&o.cancelFrom==="livraison").length,es=S.filter(o=>o.paiement==="especes").reduce((a,o)=>a+o.total,0);
+    return {label:esc(nmL(k)),sub:`${S.length} livraison${S.length>1?"s":""}${es?` · ${eur(es)} en espèces`:""}${cx?` · ${cx} annulée${cx>1?"s":""} sur place`:""}`,v:S.reduce((a,o)=>a+o.total,0)}}).sort((a,b)=>b.v-a.v);
+  const noLiv=sold.filter(o=>!keyLiv(o));if(noLiv.length)liv.push({label:"Sans livreur",sub:`${noLiv.length} livraison${noLiv.length>1?"s":""}`,v:noLiv.reduce((a,o)=>a+o.total,0),cls:"none"});
+  const pts=[...new Set([...sold,...canc].map(keyPt).filter(Boolean))].map(k=>{const S=sold.filter(o=>keyPt(o)===k),C=canc.filter(o=>keyPt(o)===k).length;
+    return {label:esc(nmP(k)),sub:`${S.length} vente${S.length>1?"s":""}${C?` · ${C} annulée${C>1?"s":""} (${pct(C,C+S.length)})`:""}`,v:S.reduce((a,o)=>a+o.total,0)}}).sort((a,b)=>b.v-a.v);
   const art={};sold.forEach(o=>o.lines.forEach(l=>{art[l.name]=art[l.name]||{q:0,v:0};art[l.name].q+=l.q;art[l.name].v+=l.q*l.price}));
   let arts=Object.entries(art).map(([n,x])=>({label:esc(n),sub:`${x.q} vendu${x.q>1?"s":""}`,v:x.v})).sort((a,b)=>b.v-a.v);const artN=arts.length;if(!symore)arts=arts.slice(0,8);
   const mrows=months.map(m=>{const S=orders.filter(o=>o.status==="livree"&&monthKey(saleDate(o))===m),C=orders.filter(o=>o.status==="annulee"&&monthKey(new Date(o.date))===m),sum=f=>S.filter(f).reduce((a,o)=>a+o.total,0);
@@ -873,6 +948,7 @@ function renderSynth(){
   <div class="sgrid">
     <section class="spanel"><h3>Par moyen de paiement</h3>${nb?bars(pay):none}</section>
     <section class="spanel"><h3>Par livreur</h3>${nb?bars(liv):none}</section>
+    <section class="spanel" style="grid-column:1/-1"><h3>Par point de livraison</h3>${pts.length?bars(pts):none}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par article <small>${artN} article${artN>1?"s":""} vendus</small></h3>${artN?bars(arts):none}${artN>8?`<button class="more" data-symore>${symore?"Voir moins":`Voir les ${artN} articles`}</button>`:""}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par mois</h3>${mrows.length?`<div class="stable"><table><thead><tr><th>Mois</th><th>Ventes</th><th>CA TTC</th><th>Espèces</th><th>CB</th><th>Non saisi</th><th>Annulées</th></tr></thead><tbody>
       ${mrows.map(r=>`<tr><td class="m">${monthLabel(r.m)}</td><td>${r.n}</td><td>${eur(r.ca)}</td><td>${eur(r.es)}</td><td>${eur(r.cb)}</td><td>${eur(r.ns)}</td><td>${r.c}</td></tr>`).join("")}
@@ -882,16 +958,159 @@ function renderSynth(){
 document.addEventListener("click",e=>{if(e.target.closest("[data-symore]")){symore=!symore;renderSynth()}});
 document.addEventListener("change",e=>{if(e.target.id==="syPeriod"){synthPeriod=e.target.value;renderSynth()}});
 
-/* ---------- Réglages : livreurs ---------- */
+/* ---------- Réglages : points de livraison, livreurs, demandes, boutique ----------
+   Public (reglages.json, dans le dépôt) : numéro WhatsApp, points de livraison (nom, consigne, actif, ordre).
+   Interne (base D1) : fiches livreurs, livreur habituel et note de chaque point, motifs, modèle de message. */
+const slug=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24)||"x";
+const plural=(n,w)=>`${n} ${w}${n>1?"s":""}`;
+const nat=w=>{w=String(w||"");return w.startsWith("262")?"0"+w.slice(3):w.startsWith("33")?"0"+w.slice(2):"+"+w};
+function toIntl(v){const n=normTel(v);if(/^0\d{9}$/.test(n))return intlTel(n);const d=String(v||"").replace(/\D/g,"");return /^\d{11,15}$/.test(d)?d:""}
+async function loadConf(){
+  try{const r=await API("config");CONF=r.config||{contact:{whatsapp:"262693473945"},points:FALLBACK_POINTS.map(p=>({...p}))};confSha=r.sha||null;confErr=""}
+  catch(e){if(e instanceof AuthError){showLogin(e.message);return}confErr=e.message||String(e)}
+  renderSettings();if(tab==="orders")renderOrders();
+}
+async function saveConf(next,msg){
+  try{const r=await API("config",{config:next,sha:confSha,message:"Gestion : "+msg});CONF=r.config;confSha=r.sha;return true}
+  catch(e){if(e instanceof AuthError){showLogin(e.message);return false}
+    if(e instanceof Conflict){await loadConf();toast("Réglages modifiés depuis un autre appareil : rechargés, refaites la modification.");return false}
+    toast("Enregistrement impossible : "+(e.message||e));return false}
+}
+async function saveSettings(part,msg){
+  if(!HASDB){toast("Base de données non reliée");return false}
+  try{settings=await API("settings",part);if(msg)toast(msg);renderSettings();if(tab==="orders")renderOrders();return true}
+  catch(e){if(e instanceof AuthError){showLogin(e.message);return false}toast("Enregistrement impossible : "+(e.message||e));return false}
+}
+function statsOf(pred){
+  const L=orders.filter(pred),D=L.filter(o=>o.status==="livree"),sum=a=>a.reduce((x,o)=>x+(+o.total||0),0);
+  return {n:L.length,liv:D.length,ca:sum(D),es:sum(D.filter(o=>o.paiement==="especes")),cb:sum(D.filter(o=>o.paiement==="cb")),ns:sum(D.filter(o=>!o.paiement)),
+    cours:L.filter(o=>o.status==="livraison").length,annul:L.filter(o=>o.status==="annulee").length,annulSur:L.filter(o=>o.status==="annulee"&&o.cancelFrom==="livraison").length};
+}
+const ptInt=id=>(settings.points||{})[id]||{};
 function renderSettings(){
-  $("#livChips").innerHTML=livreurs().map(n=>`<span class="chip">${esc(n)}<button data-livdel="${esc(n)}" aria-label="Retirer ${esc(n)}">✕</button></span>`).join("")||'<span class="hint">Aucun livreur pour l’instant.</span>';
+  $("#setWarn").innerHTML=(confErr?`<div class="banner warn"><p>Réglages de la boutique non chargés : ${esc(confErr)}</p><button class="btn" data-reconf>Réessayer</button></div>`:"")
+    +(!HASDB?`<div class="banner warn"><p>Base de données non reliée : les fiches livreurs et les réglages des demandes ne peuvent pas être enregistrés.</p></div>`:"");
+  const P=points();
+  $("#ptList").innerHTML=P.map((p,i)=>{const v=ptInt(p.id),l=livById(v.livreurId),st=statsOf(o=>keyPt(o)===p.id);
+    return `<div class="fitem${p.actif===false?" off":""}"><span class="fdot"></span><button class="fopen" data-pt="${esc(p.id)}"><b>${esc(p.nom)}</b>
+      <small>${p.actif===false?"En pause · ":""}${p.consigne?esc(p.consigne)+" · ":""}${l?"Livreur habituel : "+esc(l.prenom):"Pas de livreur habituel"}</small>
+      <small class="tabnum">${plural(st.n,"demande")} · ${plural(st.liv,"livrée")} · ${eur(st.ca)}</small></button>
+      <span class="fmv"><button data-ptmv="${i}" data-dir="-1" aria-label="Monter" ${i&&CONF?"":"disabled"}>↑</button><button data-ptmv="${i}" data-dir="1" aria-label="Descendre" ${i<P.length-1&&CONF?"":"disabled"}>↓</button></span></div>`}).join("")
+    ||'<p class="fempty">Aucun point de livraison.</p>';
+  $("#lvList").innerHTML=livreurs().map(l=>{const st=statsOf(o=>keyLiv(o)===l.id),pts=points().filter(p=>ptInt(p.id).livreurId===l.id);
+    return `<div class="fitem${l.actif===false?" off":""}"><span class="fdot"></span><button class="fopen" data-lv="${esc(l.id)}"><b>${esc(l.prenom)}</b>
+      <small>${l.actif===false?"Inactif · ":""}${STATUTS[l.statut]||"Statut à préciser"} · ${l.tel?fmtTel2(l.tel):"téléphone manquant"}</small>
+      <small class="tabnum">${plural(st.liv,"livraison")} · ${eur(st.ca)}${st.es?` dont ${eur(st.es)} en espèces`:""}${pts.length?" · "+pts.map(p=>esc(p.nom.split(" — ")[0])).join(", "):""}</small></button></div>`}).join("")
+    ||`<p class="fempty">${HASDB?"Aucun livreur pour l’instant.":"Disponible une fois la base de données reliée."}</p>`;
+  $("#mtChips").innerHTML=motifs().map(m=>`<span class="chip">${esc(m)}<button data-mtdel="${esc(m)}" aria-label="Retirer ${esc(m)}">✕</button></span>`).join("");
+  if(document.activeElement!==$("#mdTxt"))$("#mdTxt").value=settings.modele||DEFAULT_MODELE;
+  if(document.activeElement!==$("#waIn")&&CONF&&CONF.contact)$("#waIn").value=fmtTelInput(nat(CONF.contact.whatsapp));
+  $("#ptAdd").disabled=!CONF;$("#waSave").disabled=!CONF;$("#lvAdd").disabled=!HASDB;
+  ["#mtAdd","#mdSave","#mdReset"].forEach(s=>$(s).disabled=!HASDB);
   renderPushPanel();
 }
-async function saveLivreurs(L){const prev=settings.livreurs;settings={...settings,livreurs:L};renderSettings();
-  try{settings=await API("settings",{livreurs:L});renderSettings();toast("Livreurs enregistrés")}catch(e){settings={...settings,livreurs:prev};renderSettings();toast("Enregistrement impossible : "+(e.message||e))}}
-$("#livAdd").onclick=()=>{const n=$("#livIn").value.trim();if(!n)return;if(!HASDB){toast("Base de données non reliée");return}if(livreurs().includes(n)){toast("Déjà dans la liste");return}$("#livIn").value="";saveLivreurs([...livreurs(),n])};
-$("#livIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("#livAdd").click()});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-livdel]");if(b)saveLivreurs(livreurs().filter(n=>n!==b.dataset.livdel))});
+const statGrid=c=>`<div class="fstats">${c.filter(Boolean).map(([k,v])=>`<div><span>${k}</span><b class="tabnum">${v}</b></div>`).join("")}</div>`;
+function armDelete(btn,go){btn.onclick=()=>{if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="Confirmer la suppression";setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent="Supprimer"}},5000);return}go()}}
+
+/* Fiche point de livraison */
+function openPoint(id){
+  if(!CONF){toast("Réglages de la boutique non chargés");return}
+  const isNew=!id,p=isNew?{id:"",nom:"",consigne:"",actif:true}:points().find(x=>x.id===id);if(!p)return;
+  const v=ptInt(p.id),st=isNew?null:statsOf(o=>keyPt(o)===p.id),used=!!(st&&st.n),d=$("#dlg");
+  d.innerHTML=`<div class="dh"><h2 id="dlgT">${isNew?"Nouveau point de livraison":"Point de livraison"}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+  <div class="db">
+    ${st?statGrid([["Demandes",st.n],["Livrées",st.liv],["CA livré",eur(st.ca)],["Annulées",st.annul]]):""}
+    <label class="fld">Nom affiché aux clients<input class="inp" id="ptNom" value="${esc(p.nom)}" placeholder="Ex. Saint-Paul — Parking du marché forain"></label>
+    <label class="fld">Consigne pour le client <small>facultatif · affichée dans le panier et dans la confirmation</small><input class="inp" id="ptCons" value="${esc(p.consigne||"")}" placeholder="Ex. devant l’entrée principale"></label>
+    <label class="fld">Livreur habituel <small>attribué d’office aux nouvelles demandes de ce point</small><select class="sel" id="ptLiv"${HASDB?"":" disabled"}><option value="">Aucun</option>${livActifs().map(l=>`<option value="${esc(l.id)}"${l.id===v.livreurId?" selected":""}>${esc(l.prenom)}</option>`).join("")}</select></label>
+    <label class="fld">Note interne <small>jamais visible par les clients</small><textarea class="ta" id="ptNote" rows="2"${HASDB?"":" disabled"} placeholder="Ex. se garer au fond du parking">${esc(v.note||"")}</textarea></label>
+    <label class="tglrow"><input type="checkbox" id="ptOn" ${p.actif!==false?"checked":""}> Proposé aux clients</label>
+    ${used?`<p class="hint">Ce point a déjà servi : pour l’arrêter, décochez « Proposé aux clients ». Son historique reste dans la synthèse.</p>`:""}
+  </div>
+  <div class="df">${!isNew&&!used?'<button class="btn sm danger" id="ptDel">Supprimer</button>':""}<span class="sp"></span><button class="btn" data-close>Annuler</button><button class="btn pri" id="ptSave">${isNew?"Ajouter":"Enregistrer"}</button></div>`;
+  d.showModal();if(isNew)setTimeout(()=>$("#ptNom").focus(),60);
+  $("#ptSave").onclick=async()=>{
+    const nom=$("#ptNom").value.trim().replace(/\s+/g," "),cons=$("#ptCons").value.trim().replace(/\s+/g," "),on=$("#ptOn").checked;
+    if(nom.length<2){toast("Donnez un nom au point de livraison");$("#ptNom").focus();return}
+    if(points().some(x=>x.id!==p.id&&x.nom===nom)){toast("Un autre point porte déjà ce nom");return}
+    const next=JSON.parse(JSON.stringify(CONF));let pid=p.id;
+    if(isNew){const b="p-"+slug(nom);pid=b;for(let k=2;next.points.some(x=>x.id===pid);k++)pid=b+"-"+k;next.points.push({id:pid,nom,consigne:cons,actif:on})}
+    else Object.assign(next.points.find(x=>x.id===pid),{nom,consigne:cons,actif:on});
+    if(!next.points.some(x=>x.actif!==false)){toast("Gardez au moins un point proposé aux clients");return}
+    const btn=$("#ptSave");btn.disabled=true;
+    const pub=JSON.stringify(next)!==JSON.stringify(CONF);
+    if(pub&&!(await saveConf(next,isNew?`nouveau point de livraison ${nom}`:`point de livraison ${nom}${on?"":" en pause"}`))){btn.disabled=false;return}
+    if(HASDB){const lv=$("#ptLiv").value,note=$("#ptNote").value.trim(),P2={...(settings.points||{})};
+      if(lv||note)P2[pid]={...(lv?{livreurId:lv}:{}),...(note?{note}:{})};else delete P2[pid];
+      if(JSON.stringify(P2)!==JSON.stringify(settings.points||{})&&!(await saveSettings({points:P2}))){btn.disabled=false;return}}
+    d.close();renderSettings();toast(pub?"Point enregistré · visible sur la boutique d’ici 1 à 2 minutes":"Point enregistré");
+  };
+  const del=$("#ptDel");if(del)armDelete(del,async()=>{
+    const next=JSON.parse(JSON.stringify(CONF));next.points=next.points.filter(x=>x.id!==p.id);
+    if(!next.points.some(x=>x.actif!==false)){toast("Gardez au moins un point proposé aux clients");return}
+    if(await saveConf(next,`point de livraison ${p.nom} supprimé`)){if(HASDB&&settings.points&&settings.points[p.id]){const P2={...settings.points};delete P2[p.id];await saveSettings({points:P2})}d.close();renderSettings();toast("Point supprimé")}});
+}
+
+/* Fiche livreur */
+function openLivreur(id){
+  if(!HASDB){toast("Base de données non reliée");return}
+  const isNew=!id,l=isNew?{id:"",prenom:"",actif:true}:livById(id);if(!l)return;
+  const st=isNew?null:statsOf(o=>keyLiv(o)===l.id),used=!!(st&&st.n),pts=isNew?[]:points().filter(p=>ptInt(p.id).livreurId===l.id),it=intlTel(l.tel),d=$("#dlg");
+  d.innerHTML=`<div class="dh"><h2 id="dlgT">${isNew?"Nouveau livreur":esc(l.prenom)}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+  <div class="db">
+    ${st?statGrid([["Livraisons",st.liv],["CA livré",eur(st.ca)],["Espèces encaissées",eur(st.es)],["CB",eur(st.cb)],st.ns&&["Paiement non saisi",eur(st.ns)],["En cours",st.cours],["Annulées sur place",st.annulSur]]):""}
+    ${l.tel?`<div class="oacts"><a class="btn sm" href="tel:${esc(l.tel)}">Appeler</a>${it?`<a class="btn sm wa" href="https://wa.me/${it}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div>`:""}
+    <div class="frow"><label class="fld">Prénom <small>tel qu’il apparaît dans les demandes</small><input class="inp" id="lvP" value="${esc(l.prenom)}"></label>
+      <label class="fld">Téléphone <small>pour lui transmettre les demandes</small><input class="inp tabnum" id="lvT" inputmode="tel" value="${esc(fmtTel2(l.tel||""))}"></label></div>
+    <div class="frow"><label class="fld">Statut<select class="sel" id="lvS"><option value="">À préciser</option>${Object.entries(STATUTS).map(([k,v])=>`<option value="${k}"${k===l.statut?" selected":""}>${v}</option>`).join("")}</select></label>
+      <label class="fld" id="lvSirF">SIRET<input class="inp tabnum" id="lvSir" inputmode="numeric" value="${esc(l.siret||"")}" placeholder="14 chiffres"></label></div>
+    <label class="fld">Note interne<textarea class="ta" id="lvN" rows="2" placeholder="Ex. véhicule, secteur, disponibilités">${esc(l.note||"")}</textarea></label>
+    ${pts.length?`<p class="hint">Livreur habituel de : ${pts.map(p=>esc(p.nom)).join(" ; ")}</p>`:""}
+    <label class="tglrow"><input type="checkbox" id="lvOn" ${l.actif!==false?"checked":""}> Actif (proposé dans les demandes)</label>
+    ${used?`<p class="hint">Ce livreur a déjà des demandes : pour l’arrêter, décochez « Actif ». Son historique reste dans la synthèse.</p>`:""}
+  </div>
+  <div class="df">${!isNew&&!used?'<button class="btn sm danger" id="lvDel">Supprimer</button>':""}<span class="sp"></span><button class="btn" data-close>Annuler</button><button class="btn pri" id="lvSave">${isNew?"Ajouter":"Enregistrer"}</button></div>`;
+  d.showModal();if(isNew)setTimeout(()=>$("#lvP").focus(),60);
+  bindTelFormat($("#lvT"));
+  const sir=()=>{$("#lvSirF").hidden=$("#lvS").value!=="auto"};$("#lvS").onchange=sir;sir();
+  $("#lvSave").onclick=async()=>{
+    const prenom=$("#lvP").value.trim().replace(/\s+/g," "),telRaw=$("#lvT").value.trim(),tel=normTel(telRaw);
+    if(!prenom){toast("Indiquez le prénom");$("#lvP").focus();return}
+    if(livreurs().some(x=>x.id!==l.id&&x.prenom.toLowerCase()===prenom.toLowerCase())){toast("Un livreur porte déjà ce prénom : ajoutez l’initiale du nom");return}
+    if(telRaw&&!/^0\d{9}$/.test(tel)){toast("Numéro de téléphone incomplet");$("#lvT").focus();return}
+    const f={prenom,tel:telRaw?tel:"",statut:$("#lvS").value,siret:$("#lvS").value==="auto"?$("#lvSir").value.replace(/\D/g,""):"",note:$("#lvN").value.trim(),actif:$("#lvOn").checked};
+    if(f.siret&&f.siret.length!==14){toast("Le SIRET compte 14 chiffres");return}
+    let L2;
+    if(isNew){const b="l-"+slug(prenom);let nid=b;for(let k=2;livreurs().some(x=>x.id===nid);k++)nid=b+"-"+k;L2=[...livreurs(),{id:nid,...f}]}
+    else L2=livreurs().map(x=>x.id===l.id?{...x,...f}:x);
+    $("#lvSave").disabled=true;
+    if(await saveSettings({livreurs:L2},isNew?`${prenom} ajouté aux livreurs`:"Fiche enregistrée"))d.close();else $("#lvSave").disabled=false;
+  };
+  const del=$("#lvDel");if(del)armDelete(del,async()=>{
+    const P2={...(settings.points||{})};Object.keys(P2).forEach(k=>{if(P2[k].livreurId===l.id){P2[k]={...P2[k]};delete P2[k].livreurId}});
+    if(await saveSettings({livreurs:livreurs().filter(x=>x.id!==l.id),points:P2},`${l.prenom} supprimé`))d.close()});
+}
+
+document.addEventListener("click",async e=>{
+  const pt=e.target.closest("[data-pt]");if(pt){openPoint(pt.dataset.pt);return}
+  const lv=e.target.closest("[data-lv]");if(lv){openLivreur(lv.dataset.lv);return}
+  if(e.target.closest("[data-reconf]")){loadConf();return}
+  const mv=e.target.closest("[data-ptmv]");if(mv&&CONF){const i=+mv.dataset.ptmv,j=i+ +mv.dataset.dir,next=JSON.parse(JSON.stringify(CONF));if(j<0||j>=next.points.length)return;
+    [next.points[i],next.points[j]]=[next.points[j],next.points[i]];document.querySelectorAll("[data-ptmv]").forEach(b=>b.disabled=true);
+    if(await saveConf(next,"ordre des points de livraison"))toast("Ordre enregistré · visible sur la boutique d’ici 1 à 2 minutes");renderSettings();return}
+  const md=e.target.closest("[data-mtdel]");if(md){const m=motifs().filter(x=>x!==md.dataset.mtdel);if(!m.length){toast("Gardez au moins un motif");return}saveSettings({motifs:m},"Motif retiré");return}
+});
+$("#ptAdd").onclick=()=>openPoint(null);
+$("#lvAdd").onclick=()=>openLivreur(null);
+$("#mtAdd").onclick=()=>{const v=$("#mtIn").value.trim();if(!v)return;if(motifs().includes(v)){toast("Déjà dans la liste");return}$("#mtIn").value="";saveSettings({motifs:[...motifs(),v]},"Motif ajouté")};
+$("#mtIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("#mtAdd").click()});
+$("#mdSave").onclick=()=>{const t=$("#mdTxt").value.trim();if(!t){toast("Le message est vide");return}saveSettings({modele:t===DEFAULT_MODELE?"":t},"Message enregistré")};
+$("#mdReset").onclick=()=>{$("#mdTxt").value=DEFAULT_MODELE;saveSettings({modele:""},"Message d’origine rétabli")};
+bindTelFormat($("#waIn"));
+$("#waSave").onclick=async()=>{const wa=toIntl($("#waIn").value);if(!wa){toast("Numéro invalide");$("#waIn").focus();return}
+  if(!CONF||CONF.contact.whatsapp===wa){toast("Numéro inchangé");return}
+  const next=JSON.parse(JSON.stringify(CONF));next.contact={...next.contact,whatsapp:wa};$("#waSave").disabled=true;
+  if(await saveConf(next,"numéro WhatsApp"))toast("Numéro enregistré · visible sur la boutique d’ici 1 à 2 minutes");renderSettings()};
 
 /* ---------- Notifications (Web Push) ---------- */
 const PUSH={
@@ -948,7 +1167,7 @@ function renderPushBanner(){
 }
 document.addEventListener("click",async e=>{
   if(e.target.closest("[data-pushhide]")){ls.set("pushHide","1");renderPushBanner();return}
-  if(e.target.closest("[data-goset]")){setTab("settings");return}
+  if(e.target.closest("[data-goset]")){setTab("settings");setTimeout(()=>$("#pushPanel").scrollIntoView({block:"start"}),50);return}
   const b=e.target.closest("[data-push]");if(!b||PUSH.busy)return;PUSH.busy=true;b.disabled=true;
   try{const a=b.dataset.push;
     if(a==="on"){await PUSH.enable();toast("Notifications activées");API("push-test",{}).catch(()=>{})}
@@ -996,7 +1215,7 @@ async function start(){
   setStatus("saving","Chargement du catalogue…");
   await reload();
   $("#vLogin").hidden=true;$("#logout").hidden=false;
-  if(MODE==="relay"){$("#tabs").hidden=false;if(HASDB){knownIds=null;loadOrders();loadSettings();PUSH.init()}}
+  if(MODE==="relay"){$("#tabs").hidden=false;loadConf();if(HASDB){knownIds=null;loadOrders();loadSettings();PUSH.init()}}
   setTab(tabFromHash()||(MODE==="relay"?(HASDB?"orders":ls.get("tab")||"articles"):"articles"));
 }
 (async()=>{
