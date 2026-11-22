@@ -220,7 +220,9 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .catnav[hidden]{display:none}
 .catnav button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:980px;padding:6px 13px;font-size:13px;font-weight:600;white-space:nowrap}
 .catnav button[aria-current="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.ghead{scroll-margin-top:var(--tb,170px)}
+.catnav .promochip{background:#fde3e7;color:#e4002b;border-color:#f6b3bf;font-weight:800}
+.catnav .promochip[aria-pressed="true"]{background:#e4002b;color:#fff;border-color:#e4002b}
+.ghead,.resultline{scroll-margin-top:var(--tb,170px)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .resultline{color:var(--muted);font-size:13px;margin:18px 0 18px}
 /* Grille */
@@ -605,6 +607,7 @@ const store = {
 };
 let outOfStock = new Set();
 let cart = store.get("cart",{});
+let promoOnly = false;
 let cat = "all", query = "", sortBy = "az", drawerView = "cart", sheetId = null, sheetImg = 0, sheetVar = "";
 
 const $ = s => document.querySelector(s);
@@ -686,15 +689,16 @@ document.addEventListener("touchstart",e=>{const c=e.target.closest?.("#grid .ca
 document.addEventListener("touchend",e=>{document.querySelectorAll("#grid .card.touch").forEach(c=>{c.classList.remove("touch");c._pt=setTimeout(()=>{const r=c.getBoundingClientRect(),mid=innerHeight/2;if(!(r.top<mid+innerHeight*.03&&r.bottom>mid-innerHeight*.03))c.classList.remove("peek")},700)})},{passive:true});
 function renderGrid(){
   const words = norm(query).split(/\s+/).filter(Boolean);
-  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;const hay=norm([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs].join(" "));return words.every(w=>hay.includes(w))});
+  if(promoOnly&&!PRODUCTS.some(p=>p.was))promoOnly=false;
+  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;if(promoOnly&&!p.was)return false;const hay=norm([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs].join(" "));return words.every(w=>hay.includes(w))});
   list.sort((a,b)=>sortBy==="asc"?a.price-b.price||a.name.localeCompare(b.name,"fr"):sortBy==="desc"?b.price-a.price||a.name.localeCompare(b.name,"fr"):a.name.localeCompare(b.name,"fr"));
   list = [...list.filter(p=>!outOfStock.has(p.id)),...list.filter(p=>outOfStock.has(p.id))];
   const grouped = cat==="all";
   if(grouped){const order=CATS.map(c=>c[0]);list.sort((a,b)=>order.indexOf(a.cat)-order.indexOf(b.cat));} // tri stable : ordre A→Z et ruptures en fin conservés dans chaque catégorie
   const n=list.length;
-  $("#resultLine").textContent = `${n} article${n>1?"s":""}${cat!=="all"?" · "+CATNAME[cat]:""}${words.length?` pour « ${query.trim()} »`:""}`;
+  $("#resultLine").textContent = `${n} article${n>1?"s":""}${promoOnly?" en promo":""}${cat!=="all"?" · "+CATNAME[cat]:""}${words.length?` pour « ${query.trim()} »`:""}`;
   if(catalogueState!=="ok"){$("#resultLine").textContent="";$("#grid").innerHTML=catalogueState==="error"?`<p class="empty">Le catalogue n’a pas pu être chargé. Vérifiez votre connexion. <button class="add" style="margin:12px auto 0" id="retryCat">Réessayer</button></p>`:`<p class="empty">Chargement du catalogue…</p>`;const r=$("#retryCat");if(r)r.onclick=loadCatalogue;renderCatNav([]);return}
-  if(!n){$("#grid").innerHTML=`<p class="empty">Aucun article ne correspond${words.length?` à « ${esc(query.trim())} »`:""}${cat!=="all"?" dans "+CATNAME[cat]:""}. Essayez un autre mot-clé ou toutes les catégories.</p>`;return}
+  if(!n){$("#grid").innerHTML=promoOnly&&!words.length?`<p class="empty">Aucune promo en cours${cat!=="all"?" dans "+CATNAME[cat]:""}.</p>`:`<p class="empty">Aucun article ne correspond${words.length?` à « ${esc(query.trim())} »`:""}${cat!=="all"?" dans "+CATNAME[cat]:""}. Essayez un autre mot-clé ou toutes les catégories.</p>`;return}
   let prevCat=null;
   $("#grid").innerHTML = list.map(p=>{
     const out = outOfStock.has(p.id);
@@ -713,8 +717,8 @@ function renderGrid(){
 let navObs=null;
 function tbOffset(){const t=document.querySelector(".toolbar");return t?Math.round(t.getBoundingClientRect().height+52+8):170}
 function renderCatNav(cats){
-  const nav=$("#catnav");nav.hidden=cats.length<2;
-  nav.innerHTML=cats.map((c,i)=>`<button data-jump="${c}" aria-current="${i===0}">${CATNAME[c]}</button>`).join("");
+  const nav=$("#catnav"),hasPromo=PRODUCTS.some(p=>p.was);nav.hidden=cats.length<2&&!hasPromo;
+  nav.innerHTML=(hasPromo?`<button class="promochip" data-promo aria-pressed="${promoOnly}">${promoOnly?"✕ ":""}% Promo</button>`:"")+(cats.length>1?cats.map((c,i)=>`<button data-jump="${c}" aria-current="${i===0}">${CATNAME[c]}</button>`).join(""):"");
   document.documentElement.style.setProperty("--tb",tbOffset()+"px");
   navObs?.disconnect();if(!("IntersectionObserver" in window)||cats.length<2)return;
   navObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setNavActive(e.target.dataset.cat)}),{rootMargin:`-${tbOffset()}px 0px -60% 0px`});
@@ -885,6 +889,7 @@ function route(){const h=location.hash,m=h.match(/^#produit-(a\d+)$/),v=h==="#me
 
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{
+  const pv=e.target.closest("[data-promo]");if(pv){promoOnly=!promoOnly;renderGrid();const r=$("#resultLine");if(r&&r.getBoundingClientRect().top<0||promoOnly){document.documentElement.style.setProperty("--tb",tbOffset()+"px");r.scrollIntoView({block:"start",behavior:"auto"})}return}
   const jv=e.target.closest("[data-jump]");if(jv){const h=document.getElementById("g-"+jv.dataset.jump);if(h){document.documentElement.style.setProperty("--tb",tbOffset()+"px");h.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});setNavActive(jv.dataset.jump)}return}
   const vb=e.target.closest("[data-var]");if(vb&&sheetId){const p=byId(sheetId);sheetVar=vb.dataset.var;document.querySelectorAll("#sheet [data-var]").forEach(b=>b.setAttribute("aria-checked",b.dataset.var===sheetVar));const v=p.variants.find(x=>x.name===sheetVar);if(v)goImg(v.img);refreshSheetAct();return}
   const t=e.target.closest("[data-inc],[data-dec],[data-open],[data-img],[data-go],[data-slide]");if(!t)return;
