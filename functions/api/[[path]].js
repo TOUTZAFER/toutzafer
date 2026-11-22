@@ -33,8 +33,8 @@
  * Les coordonnées des clients restent dans la base D1, jamais dans le dépôt GitHub.
  */
 const FILE = "catalogue.json";
-const PHOTO_PATH = /^img\/w\/a\d{2,4}-u\d{1,3}-(360|720)\.(webp|jpg)$/;
-const MAX_FILES = 24, MAX_FILE_B64 = 2_000_000, MAX_CATALOGUE = 1_000_000;
+const PHOTO_PATH = /^img\/(w\/a\d{2,4}-u\d{1,3}-(360|720)\.(webp|jpg)|og\/a\d{2,4}-u\d{1,3}\.jpg)$/; // photos 360/720 + aperçu de partage JPG
+const MAX_FILES = 36, MAX_FILE_B64 = 2_000_000, MAX_CATALOGUE = 1_000_000;
 const STEPS = ["appeler", "livraison", "livree", "annulee"];
 const RETENTION_DAYS = 183;          // 6 mois : au-delà, les demandes non livrées sont anonymisées
 const TZ_OFFSET_H = 4;               // La Réunion : UTC+4, sans heure d'été

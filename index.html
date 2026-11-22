@@ -4,10 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light only">
+<base href="/">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Tout'zafer : les articles du quotidien à petit prix à La Réunion. Livraison offerte en point de retrait, paiement au retrait.">
-<title>Tout'zafer</title>
+<!--meta-->
+<title>Tout’zafer · Articles du quotidien à petit prix à La Réunion</title>
+<meta name="description" content="Tout’zafer : les articles du quotidien à petit prix à La Réunion. Livraison offerte en point de livraison, paiement à la livraison.">
+<link rel="canonical" href="https://toutzafer.re/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tout’zafer">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Tout’zafer · Les articles du quotidien à petit prix">
+<meta property="og:description" content="Maison, rangement, cuisine, enfants, animaux. Livraison offerte en point de livraison à La Réunion, paiement à la livraison.">
+<meta property="og:url" content="https://toutzafer.re/">
+<meta property="og:image" content="https://toutzafer.re/img/og/accueil.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<!--/meta-->
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="icon" type="image/png" sizes="32x32" href="img/ico/favicon-32.png">
 <link rel="apple-touch-icon" href="img/ico/apple-touch-icon.png">
@@ -765,9 +777,13 @@ function afterCartChange(){save();refreshQuick();renderCount();if($("#drawer").c
 
 /* ---------- Fiche produit ---------- */
 let sheetPushed=false,curView=null;
-// adresse du site pour les liens partagés : celle où la boutique est ouverte (toutzafer.re une fois le domaine branché)
-const SITE_URL=/^https?:$/.test(location.protocol)?location.origin+location.pathname.replace(/[^/]*$/,""):"https://toutzafer.re/";
-const productURL=p=>SITE_URL+"#produit-"+p.id;
+// une adresse par article : /article/<id>-<nom> (même règle que functions/article/[[path]].js)
+const SITE_URL=/^https?:$/.test(location.protocol)?location.origin:"https://toutzafer.re";
+const slugify=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60).replace(/-+$/,"");
+const articlePath=p=>`/article/${p.id}-${slugify(p.name)}`;
+const productURL=p=>SITE_URL+articlePath(p);
+const HOME_TITLE=document.title;
+const pathArticle=()=>{const m=location.pathname.match(/^\/article\/(a\d{2,4})(?:-|$)/);return m?m[1]:null};
 const shareWA=p=>"https://wa.me/?text="+encodeURIComponent(`${p.name} à ${eur(p.price)} chez Tout'zafer : ${productURL(p)}`);
 function similarHTML(p){
   const ok=x=>x.id!==p.id&&!outOfStock.has(x.id);
@@ -777,13 +793,14 @@ function similarHTML(p){
   list=list.map((x,i)=>[x,(i*7+seed)%13]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]).slice(0,3);
   return `<div class="similar"><h3>Vous aimerez aussi</h3><div class="simgrid">${list.map(x=>`<button class="simcard" data-open="${x.id}" aria-label="Voir ${esc(x.name)}"><img src="${miniSrc(x)}" alt="" loading="lazy" width="360" height="360"><span class="sn">${esc(x.name)}</span><span class="sp${x.was?" promo":""}">${priceHTML(x.price)}${wasHTML(x)}</span></button>`).join("")}</div></div>`;
 }
-function openSheet(id){
-  if(sheetId&&sheetId!==id){try{history.replaceState(null,"","#produit-"+id)}catch(e){}openSheetRaw(id);$("#sheet").scrollTo({top:0});return}
-  if(location.hash!=="#produit-"+id){sheetPushed=true;location.hash="produit-"+id}else openSheetRaw(id)}
-function clearHash(){try{history.replaceState(null,"",location.href.split("#")[0])}catch(e){location.hash=""}}
-function closeSheet(){const was=!!sheetId;closeSheetRaw();if(was&&/^#produit-/.test(location.hash)){if(sheetPushed){sheetPushed=false;history.back()}else clearHash()}}
-function openSheetRaw(id){sheetId=id;sheetImg=0;sheetVar=byId(id)?.variants?.[0].name||"";renderSheet();$("#sheet").classList.add("on");$("#scrim").classList.add("on");$("#sheet").setAttribute("aria-hidden","false");$("#sheet .x")?.focus()}
-function closeSheetRaw(){sheetId=null;const sh=$("#sheet");sh.style.transform="";sh.style.transition="";$("#scrim").style.opacity="";sh.classList.remove("on");$("#sheet").setAttribute("aria-hidden","true");if(!$("#drawer").classList.contains("on"))$("#scrim").classList.remove("on")}
+function openSheet(id){const p=byId(id);if(!p)return;
+  if(sheetId&&sheetId!==id){try{history.replaceState({sheet:id},"",articlePath(p))}catch(e){}openSheetRaw(id);$("#sheet").scrollTo({top:0});return}
+  if(pathArticle()!==id){try{history.pushState({sheet:id},"",articlePath(p));sheetPushed=true}catch(e){}}
+  openSheetRaw(id)}
+function closeSheet(){const was=!!sheetId;closeSheetRaw();if(was&&pathArticle()){if(sheetPushed){sheetPushed=false;history.back()}else{try{history.replaceState(null,"","/")}catch(e){}}}}
+function go(url){try{history.pushState(null,"",url)}catch(e){location.href=url;return}sheetPushed=false;route()}
+function openSheetRaw(id){sheetId=id;sheetImg=0;sheetVar=byId(id)?.variants?.[0].name||"";document.title=`${byId(id).name} · Tout’zafer`;renderSheet();$("#sheet").classList.add("on");$("#scrim").classList.add("on");$("#sheet").setAttribute("aria-hidden","false");$("#sheet .x")?.focus()}
+function closeSheetRaw(){sheetId=null;document.title=HOME_TITLE;const sh=$("#sheet");sh.style.transform="";sh.style.transition="";$("#scrim").style.opacity="";sh.classList.remove("on");$("#sheet").setAttribute("aria-hidden","true");if(!$("#drawer").classList.contains("on"))$("#scrim").classList.remove("on")}
 function renderSheet(){
   const p=byId(sheetId);if(!p)return;const out=outOfStock.has(p.id);
   $("#sheet").innerHTML=`<span class="grab" aria-hidden="true"></span><button class="sheetx" id="closeSheet" aria-label="Fermer la fiche"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="gal"><div class="stage">
@@ -996,9 +1013,14 @@ function bindDone(){
 function selectRecap(){const r=document.createRange();r.selectNodeContents($("#recap"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Texte sélectionné, copiez-le")}
 
 function showView(v){curView=v;closeSheetRaw();closeCart();$("#shop").hidden=v!=="shop";$("#legalView").hidden=v!=="legal";$("#cgvView").hidden=v!=="cgv";if(v==="shop")renderGrid();scrollTo(0,0);setTimeout(renderCartBar,0)}
-function route(){const h=location.hash,m=h.match(/^#produit-(a\d+)$/),v=h==="#mentions-legales"?"legal":h==="#cgv"?"cgv":"shop";
+function route(){const h=location.hash,v=h==="#mentions-legales"?"legal":h==="#cgv"?"cgv":"shop";
+  // anciens liens « #produit-aNN » : convertis en adresse d'article
+  const old=h.match(/^#produit-(a\d+)$/);if(old&&byId(old[1])){try{history.replaceState(null,"",articlePath(byId(old[1])))}catch(e){}}
   if(curView!==v)showView(v);
-  if(v==="shop"){if(m&&byId(m[1])){if(sheetId!==m[1])openSheetRaw(m[1])}else if(sheetId){closeSheetRaw()}}}
+  if(v!=="shop")return;
+  const id=pathArticle();
+  if(id&&catalogueState==="ok"&&!byId(id)){try{history.replaceState(null,"","/")}catch(e){}toast("Cet article n’est plus disponible");if(sheetId)closeSheetRaw();return}
+  if(id&&byId(id)){if(sheetId!==id)openSheetRaw(id)}else if(sheetId){closeSheetRaw()}}
 
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{
@@ -1032,12 +1054,14 @@ $("#closeCart").onclick=closeCart;
 $("#scrim").onclick=()=>{closeSheet();closeCart()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSheet();closeCart()}
   if(sheetId&&(e.key==="ArrowRight"||e.key==="ArrowLeft"))goImg(sheetImg+(e.key==="ArrowRight"?1:-1))});
-$("#goHome").onclick=()=>{location.hash="";route()};
-$("#legal").onclick=()=>{location.hash="mentions-legales";route()};
-document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{location.hash="";route()});
-$("#cgv").onclick=()=>{location.hash="cgv";route()};
-document.querySelectorAll("[data-legal]").forEach(b=>b.onclick=()=>{location.hash="mentions-legales";route()});
+$("#goHome").onclick=()=>go("/");
+$("#legal").onclick=()=>go("/#mentions-legales");
+document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>go("/"));
+$("#cgv").onclick=()=>go("/#cgv");
+document.querySelectorAll("[data-legal]").forEach(b=>b.onclick=()=>go("/#mentions-legales"));
+document.addEventListener("click",e=>{const a=e.target.closest("[data-cgvlink]");if(a){e.preventDefault();go("/#cgv")}});
 addEventListener("hashchange",route);
+addEventListener("popstate",()=>{sheetPushed=false;route()});
 
 try{history.scrollRestoration="manual"}catch(e){}
 renderHero();renderCatSelect();renderCount();route();scrollTo(0,0);
@@ -1048,7 +1072,7 @@ async function loadCatalogue(){
   catch(e){console.warn("catalogue",e);catalogueState="error"}
   outOfStock=new Set(PRODUCTS.filter(p=>p.oos).map(p=>p.id));cleanCart();
   renderHero();renderCatSelect();renderCount();if(curView==="shop")renderGrid();
-  const m=location.hash.match(/^#produit-(a\d+)$/);if(m&&byId(m[1])&&sheetId!==m[1])openSheetRaw(m[1]);
+  route();
 }
 loadCatalogue();loadReglages();
 </script>

@@ -136,6 +136,8 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .sws input:checked{background:var(--ok)}
 .sws input:checked::after{transform:translateX(18px)}
 .hint{font-size:12px;color:var(--muted)}
+.artlink{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;background:var(--bg-alt);border-radius:12px;padding:8px 10px}
+.artlink span{font-weight:600;color:var(--muted)}.artlink a{flex:1;min-width:0;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .promo-box{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--bg-alt)}
 .promo-box .tgl{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
 .promo-box .tgl input{width:20px;height:20px;accent-color:var(--brand)}
@@ -430,6 +432,7 @@ async function makePhoto(file){
   for(const s of [360,720]){let b=await toBlob(squareCanvas(im,s),"image/webp",.82);
     if(!b||b.type!=="image/webp"){ext="jpg";b=await toBlob(squareCanvas(im,s),"image/jpeg",.85)} out[s]=b}
   if(ext==="jpg"&&out[360].type==="image/webp")out[360]=await toBlob(squareCanvas(im,360),"image/jpeg",.85);
+  out.og=await toBlob(squareCanvas(im,720),"image/jpeg",.82); // aperçu de partage (WhatsApp, Facebook)
   return {ext,blobs:out};
 }
 const b64=blob=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob)});
@@ -544,6 +547,12 @@ document.addEventListener("change",e=>{const id=e.target.dataset?.sw;if(!id)retu
   p.oos=!e.target.checked;render();toast(`${p.name} : ${p.oos?"en rupture":"de nouveau en stock"}`);change(`${p.name} ${p.oos?"en rupture":"en stock"}`)});
 $("#newBtn").onclick=()=>openEditor(null);
 
+/* ---------- Adresse publique d'un article (même règle que la boutique) ---------- */
+const slugify=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60).replace(/-+$/,"");
+const artURL=p=>`${location.origin}/article/${p.id}-${slugify(p.name)}`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-copyart]");if(!b)return;const u=b.dataset.copyart;
+  (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Lien copié"),()=>toast(u))});
+
 /* ---------- Fiche article ---------- */
 let ed=null;
 function openEditor(id){
@@ -555,6 +564,7 @@ function openEditor(id){
   <div class="db">
     <div class="fld">Photos <small>la première est la photo principale</small><div class="phs" id="ePhs"></div></div>
     <label class="fld">Nom<input class="inp" id="eName" value="${esc(ed.name)}" placeholder="Ex. Lot de 3 boîtes hermétiques"></label>
+    ${isNew||ed.hidden?"":`<div class="artlink"><span>Lien de l’article</span><a href="${esc(artURL(ed))}" target="_blank" rel="noopener">${esc(artURL(ed).replace(/^https?:\/\//,""))}</a><button type="button" class="btn sm" data-copyart="${esc(artURL(ed))}">Copier</button></div>`}
     <div class="frow"><label class="fld">Prix (€)<input class="inp tabnum" id="ePrice" type="text" inputmode="decimal" value="${ed.price===""?"":String(ed.price).replace(".",",")}" placeholder="19,99"></label>
       <label class="fld">Catégorie<select class="sel" id="eCat">${CATS.map(([k,l])=>`<option value="${k}"${k===ed.cat?" selected":""}>${l}</option>`).join("")}</select></label></div>
     <div class="promo-box">
@@ -613,7 +623,8 @@ async function saveEditor(){
   const btn=$("#eSave");btn.disabled=true;btn.textContent="Préparation…";
   try{
     for(const [b,ph] of Object.entries(ed.newPhotos)){if(!ed.base.includes(b))continue;const stem=b.replace(/\.(webp|jpg|png)$/,"");
-      for(const s of [360,720])pendingFiles.push({path:`img/w/${stem}-${s}.${ph.ext}`,data:await b64(ph.blobs[s])})}
+      for(const s of [360,720])pendingFiles.push({path:`img/w/${stem}-${s}.${ph.ext}`,data:await b64(ph.blobs[s])});
+      if(ph.blobs.og)pendingFiles.push({path:`img/og/${stem}.jpg`,data:await b64(ph.blobs.og)})}
     const vnames=$("#eVar").value.split("\n").map(s=>s.trim()).filter(Boolean);
     const p={id:ed.id,n:ed.n,cat:$("#eCat").value,name,price:Math.round(price*100)/100,d:$("#eD").value.trim(),desc:$("#eDesc").value.trim(),
       specs:$("#eSpecs").value.split("\n").map(s=>s.trim()).filter(Boolean),base:ed.base.slice(),oos:!$("#eStock").checked};
