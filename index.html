@@ -119,7 +119,11 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .tags{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:1}
 .tag{font-size:11px;font-weight:700;border-radius:980px;padding:4px 9px;background:var(--pop);color:var(--pop-fg)}
 .tag.deal{background:var(--brand);color:var(--brand-fg)}
-.tag.promo{background:#e4002b;color:#fff}
+.pastille{position:absolute;top:8px;right:8px;z-index:2;width:54px;height:54px;border-radius:50%;background:#e4002b;color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.02em;transform:rotate(-10deg);box-shadow:0 3px 10px rgba(0,0,0,.22);pointer-events:none}
+.stage .pastille{top:auto;right:auto;bottom:14px;left:14px;width:72px;height:72px;font-size:16px}
+.promo .pr{background:#e4002b;color:#fff}
+.price.promo,.sp.promo{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:2px}
+.price.promo .was,.sp.promo .was{margin-left:0;font-size:12px}
 .was{font-size:13px;font-weight:500;color:var(--muted);text-decoration:line-through;margin-left:7px;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
 .big .was{font-size:16px}
 .refnote{font-size:12px;color:var(--muted);margin:-2px 0 4px}
@@ -624,7 +628,8 @@ function priceHTML(v){const [e,c]=v.toFixed(2).split(".");return `<span class="p
 const wasHTML=p=>p.was?`<s class="was" aria-label="au lieu de ${eur(p.was)}">${eur(p.was)}</s>`:"";
 function tagsFor(p){const t=[];const n=name=>name.match(/lot de (\d+)/i)||name.match(/^(\d+)\s/);const m=n(p.name);const pc=p.name.match(/(\d+)\s*pièces/i);
   if(m)t.push(`<span class="tag">Lot de ${m[1]}</span>`);else if(pc)t.push(`<span class="tag">${pc[1]} pièces</span>`);
-  if(p.was)t.unshift(`<span class="tag promo">−${p.off} %</span>`);else if(p.price<15)t.push('<span class="tag deal">Petit prix</span>');return t.join("")}
+  if(!p.was&&p.price<15)t.push('<span class="tag deal">Petit prix</span>');return t.join("")}
+const pastilleHTML=p=>p.was?`<span class="pastille" aria-label="Promotion, moins ${p.off} %">PROMO</span>`:"";
 const HERO_SLIDES=[["img/hero/h1.jpg","a01"],["img/hero/h2.jpg","a02"],["img/hero/h3.jpg","a04"],["img/hero/h4.jpg","a20"],["img/hero/h5.jpg","a15"],["img/hero/h6.jpg","a07"]];
 let heroIdx=0,heroTimer=null,heroList=[];
 function renderHero(){
@@ -689,8 +694,8 @@ function renderGrid(){
     if(grouped&&p.cat!==prevCat){prevCat=p.cat;const k=list.filter(x=>x.cat===p.cat).length;head=`<h2 class="ghead" id="g-${p.cat}" data-cat="${p.cat}">${CATNAME[p.cat]}<span class="tabnum">${k}</span></h2>`}
     const quick=quickHTML(p);
     return head+`<article class="card${out?" out":""}" data-id="${p.id}">
-      <div class="media"><button class="thumb" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':`<span class="tags">${tagsFor(p)}</span>`}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</button>${quick}</div>
-      <div class="meta">${grouped?"":`<span class="cat">${CATNAME[p.cat]}</span>`}<button class="name" data-open="${p.id}">${esc(p.name)}</button><span class="price">${priceHTML(p.price)}${wasHTML(p)}</span></div>
+      <div class="media"><button class="thumb" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':`<span class="tags">${tagsFor(p)}</span>${pastilleHTML(p)}`}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</button>${quick}</div>
+      <div class="meta">${grouped?"":`<span class="cat">${CATNAME[p.cat]}</span>`}<button class="name" data-open="${p.id}">${esc(p.name)}</button><span class="price${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span></div>
       </article>`;
   }).join("");
   observePeek();
@@ -730,7 +735,7 @@ function similarHTML(p){
   if(list.length<3)list=list.concat(PRODUCTS.filter(x=>ok(x)&&x.cat!==p.cat&&!list.includes(x)));
   const seed=[...p.id].reduce((a,c)=>a+c.charCodeAt(0),0); // ordre stable par article
   list=list.map((x,i)=>[x,(i*7+seed)%13]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]).slice(0,3);
-  return `<div class="similar"><h3>Vous aimerez aussi</h3><div class="simgrid">${list.map(x=>`<button class="simcard" data-open="${x.id}" aria-label="Voir ${esc(x.name)}"><img src="${miniSrc(x)}" alt="" loading="lazy" width="360" height="360"><span class="sn">${esc(x.name)}</span><span class="sp">${priceHTML(x.price)}${wasHTML(x)}</span></button>`).join("")}</div></div>`;
+  return `<div class="similar"><h3>Vous aimerez aussi</h3><div class="simgrid">${list.map(x=>`<button class="simcard" data-open="${x.id}" aria-label="Voir ${esc(x.name)}"><img src="${miniSrc(x)}" alt="" loading="lazy" width="360" height="360"><span class="sn">${esc(x.name)}</span><span class="sp${x.was?" promo":""}">${priceHTML(x.price)}${wasHTML(x)}</span></button>`).join("")}</div></div>`;
 }
 function openSheet(id){
   if(sheetId&&sheetId!==id){try{history.replaceState(null,"","#produit-"+id)}catch(e){}openSheetRaw(id);$("#sheet").scrollTo({top:0});return}
@@ -744,12 +749,12 @@ function renderSheet(){
   $("#sheet").innerHTML=`<span class="grab" aria-hidden="true"></span><button class="sheetx" id="closeSheet" aria-label="Fermer la fiche"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="gal"><div class="stage">
       <div class="track" id="track">${p.imgs.map((s,i)=>imgTag(p,i,`alt="${esc(p.name)}, photo ${i+1} sur ${p.imgs.length}"`,SZ_BIG)).join("")}</div>
       <button class="nav prev" data-go="-1" aria-label="Photo précédente">‹</button><button class="nav next" data-go="1" aria-label="Photo suivante">›</button>
-      <span class="counter tabnum" id="counter"></span></div>
+      <span class="counter tabnum" id="counter"></span>${p.was&&!outOfStock.has(p.id)?pastilleHTML(p):""}</div>
     <div class="thumbs">${p.imgs.map((s,i)=>`<button data-img="${i}" aria-label="Voir la photo ${i+1}"><img src="${miniSrc(p,i)}" alt=""></button>`).join("")}</div></div>
     <div class="info">
       <span class="cat">${CATNAME[p.cat]}</span><h2 id="sTitle">${esc(p.name)}</h2>
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
-      <div class="buyrow"><span class="big">${priceHTML(p.price)}${wasHTML(p)}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
+      <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
       ${p.was?`<p class="refnote">Promotion −${p.off} %${p.promoTo?` jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"})} inclus`:""}.</p>`:""}
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
       ${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}
