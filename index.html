@@ -127,6 +127,12 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .was{font-size:13px;font-weight:500;color:var(--muted);text-decoration:line-through;margin-left:7px;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
 .big .was{font-size:16px}
 .saved{display:flex;justify-content:space-between;align-items:baseline;color:#e4002b;font-weight:700;font-size:15px;margin:-4px 0 10px}
+.big.promo{display:inline-flex;align-items:center;gap:10px}
+.wasbox{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.wasbox .was{margin-left:0;font-size:15px}
+.offrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.offdate{font-size:12px;font-weight:600;color:#e4002b}
+.offbadge{font-size:13px;font-weight:800;color:#e4002b;background:#fde3e7;border-radius:980px;padding:3px 9px;line-height:1.2;font-variant-numeric:tabular-nums}
 .refnote{font-size:12px;color:var(--muted);margin:-2px 0 4px}
 
 /* Mode de réception */
@@ -756,8 +762,7 @@ function renderSheet(){
     <div class="info">
       <span class="cat">${CATNAME[p.cat]}</span><h2 id="sTitle">${esc(p.name)}</h2>
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
-      <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
-      ${p.was?`<p class="refnote">−${p.off}%${p.promoTo?` jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"})} inclus`:""}</p>`:""}
+      <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${p.was?`<span class="wasbox">${wasHTML(p)}<span class="offrow"><span class="offbadge">−${p.off}%</span>${p.promoTo?`<span class="offdate">jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</span>`:""}</span></span>`:""}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
       ${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}
       ${p.specs.length?`<ul>${p.specs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
