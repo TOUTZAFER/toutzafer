@@ -129,6 +129,15 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .sws input:checked{background:var(--ok)}
 .sws input:checked::after{transform:translateX(18px)}
 .hint{font-size:12px;color:var(--muted)}
+.promo-box{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--bg-alt)}
+.promo-box .tgl{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
+.promo-box .tgl input{width:20px;height:20px;accent-color:var(--brand)}
+#ePromoF{display:flex;flex-direction:column;gap:10px}
+#ePromoF[hidden]{display:none!important}
+.hint b{color:var(--fg)} .bad{color:var(--err);font-weight:600}
+.flag.pr{background:#fde3e7;color:#c4002b}
+.row .pp{color:#c4002b}
+.row .u s{opacity:.8}
 
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--fg);color:var(--bg);border-radius:980px;padding:10px 18px;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -164,7 +173,7 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
     <div class="tools">
       <input class="inp" id="q" type="search" placeholder="Rechercher un article" aria-label="Rechercher un article">
       <select class="sel" id="flt" aria-label="Filtrer">
-        <option value="all">Tous</option><option value="in">En stock</option><option value="out">En rupture</option><option value="hid">Masqués du site</option>
+        <option value="all">Tous</option><option value="in">En stock</option><option value="out">En rupture</option><option value="promo">En promotion</option><option value="hid">Masqués du site</option>
       </select>
       <button class="btn pri" id="newBtn">+ Nouvel article</button>
     </div>
@@ -293,12 +302,39 @@ addEventListener("beforeunload",e=>{if(saving||saveTimer||dirtyMsgs.length){e.pr
 
 async function reload(){const r=await STORE.load();items=r.catalogue;sha=r.sha;dirtyMsgs=[];pendingFiles=[];render();idle()}
 
+/* ---------- Prix et promotions ----------
+   hist : changements du prix réellement pratiqué [{d:"AAAA-MM-JJ", p:prix}] (une date future = fin de promo programmée).
+   promo : {price, ref, from, to?} ; ref = prix barré = prix le plus bas pratiqué au cours des 30 jours précédant la réduction
+   (article L112-1-1 du code de la consommation). Une promo qui s'enchaîne sur une promo en cours garde le prix de référence d'origine. */
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const fmtDay=s=>new Date(s+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"});
+function promoOn(p,day=today()){const r=p&&p.promo;return !!(r&&r.price>0&&r.ref>r.price&&(!r.from||r.from<=day)&&(!r.to||day<=r.to))}
+const effPrice=(p,day=today())=>promoOn(p,day)?p.promo.price:p.price;
+function lowest30(p){ // prix le plus bas pratiqué sur les 30 derniers jours (jusqu'à aujourd'hui inclus)
+  if(!p)return null;const t=today(),start=addDays(t,-30);
+  const H=(p.hist||[]).filter(h=>h.d<=t).sort((a,b)=>a.d.localeCompare(b.d));
+  if(!H.length)return effPrice(p);
+  let atStart=null;const inWin=[];for(const h of H){if(h.d<=start)atStart=h.p;else inWin.push(h.p)}
+  if(atStart==null)atStart=H[0].p;
+  return Math.min(atStart,...inWin,effPrice(p));
+}
+function nextHist(old,np){ // historique après enregistrement de np (old = version précédente ou null)
+  const t=today();let H=((old&&old.hist)||[]).filter(h=>h.d<=t).sort((a,b)=>a.d.localeCompare(b.d));
+  if(!H.length)H=[{d:old?"2000-01-01":t,p:old?effPrice(old):effPrice(np)}];
+  const e=effPrice(np),last=H[H.length-1];
+  if(last.p!==e)H.push({d:t,p:e}); // plusieurs changements le même jour : tous conservés
+  if(np.promo&&np.promo.to&&np.promo.to>=t)H.push({d:addDays(np.promo.to,1),p:np.price});
+  const cut=addDays(t,-60);const keep=H.filter(h=>h.d>=cut),before=H.filter(h=>h.d<cut);
+  return before.length?[before[before.length-1],...keep]:keep;
+}
+
 /* ---------- Liste ---------- */
 let q="",flt="all";
 function render(){
   let L=items.slice();const w=q.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
   if(w)L=L.filter(p=>(p.name+" "+(p.d||"")+" "+(CATNAME[p.cat]||"")).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(w));
-  if(flt==="in")L=L.filter(p=>!p.oos&&!p.hidden);if(flt==="out")L=L.filter(p=>p.oos);if(flt==="hid")L=L.filter(p=>p.hidden);
+  if(flt==="in")L=L.filter(p=>!p.oos&&!p.hidden);if(flt==="out")L=L.filter(p=>p.oos);if(flt==="hid")L=L.filter(p=>p.hidden);if(flt==="promo")L=L.filter(p=>promoOn(p));
   const ord=CATS.map(c=>c[0]);L.sort((a,b)=>ord.indexOf(a.cat)-ord.indexOf(b.cat)||a.name.localeCompare(b.name,"fr"));
   const nOut=items.filter(p=>p.oos&&!p.hidden).length;
   $("#count").textContent=`${items.length} article${items.length>1?"s":""} · ${nOut} en rupture`+(L.length!==items.length?` · ${L.length} affiché${L.length>1?"s":""}`:"");
@@ -306,8 +342,8 @@ function render(){
   $("#list").innerHTML=L.length?L.map(p=>{const b=(p.base||[])[0];
     return `<div class="row${p.oos||p.hidden?" off":""}">
       ${b?`<img src="${thumb(b)}" data-b="${esc(b)}" data-edit="${p.id}" alt="" loading="lazy" width="60" height="60">`:`<span class="ph0" data-edit="${p.id}"></span>`}
-      <div style="min-width:0" data-edit="${p.id}"><div class="t">${esc(p.name)}</div><div class="u tabnum">${eur(p.price)} · ${CATNAME[p.cat]||esc(p.cat)}</div>
-        ${p.hidden?'<span class="flag">Masqué du site</span>':""}${!String(p.desc||"").trim()?'<span class="flag w">Sans description</span>':""}</div>
+      <div style="min-width:0" data-edit="${p.id}"><div class="t">${esc(p.name)}</div><div class="u tabnum">${promoOn(p)?`<b class="pp">${eur(p.promo.price)}</b> <s>${eur(p.promo.ref)}</s>`:eur(p.price)} · ${CATNAME[p.cat]||esc(p.cat)}</div>
+        ${promoOn(p)?`<span class="flag pr">Promo −${Math.round((1-p.promo.price/p.promo.ref)*100)} %${p.promo.to?` jusqu’au ${fmtDay(p.promo.to)}`:""}</span>`:p.promo&&p.promo.to&&p.promo.to<today()?'<span class="flag">Promo terminée</span>':""}${p.hidden?'<span class="flag">Masqué du site</span>':""}${!String(p.desc||"").trim()?'<span class="flag w">Sans description</span>':""}</div>
       <label class="sw"><input type="checkbox" data-sw="${p.id}" ${p.oos?"":"checked"} aria-label="${esc(p.name)} en stock"><span class="${p.oos?"out":"in"}">${p.oos?"Rupture":"En stock"}</span></label></div>`}).join("")
     :`<p class="empty">${items.length?"Aucun article ne correspond.":"Aucun article pour l’instant."}</p>`;
 }
@@ -331,6 +367,15 @@ function openEditor(id){
     <label class="fld">Nom<input class="inp" id="eName" value="${esc(ed.name)}" placeholder="Ex. Lot de 3 boîtes hermétiques"></label>
     <div class="frow"><label class="fld">Prix (€)<input class="inp tabnum" id="ePrice" type="text" inputmode="decimal" value="${ed.price===""?"":String(ed.price).replace(".",",")}" placeholder="19,99"></label>
       <label class="fld">Catégorie<select class="sel" id="eCat">${CATS.map(([k,l])=>`<option value="${k}"${k===ed.cat?" selected":""}>${l}</option>`).join("")}</select></label></div>
+    <div class="promo-box">
+      <label class="tgl"><input type="checkbox" id="ePromoOn" ${promoOn(ed)||(ed.promo&&ed.promo.from>today())?"checked":""} ${isNew?"disabled":""}> Mettre en promotion (prix barré)</label>
+      ${isNew?'<p class="hint">Un nouvel article doit d’abord être vendu à son prix normal avant de pouvoir être mis en promotion.</p>':""}
+      <div id="ePromoF" ${promoOn(ed)?"":"hidden"}>
+        <div class="frow"><label class="fld">Prix promo (€)<input class="inp tabnum" id="ePromo" type="text" inputmode="decimal" value="${ed.promo&&promoOn(ed)?String(ed.promo.price).replace(".",","):""}" placeholder="9,99"></label>
+          <label class="fld">Jusqu’au <small>facultatif, inclus</small><input class="inp" id="ePromoTo" type="date" min="${today()}" value="${ed.promo&&promoOn(ed)?ed.promo.to||"":""}"></label></div>
+        <p class="hint" id="ePromoInfo"></p>
+      </div>
+    </div>
     <label class="fld">Précision courte <small>sous le nom, ex. « Lot de 3 · 1,2 L »</small><input class="inp" id="eD" value="${esc(ed.d||"")}"></label>
     <label class="fld">Description<textarea class="ta" id="eDesc" rows="4" placeholder="À quoi sert l’article, pourquoi il est pratique…">${esc(ed.desc||"")}</textarea></label>
     <label class="fld">Caractéristiques <small>une par ligne</small><textarea class="ta" id="eSpecs" rows="4" placeholder="Dimensions : 30 × 20 cm&#10;Matière : verre">${esc((ed.specs||[]).join("\n"))}</textarea></label>
@@ -340,6 +385,13 @@ function openEditor(id){
   <div class="df">${isNew?"":`<button class="btn sm danger" id="eDel">Supprimer</button>`}<span class="sp"></span><button class="btn" data-close>Annuler</button><button class="btn pri" id="eSave">${isNew?"Créer l’article":"Enregistrer"}</button></div>`;
   renderPhotos();$("#dlg").showModal();
   $("#eSave").onclick=saveEditor;
+  const old=items.find(x=>x.id===ed.id);
+  const promoRef=()=>promoOn(old)?old.promo.ref:lowest30(old&&{...old,price:old.price});
+  const upd=()=>{const on=$("#ePromoOn").checked;$("#ePromoF").hidden=!on;if(!on)return;
+    const ref=promoOn(old)?old.promo.ref:Math.min(lowest30(old),num($("#ePrice").value)||Infinity);const pp=num($("#ePromo").value);
+    $("#ePromoInfo").innerHTML=pp>0?(pp<ref?`Prix barré affiché : <b>${eur(ref)}</b>, soit <b>−${Math.round((1-pp/ref)*100)} %</b>. C’est le prix le plus bas pratiqué ces 30 derniers jours, comme l’exige la loi.`:`<span class="bad">Le prix promo doit être inférieur à ${eur(ref)}, le prix le plus bas pratiqué ces 30 derniers jours.</span>`)
+      :`Le prix barré sera ${eur(ref)} : le prix le plus bas pratiqué ces 30 derniers jours.`};
+  ["ePromoOn","ePromo","ePrice"].forEach(id=>$("#"+id).addEventListener("input",upd));$("#ePromoOn").addEventListener("change",upd);upd();
   const del=$("#eDel");if(del)del.onclick=()=>{if(del.dataset.armed){deleteItem();return}del.dataset.armed="1";del.textContent="Confirmer la suppression";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="Supprimer"}},5000)};
   if(isNew)setTimeout(()=>$("#eName").focus(),60);
 }
@@ -379,10 +431,21 @@ async function saveEditor(){
       specs:$("#eSpecs").value.split("\n").map(s=>s.trim()).filter(Boolean),base:ed.base.slice(),oos:!$("#eStock").checked};
     if(vnames.length){const off=p.base.length>vnames.length?1:0;p.variants=vnames.map((v,i)=>{const prev=(ed.variants||[]).find(x=>x.name===v);return {name:v,img:Math.min(prev?prev.img:i+off,p.base.length-1)}})}
     if(!$("#eVis").checked)p.hidden=true;
+    const old=items.find(x=>x.id===p.id);
+    if(!ed.isNew&&$("#ePromoOn").checked){
+      const pp=Math.round(num($("#ePromo").value)*100)/100,to=$("#ePromoTo").value||"";
+      const ref=promoOn(old)?old.promo.ref:Math.min(lowest30(old),p.price);
+      if(!(pp>0)){btn.disabled=false;btn.textContent="Enregistrer";toast("Indiquez le prix promo");$("#ePromo").focus();return}
+      if(pp>=ref){btn.disabled=false;btn.textContent="Enregistrer";toast(`Le prix promo doit être inférieur à ${eur(ref)}`);$("#ePromo").focus();return}
+      if(to&&to<today()){btn.disabled=false;btn.textContent="Enregistrer";toast("La date de fin est déjà passée");return}
+      p.promo={price:pp,ref,from:promoOn(old)?old.promo.from:today()};if(to)p.promo.to=to;
+    }
+    p.hist=nextHist(old,p);
     const i=items.findIndex(x=>x.id===p.id);
     if(i<0)items.push(p);else items[i]=p;
     const isNew=ed.isNew;$("#dlg").close();render();
-    toast(isNew?"Article créé":"Article enregistré");change(isNew?`nouvel article ${name}`:`${name} modifié`,200);
+    const pm=p.promo&&!promoOn(old)?` en promo à ${eur(p.promo.price)}`:!p.promo&&promoOn(old)?" fin de promo":"";
+    toast(isNew?"Article créé":"Article enregistré");change(isNew?`nouvel article ${name}`:`${name} modifié${pm}`,200);
   }catch(e){btn.disabled=false;btn.textContent="Enregistrer";toast("Préparation impossible : "+(e.message||e))}
 }
 function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=items.filter(x=>x.id!==p.id);$("#dlg").close();render();toast(`${p.name} supprimé`);change(`${p.name} supprimé`,200)}
