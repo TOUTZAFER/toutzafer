@@ -128,7 +128,6 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .pr span{font-weight:700;font-size:.8em;margin-left:1px;margin-top:.12em}
 
 /* Pastilles produits */
-.tags{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:1}
 .tag{font-size:11px;font-weight:700;border-radius:980px;padding:4px 9px;background:var(--pop);color:var(--pop-fg)}
 .tag.deal{background:var(--brand);color:var(--brand-fg)}
 .pastille{position:absolute;top:8px;right:8px;z-index:2;width:54px;height:54px;border-radius:50%;background:#e4002b;color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.02em;transform:rotate(-10deg);box-shadow:0 3px 10px rgba(0,0,0,.22);pointer-events:none}
@@ -694,9 +693,6 @@ function renderCatSelect(){
 }
 function priceHTML(v){const [e,c]=v.toFixed(2).split(".");return `<span class="pr"><b>${e}</b><span>,${c} €</span></span>`}
 const wasHTML=p=>p.was?`<s class="was" aria-label="au lieu de ${eur(p.was)}">${eur(p.was)}</s>`:"";
-function tagsFor(p){const t=[];const n=name=>name.match(/lot de (\d+)/i)||name.match(/^(\d+)\s/);const m=n(p.name);const pc=p.name.match(/(\d+)\s*pièces/i);
-  if(m)t.push(`<span class="tag">Lot de ${m[1]}</span>`);else if(pc)t.push(`<span class="tag">${pc[1]} pièces</span>`);
-  if(!p.was&&p.price<15)t.push('<span class="tag deal">Petit prix</span>');return t.join("")}
 const pastilleHTML=p=>p.was?`<span class="pastille" aria-label="Promotion, moins ${p.off} %">PROMO</span>`:"";
 const HERO_SLIDES=[["img/hero/h1.jpg","a01"],["img/hero/h2.jpg","a02"],["img/hero/h3.jpg","a04"],["img/hero/h4.jpg","a20"],["img/hero/h5.jpg","a15"],["img/hero/h6.jpg","a07"]];
 let heroIdx=0,heroTimer=null,heroList=[];
@@ -761,7 +757,7 @@ function renderGrid(){
     if(grouped&&p.cat!==prevCat){prevCat=p.cat;const k=list.filter(x=>x.cat===p.cat).length;head=`<h2 class="ghead" id="g-${p.cat}" data-cat="${p.cat}">${CATNAME[p.cat]}<span class="tabnum">${k}</span></h2>`}
     const quick=quickHTML(p);
     return head+`<article class="card${out?" out":""}" data-id="${p.id}">
-      <div class="media"><button class="thumb" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':`<span class="tags">${tagsFor(p)}</span>${pastilleHTML(p)}`}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</button>${quick}</div>
+      <div class="media"><button class="thumb" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':pastilleHTML(p)}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</button>${quick}</div>
       <div class="meta">${grouped?"":`<span class="cat">${CATNAME[p.cat]}</span>`}<button class="name" data-open="${p.id}">${esc(p.name)}</button><span class="price${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span></div>
       </article>`;
   }).join("");
