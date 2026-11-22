@@ -938,7 +938,7 @@ function bindDone(){
   on("#retry",e=>{if(lastSend)postOrder(lastSend.payload,lastSend.o,e.currentTarget)});
   document.querySelectorAll("#dBody [data-fb]").forEach(a=>a.addEventListener("click",()=>{setTimeout(()=>{clearCart();lastSend=null;
     $("#dBody .done h3").textContent="Plus qu’une étape";$("#dBody .done p").textContent="Appuyez sur Envoyer dans WhatsApp ou Messages pour nous transmettre votre demande. Nous vous rappelons ensuite.";
-    const bk=$("#back");if(bk){bk.id="again";bk.textContent="Continuer mes achats";bk.onclick=()=>{drawerView="cart";closeCart()}}},300)}));
+    const rt=$("#retry");if(rt)rt.remove();const bk=$("#back");if(bk){bk.id="again";bk.textContent="Continuer mes achats";bk.onclick=()=>{drawerView="cart";closeCart()}}},300)}));
   on("#copy",()=>{const t=$("#recap").textContent;try{navigator.clipboard.writeText(t).then(()=>toast("Récapitulatif copié"),selectRecap)}catch(e){selectRecap()}});
 }
 function selectRecap(){const r=document.createRange();r.selectNodeContents($("#recap"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Texte sélectionné, copiez-le")}
