@@ -843,6 +843,7 @@ function renderDrawer(){
 }
 function mode(){return "retrait"}
 function bindForm(){
+  bindTelFormat($("#fTel")); // en premier : les contrôles suivants voient le numéro déjà mis en forme
   const T='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>';
   const ok=()=>{
     const free=shipIsFree(),miss=FREE_SHIP_MIN-total();
@@ -865,7 +866,42 @@ function bindForm(){
   };
   $("#send").addEventListener("click",onSend);
 }
-const fmtTel=t=>String(t).replace(/(\d{4})(\d{2})(\d{2})(\d{2})/,"$1 $2 $3 $4");
+/* ---------- Numéro de téléphone : espaces ajoutés pendant la saisie ----------
+   0692 12 34 56 (Réunion, Mayotte) · 06 12 34 56 78 (métropole) · +262 692 12 34 56 · +33 6 12 34 56 78 */
+const TEL_RE=["0262","0263","0269","0692","0693","0639"];
+function fmtTelInput(v){
+  let s=String(v||"").replace(/[^\d+]/g,"");
+  if(s.startsWith("00"))s="+"+s.slice(2);
+  const plus=s.startsWith("+");let d=s.replace(/\+/g,"");
+  const grp=(x,sizes)=>{const out=[];let i=0;for(const n of sizes){if(i>=x.length)break;out.push(x.slice(i,i+n));i+=n}return out.join(" ")};
+  if(plus){
+    if(d.startsWith("262"))return "+"+grp(d.slice(0,12),[3,3,2,2,2]);
+    if(d.startsWith("33"))return "+"+grp(d.slice(0,11),[2,1,2,2,2,2]);
+    return "+"+d.slice(0,15);
+  }
+  if(d.startsWith("0")){d=d.slice(0,10);const re=TEL_RE.some(p=>d.length<4?p.startsWith(d):d.startsWith(p));return grp(d,re?[4,2,2,2]:[2,2,2,2,2])}
+  if(d.startsWith("262"))return grp(d.slice(0,12),[3,3,2,2,2]);
+  return d.slice(0,15);
+}
+function bindTelFormat(el){
+  if(!el)return;
+  const count=(s,pos)=>s.slice(0,pos).replace(/[^\d+]/g,"").length;
+  const place=(s,n)=>{if(n<=0)return 0;let k=0;for(let i=0;i<s.length;i++)if(/[\d+]/.test(s[i])&&++k===n)return i+1;return s.length};
+  const apply=()=>{const v=el.value,f=fmtTelInput(v);if(f===v)return;const n=count(v,el.selectionStart??v.length)-(/^\s*00/.test(v)?1:0);el.value=f;
+    if(document.activeElement===el)try{const p=place(f,n);el.setSelectionRange(p,p)}catch(e){}};
+  // effacer juste après (ou avant) un espace efface le chiffre voisin
+  el.addEventListener("beforeinput",e=>{
+    if(e.inputType!=="deleteContentBackward"&&e.inputType!=="deleteContentForward")return;
+    const a=el.selectionStart,b=el.selectionEnd;if(a==null||a!==b)return;
+    const back=e.inputType==="deleteContentBackward",i=back?a-1:a;if(el.value[i]!==" ")return;
+    const j=back?i-1:i+1;if(j<0||j>=el.value.length)return;
+    e.preventDefault();const v=el.value,lo=Math.min(i,j);el.value=v.slice(0,lo)+v.slice(Math.max(i,j)+1);
+    try{el.setSelectionRange(lo,lo)}catch(x){}el.dispatchEvent(new Event("input",{bubbles:true}));
+  });
+  el.addEventListener("input",apply);
+  apply();
+}
+const fmtTel=t=>fmtTelInput(t);
 function newId(){const d=new Date(),z=n=>String(n).padStart(2,"0");return `TZ-${z(d.getDate())}${z(d.getMonth()+1)}${String(d.getFullYear()).slice(2)}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`}
 function buildOrder(){
   return {id:newId(),date:new Date().toISOString(),prenom:$("#fPrenom").value.trim(),nom:$("#fNom").value.trim(),tel:normTel($("#fTel").value),mode:"retrait",pick:$("#fPick").value,shipFree:shipIsFree(),
