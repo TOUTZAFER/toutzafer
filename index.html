@@ -119,8 +119,8 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .tags{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:1}
 .tag{font-size:11px;font-weight:700;border-radius:980px;padding:4px 9px;background:var(--pop);color:var(--pop-fg)}
 .tag.deal{background:var(--brand);color:var(--brand-fg)}
-.pastille{position:absolute;top:8px;right:8px;z-index:2;width:54px;height:54px;border-radius:50%;background:#e4002b;color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:16px;letter-spacing:-.03em;transform:rotate(-10deg);box-shadow:0 3px 10px rgba(0,0,0,.22);pointer-events:none}
-.stage .pastille{top:auto;right:auto;bottom:14px;left:14px;width:68px;height:68px;font-size:20px}
+.pastille{position:absolute;top:8px;right:8px;z-index:2;width:54px;height:54px;border-radius:50%;background:#e4002b;color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.02em;transform:rotate(-10deg);box-shadow:0 3px 10px rgba(0,0,0,.22);pointer-events:none}
+.stage .pastille{top:auto;right:auto;bottom:14px;left:14px;width:72px;height:72px;font-size:16px}
 .promo .pr{background:#e4002b;color:#fff}
 .price.promo,.sp.promo{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:2px}
 .price.promo .was,.sp.promo .was{margin-left:0;font-size:12px}
@@ -629,7 +629,7 @@ const wasHTML=p=>p.was?`<s class="was" aria-label="au lieu de ${eur(p.was)}">${e
 function tagsFor(p){const t=[];const n=name=>name.match(/lot de (\d+)/i)||name.match(/^(\d+)\s/);const m=n(p.name);const pc=p.name.match(/(\d+)\s*pièces/i);
   if(m)t.push(`<span class="tag">Lot de ${m[1]}</span>`);else if(pc)t.push(`<span class="tag">${pc[1]} pièces</span>`);
   if(!p.was&&p.price<15)t.push('<span class="tag deal">Petit prix</span>');return t.join("")}
-const pastilleHTML=p=>p.was?`<span class="pastille" aria-label="Promotion moins ${p.off} %">−${p.off}%</span>`:"";
+const pastilleHTML=p=>p.was?`<span class="pastille" aria-label="Promotion, moins ${p.off} %">PROMO</span>`:"";
 const HERO_SLIDES=[["img/hero/h1.jpg","a01"],["img/hero/h2.jpg","a02"],["img/hero/h3.jpg","a04"],["img/hero/h4.jpg","a20"],["img/hero/h5.jpg","a15"],["img/hero/h6.jpg","a07"]];
 let heroIdx=0,heroTimer=null,heroList=[];
 function renderHero(){
