@@ -141,9 +141,9 @@
    "Poignée intégrée"
   ],
   "base": [
+   "a07-n3",
    "a07-n1",
-   "a07-n2",
-   "a07-n3"
+   "a07-n2"
   ],
   "oos": false
  },
