@@ -304,21 +304,12 @@ async function reload(){const r=await STORE.load();items=r.catalogue;sha=r.sha;d
 
 /* ---------- Prix et promotions ----------
    hist : changements du prix réellement pratiqué [{d:"AAAA-MM-JJ", p:prix}] (une date future = fin de promo programmée).
-   promo : {price, ref, from, to?} ; ref = prix barré = prix le plus bas pratiqué au cours des 30 jours précédant la réduction
-   (article L112-1-1 du code de la consommation). Une promo qui s'enchaîne sur une promo en cours garde le prix de référence d'origine. */
+   promo : {price, ref, from, to?} ; ref = prix barré = prix normal de l'article au moment de l'enregistrement. */
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
 const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
 const fmtDay=s=>new Date(s+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"});
 function promoOn(p,day=today()){const r=p&&p.promo;return !!(r&&r.price>0&&r.ref>r.price&&(!r.from||r.from<=day)&&(!r.to||day<=r.to))}
 const effPrice=(p,day=today())=>promoOn(p,day)?p.promo.price:p.price;
-function lowest30(p){ // prix le plus bas pratiqué sur les 30 derniers jours (jusqu'à aujourd'hui inclus)
-  if(!p)return null;const t=today(),start=addDays(t,-30);
-  const H=(p.hist||[]).filter(h=>h.d<=t).sort((a,b)=>a.d.localeCompare(b.d));
-  if(!H.length)return effPrice(p);
-  let atStart=null;const inWin=[];for(const h of H){if(h.d<=start)atStart=h.p;else inWin.push(h.p)}
-  if(atStart==null)atStart=H[0].p;
-  return Math.min(atStart,...inWin,effPrice(p));
-}
 function nextHist(old,np){ // historique après enregistrement de np (old = version précédente ou null)
   const t=today();let H=((old&&old.hist)||[]).filter(h=>h.d<=t).sort((a,b)=>a.d.localeCompare(b.d));
   if(!H.length)H=[{d:old?"2000-01-01":t,p:old?effPrice(old):effPrice(np)}];
@@ -368,8 +359,7 @@ function openEditor(id){
     <div class="frow"><label class="fld">Prix (€)<input class="inp tabnum" id="ePrice" type="text" inputmode="decimal" value="${ed.price===""?"":String(ed.price).replace(".",",")}" placeholder="19,99"></label>
       <label class="fld">Catégorie<select class="sel" id="eCat">${CATS.map(([k,l])=>`<option value="${k}"${k===ed.cat?" selected":""}>${l}</option>`).join("")}</select></label></div>
     <div class="promo-box">
-      <label class="tgl"><input type="checkbox" id="ePromoOn" ${promoOn(ed)||(ed.promo&&ed.promo.from>today())?"checked":""} ${isNew?"disabled":""}> Mettre en promotion (prix barré)</label>
-      ${isNew?'<p class="hint">Un nouvel article doit d’abord être vendu à son prix normal avant de pouvoir être mis en promotion.</p>':""}
+      <label class="tgl"><input type="checkbox" id="ePromoOn" ${promoOn(ed)||(ed.promo&&ed.promo.from>today())?"checked":""}> Mettre en promotion (prix barré)</label>
       <div id="ePromoF" ${promoOn(ed)?"":"hidden"}>
         <div class="frow"><label class="fld">Prix promo (€)<input class="inp tabnum" id="ePromo" type="text" inputmode="decimal" value="${ed.promo&&promoOn(ed)?String(ed.promo.price).replace(".",","):""}" placeholder="9,99"></label>
           <label class="fld">Jusqu’au <small>facultatif, inclus</small><input class="inp" id="ePromoTo" type="date" min="${today()}" value="${ed.promo&&promoOn(ed)?ed.promo.to||"":""}"></label></div>
@@ -386,11 +376,10 @@ function openEditor(id){
   renderPhotos();$("#dlg").showModal();
   $("#eSave").onclick=saveEditor;
   const old=items.find(x=>x.id===ed.id);
-  const promoRef=()=>promoOn(old)?old.promo.ref:lowest30(old&&{...old,price:old.price});
   const upd=()=>{const on=$("#ePromoOn").checked;$("#ePromoF").hidden=!on;if(!on)return;
-    const ref=promoOn(old)?old.promo.ref:Math.min(lowest30(old),num($("#ePrice").value)||Infinity);const pp=num($("#ePromo").value);
-    $("#ePromoInfo").innerHTML=pp>0?(pp<ref?`Prix barré affiché : <b>${eur(ref)}</b>, soit <b>−${Math.round((1-pp/ref)*100)} %</b>. C’est le prix le plus bas pratiqué ces 30 derniers jours, comme l’exige la loi.`:`<span class="bad">Le prix promo doit être inférieur à ${eur(ref)}, le prix le plus bas pratiqué ces 30 derniers jours.</span>`)
-      :`Le prix barré sera ${eur(ref)} : le prix le plus bas pratiqué ces 30 derniers jours.`};
+    const ref=num($("#ePrice").value);const pp=num($("#ePromo").value);
+    $("#ePromoInfo").innerHTML=pp>0&&ref>0?(pp<ref?`Prix barré affiché : <b>${eur(ref)}</b> (le prix normal), soit <b>−${Math.round((1-pp/ref)*100)} %</b>.`:`<span class="bad">Le prix promo doit être inférieur au prix normal (${eur(ref)}).</span>`)
+      :`Le prix barré affiché sera le prix normal${ref>0?` (${eur(ref)})`:""}.`};
   ["ePromoOn","ePromo","ePrice"].forEach(id=>$("#"+id).addEventListener("input",upd));$("#ePromoOn").addEventListener("change",upd);upd();
   const del=$("#eDel");if(del)del.onclick=()=>{if(del.dataset.armed){deleteItem();return}del.dataset.armed="1";del.textContent="Confirmer la suppression";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="Supprimer"}},5000)};
   if(isNew)setTimeout(()=>$("#eName").focus(),60);
@@ -432,11 +421,11 @@ async function saveEditor(){
     if(vnames.length){const off=p.base.length>vnames.length?1:0;p.variants=vnames.map((v,i)=>{const prev=(ed.variants||[]).find(x=>x.name===v);return {name:v,img:Math.min(prev?prev.img:i+off,p.base.length-1)}})}
     if(!$("#eVis").checked)p.hidden=true;
     const old=items.find(x=>x.id===p.id);
-    if(!ed.isNew&&$("#ePromoOn").checked){
+    if($("#ePromoOn").checked){
       const pp=Math.round(num($("#ePromo").value)*100)/100,to=$("#ePromoTo").value||"";
-      const ref=promoOn(old)?old.promo.ref:Math.min(lowest30(old),p.price);
+      const ref=p.price; // prix barré = prix normal
       if(!(pp>0)){btn.disabled=false;btn.textContent="Enregistrer";toast("Indiquez le prix promo");$("#ePromo").focus();return}
-      if(pp>=ref){btn.disabled=false;btn.textContent="Enregistrer";toast(`Le prix promo doit être inférieur à ${eur(ref)}`);$("#ePromo").focus();return}
+      if(pp>=ref){btn.disabled=false;btn.textContent="Enregistrer";toast(`Le prix promo doit être inférieur au prix normal (${eur(ref)})`);$("#ePromo").focus();return}
       if(to&&to<today()){btn.disabled=false;btn.textContent="Enregistrer";toast("La date de fin est déjà passée");return}
       p.promo={price:pp,ref,from:promoOn(old)?old.promo.from:today()};if(to)p.promo.to=to;
     }
