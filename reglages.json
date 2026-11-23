@@ -7,7 +7,11 @@
    "id": "v-le-port",
    "nom": "Le Port",
    "actif": true,
-   "quartiers": []
+   "quartiers": [
+    "Centre-ville",
+    "Sacré cœur",
+    "La darse"
+   ]
   },
   {
    "id": "v-la-possession",
