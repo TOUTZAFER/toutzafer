@@ -4,16 +4,6 @@
  },
  "villes": [
   {
-   "id": "v-entre-deux",
-   "nom": "Entre-Deux",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Le Bras Long",
-    "Grand Fond"
-   ]
-  },
-  {
    "id": "v-l-etang-sale",
    "nom": "L’Étang-Salé",
    "actif": true,
