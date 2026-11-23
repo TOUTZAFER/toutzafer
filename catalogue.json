@@ -250,9 +250,9 @@
   "id": "a12",
   "n": 12,
   "cat": "enfants",
-  "name": "Mallette de dessin complète",
+  "name": "Mallette de dessin 141 pièces",
   "price": 29.99,
-  "d": "2 modèles au choix",
+  "d": "2 couleurs au choix",
   "desc": "Une grande mallette pour les petits artistes, avec crayons de couleur, feutres, pastels, peinture et accessoires, tout rangé dans une valise qui se transporte facilement. Une belle idée cadeau.",
   "specs": [
    "Crayons, feutres, pastels, aquarelle et accessoires",
@@ -273,6 +273,12 @@
    {
     "name": "Licorne",
     "img": 2
+   }
+  ],
+  "hist": [
+   {
+    "d": "2000-01-01",
+    "p": 29.99
    }
   ]
  },
