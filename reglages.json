@@ -7,12 +7,7 @@
    "id": "v-le-port",
    "nom": "Le Port",
    "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Ariste Bolon",
-    "Say Piscine",
-    "Titan"
-   ]
+   "quartiers": []
   },
   {
    "id": "v-la-possession",
