@@ -4,16 +4,6 @@
  },
  "villes": [
   {
-   "id": "v-l-etang-sale",
-   "nom": "L’Étang-Salé",
-   "actif": true,
-   "quartiers": [
-    "Étang-Salé-les-Bains",
-    "Étang-Salé-les-Hauts",
-    "Le Maniron"
-   ]
-  },
-  {
    "id": "v-petite-ile",
    "nom": "Petite-Île",
    "actif": true,
