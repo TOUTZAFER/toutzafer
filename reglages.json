@@ -4,15 +4,6 @@
  },
  "villes": [
   {
-   "id": "v-les-avirons",
-   "nom": "Les Avirons",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Le Tévelave"
-   ]
-  },
-  {
    "id": "v-entre-deux",
    "nom": "Entre-Deux",
    "actif": true,
