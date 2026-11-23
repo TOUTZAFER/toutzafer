@@ -4,16 +4,6 @@
  },
  "villes": [
   {
-   "id": "v-petite-ile",
-   "nom": "Petite-Île",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Grande Anse",
-    "Piton des Goyaves"
-   ]
-  },
-  {
    "id": "v-le-port",
    "nom": "Le Port",
    "actif": true,
