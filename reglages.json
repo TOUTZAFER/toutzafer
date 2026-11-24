@@ -61,18 +61,6 @@
    ]
   },
   {
-   "id": "v-saint-philippe",
-   "nom": "Saint-Philippe",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Le Baril",
-    "Basse Vallée",
-    "Mare Longue",
-    "Le Tremblet"
-   ]
-  },
-  {
    "id": "v-saint-pierre",
    "nom": "Saint-Pierre",
    "actif": true,
