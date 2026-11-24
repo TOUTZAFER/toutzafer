@@ -43,22 +43,6 @@
    ]
   },
   {
-   "id": "v-saint-joseph",
-   "nom": "Saint-Joseph",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Grand Coude",
-    "Jean Petit",
-    "Langevin",
-    "Le Butor",
-    "Les Lianes",
-    "Manapany-les-Bains",
-    "Plaine des Grègues",
-    "Vincendo"
-   ]
-  },
-  {
    "id": "v-saint-leu",
    "nom": "Saint-Leu",
    "actif": true,
