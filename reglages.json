@@ -43,21 +43,6 @@
    ]
   },
   {
-   "id": "v-saint-leu",
-   "nom": "Saint-Leu",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "La Chaloupe",
-    "Les Colimaçons",
-    "Piton Saint-Leu",
-    "Le Plate",
-    "Pointe des Châteaux",
-    "Le Portail",
-    "Stella"
-   ]
-  },
-  {
    "id": "v-saint-louis",
    "nom": "Saint-Louis",
    "actif": true,
