@@ -166,7 +166,7 @@
   "n": 8,
   "cat": "rangement",
   "name": "Porte-vêtements sur roulettes",
-  "price": 29.99,
+  "price": 49.99,
   "d": "Sur roulettes · 110 × 150 cm",
   "desc": "Un portant à vêtements en métal noir avec double barre de suspension, crochets latéraux et deux étagères basses pour les chaussures ou les boîtes. Monté sur roulettes, il se déplace facilement.",
   "specs": [
@@ -181,7 +181,18 @@
    "a08-n3",
    "a08-n4"
   ],
-  "oos": false
+  "oos": false,
+  "promo": {
+   "price": 29.99,
+   "ref": 49.99,
+   "from": "2026-11-24"
+  },
+  "hist": [
+   {
+    "d": "2000-01-01",
+    "p": 29.99
+   }
+  ]
  },
  {
   "id": "a09",
