@@ -149,20 +149,12 @@
    "actif": true,
    "quartiers": [
     "Centre-ville",
-    "Basse Terre",
-    "Bassin Plat",
-    "Bois d’Olive",
-    "Grand Bois",
-    "Joli Fond",
-    "Les Casernes",
-    "Ligne des Bambous",
-    "Ligne Paradis",
-    "Montvert-les-Bas",
-    "Montvert-les-Hauts",
-    "Pierrefonds",
-    "Ravine Blanche",
-    "Ravine des Cabris",
-    "Terre Sainte"
+    "Terre-Sainte",
+    "Ravine blanche",
+    "Pierrefond",
+    "Joli fond",
+    "Casabona",
+    "Les casernes"
    ]
   },
   {
