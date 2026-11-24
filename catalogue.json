@@ -329,7 +329,7 @@
   "id": "a15",
   "n": 15,
   "cat": "cuisine",
-  "name": "Support à fruits 3 niveaux",
+  "name": "Support de fruits 3 niveaux",
   "price": 24.99,
   "d": "Corbeilles sur pied en bois",
   "desc": "Trois coupes vert foncé superposées sur une structure en bois, pour présenter fruits et légumes sans les écraser. Décoratif sur un plan de travail ou une table, il libère de la place.",
@@ -344,7 +344,13 @@
    "a15-n2",
    "a15-n3"
   ],
-  "oos": false
+  "oos": false,
+  "hist": [
+   {
+    "d": "2000-01-01",
+    "p": 24.99
+   }
+  ]
  },
  {
   "id": "a16",
