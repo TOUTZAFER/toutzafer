@@ -665,7 +665,7 @@
   "id": "a30",
   "n": 30,
   "cat": "cuisine",
-  "name": "Lot de 14 boîtes en plastique rigide",
+  "name": "Lot de 14 boîtes",
   "price": 34.99,
   "d": "Couvercles à clips · tailles variées",
   "desc": "Un grand lot de 14 boîtes de conservation en plastique rigide transparent, avec couvercles à clips. Plusieurs tailles qui s’empilent, pour préparer les repas de la semaine, ranger les restes ou emporter son déjeuner.",
@@ -676,11 +676,16 @@
    "Empilables"
   ],
   "base": [
-   "a30-n1",
-   "a30-n2",
-   "a30-n3",
-   "a30-n4"
+   "a30-u1",
+   "a30-u2",
+   "a30-u3"
   ],
-  "oos": false
+  "oos": false,
+  "hist": [
+   {
+    "d": "2000-01-01",
+    "p": 34.99
+   }
+  ]
  }
 ]
