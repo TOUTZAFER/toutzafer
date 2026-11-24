@@ -83,17 +83,6 @@
    ]
   },
   {
-   "id": "v-sainte-suzanne",
-   "nom": "Sainte-Suzanne",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "Bagatelle",
-    "Les Deux-Rives",
-    "Quartier-Français"
-   ]
-  },
-  {
    "id": "v-le-tampon",
    "nom": "Le Tampon",
    "actif": true,
