@@ -90,16 +90,6 @@
     "Centre-ville",
     "Lycée Roland Garros"
    ]
-  },
-  {
-   "id": "v-trois-bassins",
-   "nom": "Trois-Bassins",
-   "actif": true,
-   "quartiers": [
-    "Centre-ville",
-    "La Grande Ravine",
-    "Souris Blanche"
-   ]
   }
  ]
 }
