@@ -169,7 +169,9 @@ function validConfig(c) {
     return { id, nom, actif: v.actif !== false, quartiers };
   });
   if (!villes.some(v => v.actif)) throw new HttpError(400, "Gardez au moins une ville proposée aux clients.");
-  return { contact: { whatsapp: wa }, villes };
+  const min = c.commande == null ? 0 : Number(c.commande.minimum);
+  if (!(min >= 0 && min <= 500)) throw new HttpError(400, "Minimum de commande invalide (entre 0 et 500 €).");
+  return { contact: { whatsapp: wa }, commande: { minimum: round2(min) }, villes };
 }
 async function loadConfig(env) {
   const { api, branch } = gh(env);
@@ -177,7 +179,10 @@ async function loadConfig(env) {
   return j ? { config: JSON.parse(b64ToText(j.content)), sha: j.sha } : { config: null, sha: null };
 }
 async function saveConfig(env, b) {
-  const config = validConfig(b && b.config), { api, branch } = gh(env);
+  const { api, branch } = gh(env), cfg = b && b.config;
+  // une page Gestion restée ouverte avant l'ajout du minimum ne l'envoie pas : on garde celui en place
+  if (cfg && typeof cfg === "object" && cfg.commande == null) { const cur = await loadConfig(env).catch(() => null); if (cur && cur.config && cur.config.commande) cfg.commande = cur.config.commande; }
+  const config = validConfig(cfg);
   const msg = String((b && b.message) || "Gestion : réglages de la boutique").replace(/[\r\n]+/g, " ").slice(0, 300);
   const body = { message: msg, content: textToB64(JSON.stringify(config, null, 1) + "\n"), branch };
   if (b && typeof b.sha === "string" && b.sha) body.sha = b.sha;
@@ -352,6 +357,8 @@ async function newDemande(request, env, ctx) {
   if (gone.length) throw new HttpError(409, "Certains articles ne sont plus disponibles.", { gone: [...new Set(gone)] });
   const lines = [...merged.values()].map(l => { if (l.q > 99) l.q = 99; return l; });
   const total = round2(lines.reduce((a, l) => a + l.q * l.price, 0));
+  const minOrder = Number(conf && conf.commande && conf.commande.minimum) || 0;
+  if (total + 0.004 < minOrder) throw new HttpError(400, `Il manque ${eurTxt(minOrder - total)} pour atteindre le minimum de commande de ${eurTxt(minOrder)}.`, { pickGone: true });
   const saved = round2(lines.reduce((a, l) => a + (l.was ? (l.was - l.price) * l.q : 0), 0));
   const r = reunion();
   const idBase = `TZ-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`;

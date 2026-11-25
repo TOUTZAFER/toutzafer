@@ -397,6 +397,8 @@ a.btn.pri{color:#fff}
       <label class="fld">Numéro WhatsApp et téléphone affichés sur le site<input class="inp tabnum" id="waIn" inputmode="tel" autocomplete="off"></label>
       <p class="hint" style="font-size:13px">Sert aussi pour les demandes envoyées par WhatsApp ou SMS quand le site n’arrive pas à les enregistrer. Visible sur la boutique 1 à 2 minutes après l’enregistrement.</p>
       <div class="oacts"><button class="btn pri" id="waSave">Enregistrer le numéro</button></div>
+      <label class="fld">Minimum de commande (€) <small>en dessous, le client ne peut pas envoyer sa demande · 0 = pas de minimum</small><input class="inp tabnum" id="minIn" inputmode="decimal" autocomplete="off"></label>
+      <div class="oacts"><button class="btn pri" id="minSave">Enregistrer le minimum</button></div>
       <p class="hint" style="font-size:13px">Livraison offerte et délai de livraison : fixés dans les conditions générales de vente, à modifier ensemble si besoin.</p>
       <label class="tglrow"><input type="checkbox" id="teamOn"> Ne pas compter mes visites sur cet appareil</label>
       <p class="hint" style="font-size:13px">Pour les statistiques. Activé d’office sur les appareils où Gestion est ouverte. Sur iPhone, ouvrez la boutique avec le lien « Boutique ↗ » en haut de Gestion pour que Safari soit aussi exclu.</p></div>
@@ -1153,7 +1155,8 @@ function renderSettings(){
   $("#mtChips").innerHTML=motifs().map(m=>`<span class="chip">${esc(m)}<button data-mtdel="${esc(m)}" aria-label="Retirer ${esc(m)}">✕</button></span>`).join("");
   if(document.activeElement!==$("#mdTxt"))$("#mdTxt").value=settings.modele||DEFAULT_MODELE;
   if(document.activeElement!==$("#waIn")&&CONF&&CONF.contact)$("#waIn").value=fmtTelInput(nat(CONF.contact.whatsapp));
-  $("#ptAdd").disabled=!CONF;$("#waSave").disabled=!CONF;$("#lvAdd").disabled=!HASDB;
+  if(document.activeElement!==$("#minIn")&&CONF)$("#minIn").value=String((CONF.commande&&CONF.commande.minimum)||0).replace(".",",");
+  $("#ptAdd").disabled=!CONF;$("#waSave").disabled=!CONF;$("#minSave").disabled=!CONF;$("#lvAdd").disabled=!HASDB;
   ["#mtAdd","#mdSave","#mdReset"].forEach(s=>$(s).disabled=!HASDB);
   renderPushPanel();
 }
@@ -1262,6 +1265,11 @@ bindTelFormat($("#waIn"));
 // visites de l'équipe exclues des statistiques (réglage propre à chaque appareil et navigateur)
 try{if(localStorage.getItem("tz_equipe")===null)localStorage.setItem("tz_equipe","1");$("#teamOn").checked=localStorage.getItem("tz_equipe")==="1"}catch(e){}
 $("#teamOn").onchange=e=>{try{localStorage.setItem("tz_equipe",e.target.checked?"1":"0")}catch(x){}toast(e.target.checked?"Vos visites ne seront plus comptées sur cet appareil":"Vos visites seront de nouveau comptées sur cet appareil")};
+$("#minSave").onclick=async()=>{const v=Math.round(parseFloat($("#minIn").value.replace(",",".").replace(/[^0-9.]/g,""))*100)/100;
+  if(!(v>=0&&v<=500)){toast("Montant invalide (entre 0 et 500 €)");$("#minIn").focus();return}
+  if(!CONF||((CONF.commande&&CONF.commande.minimum)||0)===v){toast("Minimum inchangé");return}
+  const next=JSON.parse(JSON.stringify(CONF));next.commande={minimum:v};$("#minSave").disabled=true;
+  if(await saveConf(next,"minimum de commande"))toast("Minimum enregistré · appliqué sur la boutique d’ici 1 à 2 minutes");renderSettings()};
 $("#waSave").onclick=async()=>{const wa=toIntl($("#waIn").value);if(!wa){toast("Numéro invalide");$("#waIn").focus();return}
   if(!CONF||CONF.contact.whatsapp===wa){toast("Numéro inchangé");return}
   const next=JSON.parse(JSON.stringify(CONF));next.contact={...next.contact,whatsapp:wa};$("#waSave").disabled=true;

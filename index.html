@@ -348,6 +348,15 @@ mark.todo{background:var(--hl);color:inherit;border-radius:3px;padding:0 3px}
 .sheetx{position:absolute;top:14px;right:14px;z-index:3;width:34px;height:34px;border-radius:50%;border:0;background:var(--glass);color:var(--fg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 4px rgba(0,0,0,.18);display:grid;place-items:center}
 .sheetx:hover{background:var(--bg)}
 .share{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.info .sec{display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-top:18px;border-top:1px solid var(--line)}
+.info .share.sec{flex-direction:row}
+.info .sec .desc{margin:0}
+.minbox{background:var(--warn-soft);border-radius:14px;padding:12px 14px;display:grid;gap:9px;font-size:14px}
+.minbox b{font-weight:700}.minbox .bar{height:8px;border-radius:4px;background:rgba(0,0,0,.09);overflow:hidden}.minbox .bar i{display:block;height:100%;border-radius:4px;background:var(--warn)}
+.minsug{display:grid;gap:8px}.minsug>span{font-size:13px;font-weight:700;color:var(--muted)}
+.minsug .sg{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:8px 10px}
+.minsug .sg img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none}.minsug .sg div{flex:1;min-width:0;font-size:13.5px;line-height:1.25}.minsug .sg div b{display:block;font-variant-numeric:tabular-nums}
+.minsug .sg button{flex:none;border:0;border-radius:999px;background:var(--brand,#0020fe);color:#fff;font:700 13px/1 inherit;padding:10px 14px;cursor:pointer}
 .shbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:980px;padding:8px 14px 8px 10px;font-size:13px;font-weight:600;text-decoration:none}
 .shbtn:hover{background:var(--bg-alt)}
 .similar{margin-top:14px;padding-top:16px;border-top:1px solid var(--line)}
@@ -429,7 +438,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <div class="shade"></div>
     <div class="in">
       <div class="copy">
-        <span class="ship"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>Livraison offerte</span>
+        <span class="ship"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span data-ship>Livraison offerte</span></span>
         <h1><img class="wm" src="img/logo/wordmark.svg" alt="Tout’zafer" width="418" height="132"></h1>
         <p class="lead">Les articles du quotidien à petit prix.</p>
         <ul class="trust">
@@ -483,7 +492,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <p>Les ventes sont conclues avec Aiman CASSAM, entrepreneur individuel (EI), nom commercial Tout’zafer, SIRET <span class="tabnum">938 090 263 00014</span>, 132 rue Victor Le Vigoureux, appartement 7, 97410 Saint-Pierre, La Réunion. Contact : WhatsApp ou téléphone au <span class="tabnum" data-tel></span>, e-mail <a href="mailto:contact@toutzafer.re">contact@toutzafer.re</a>. Les présentes conditions s’appliquent aux ventes à des particuliers.</p>
 
     <h2>2. Articles et prix</h2>
-    <p>Les caractéristiques essentielles de chaque article figurent sur sa fiche. Les photos le présentent le plus fidèlement possible. Les prix sont indiqués en euros, toutes taxes comprises (TVA au taux en vigueur à La Réunion). La livraison est offerte. Le prix applicable est celui confirmé lors de l’appel.</p>
+    <p>Les caractéristiques essentielles de chaque article figurent sur sa fiche. Les photos le présentent le plus fidèlement possible. Les prix sont indiqués en euros, toutes taxes comprises (TVA au taux en vigueur à La Réunion). La livraison est offerte. Une commande est possible à partir du montant minimum d’achat indiqué sur le site et dans le panier (24,99 € à ce jour). Le prix applicable est celui confirmé lors de l’appel.</p>
 
     <h2>3. Demande et conclusion de la vente</h2>
     <p>L’envoi d’une demande depuis le site ne vous engage pas et ne vous oblige à aucun paiement. Tout’zafer vous rappelle pour confirmer la disponibilité des articles, le prix et le lieu de livraison. La vente est conclue à cette confirmation, que nous vous adressons ensuite par écrit (WhatsApp ou SMS) avec le récapitulatif de votre achat et un lien vers les présentes conditions.</p>
@@ -622,15 +631,19 @@ let VILLES = [
   {id:"v-le-tampon",nom:"Le Tampon",quartiers:[]},
   {id:"v-trois-bassins",nom:"Trois-Bassins",quartiers:[]}
 ];
-const FREE_SHIP_MIN = 0; // livraison offerte, sans minimum
+const FREE_SHIP_MIN = 0; // livraison offerte
+let MIN_ORDER = 0;          // minimum de commande (reglages.json → commande.minimum), réglable depuis Gestion
+const minMiss=()=>Math.max(0,Math.round((MIN_ORDER-total())*100)/100);
+const shipLabel=()=>MIN_ORDER>0?`Livraison offerte dès ${eur(MIN_ORDER)} d’achat`:"Livraison offerte";
 function shipIsFree(){return total()>=FREE_SHIP_MIN}
 const villeById=id=>VILLES.find(v=>v.id===id);
 async function loadReglages(){
   try{const r=await fetch("reglages.json?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);const c=await r.json();
     const wa=String(c.contact&&c.contact.whatsapp||"");if(/^\d{11,15}$/.test(wa))WA_NUMBER=wa;
-    const vs=(Array.isArray(c.villes)?c.villes:[]).filter(v=>v&&v.actif!==false&&v.id&&v.nom).map(v=>({...v,quartiers:Array.isArray(v.quartiers)?v.quartiers:[]}));if(vs.length)VILLES=vs}
+    const vs=(Array.isArray(c.villes)?c.villes:[]).filter(v=>v&&v.actif!==false&&v.id&&v.nom).map(v=>({...v,quartiers:Array.isArray(v.quartiers)?v.quartiers:[]}));if(vs.length)VILLES=vs;
+    const m=Number(c.commande&&c.commande.minimum);MIN_ORDER=m>0&&m<=500?m:0}
   catch(e){console.warn("réglages",e)}
-  applyContact();if(!$("#drawer").classList.contains("on"))renderDrawer();
+  applyContact();document.querySelectorAll("[data-ship]").forEach(e=>e.textContent=shipLabel());if(!$("#drawer").classList.contains("on"))renderDrawer();
 }
 function waNational(){const w=WA_NUMBER;return fmtTelInput(w.startsWith("262")?"0"+w.slice(3):w.startsWith("33")?"0"+w.slice(2):"+"+w)}
 function applyContact(){
@@ -830,10 +843,9 @@ function renderSheet(){
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
       <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${p.was?`<span class="wasbox">${wasHTML(p)}<span class="offrow"><span class="offbadge">−${p.off}%</span>${p.promoTo?`<span class="offdate">jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</span>`:""}</span></span>`:""}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
-      <ul class="assur"><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span>Livraison offerte</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Aucun paiement à l’avance</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg><span>Paiement en espèces ou CB, directement sur place avec le livreur.</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>Nous vous appelons pour organiser la livraison.</span></li></ul><a class="qprod qlink" href="${waProduit(p)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5A8.5 8.5 0 1 1 21 11.5z"/></svg>Une question sur ce produit ?</a>
-      ${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}
-      ${p.specs.length?`<ul>${p.specs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
-      <div class="share"><a class="shbtn" href="${shareWA(p)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="20" height="20">Partager</a><button class="shbtn" id="copyLink" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Copier le lien</button></div>
+      ${p.desc||p.specs.length?`<div class="sec">${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}${p.specs.length?`<ul>${p.specs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>`:""}
+      <div class="sec"><ul class="assur"><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span>${shipLabel()}</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Aucun paiement à l’avance</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg><span>Paiement en espèces ou CB, directement sur place avec le livreur.</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>Nous vous appelons pour organiser la livraison.</span></li></ul><a class="qprod qlink" href="${waProduit(p)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5A8.5 8.5 0 1 1 21 11.5z"/></svg>Une question sur ce produit ?</a></div>
+      <div class="share sec"><a class="shbtn" href="${shareWA(p)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="20" height="20">Partager</a><button class="shbtn" id="copyLink" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Copier le lien</button></div>
       ${similarHTML(p)}</div>`;
   $("#closeSheet").onclick=closeSheet;
   $("#copyLink").onclick=()=>{const u=productURL(p);try{navigator.clipboard.writeText(u).then(()=>toast("Lien copié"),()=>toast(u))}catch(e){toast(u)}};
@@ -871,7 +883,7 @@ function renderDrawer(){
   b.innerHTML = notice + lines + `
     <div class="total"><span>Total indicatif</span><span class="tabnum">${eur(total())}</span></div>
     ${saved()>0.004?`<div class="saved"><span>Vous avez économisé</span><span class="tabnum">${eur(saved())}</span></div>`:""}
-    <div class="freeship"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span>Livraison</span><b>Offerte</b></div>
+    ${minHTML()||`<div class="freeship"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span>Livraison</span><b>Offerte</b></div>`}
     <div class="paylater"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 15h2"/></svg><div><b>Rien à payer maintenant</b><span>Vous réglez uniquement à la livraison après confirmation de votre demande.</span></div></div>
     <form class="f" id="f" novalidate>
       <div class="row2">
@@ -891,6 +903,17 @@ function renderDrawer(){
       <p class="mutedline">Sans engagement et rien à payer maintenant : nous vous appelons pour confirmer.</p></div>`;
   bindForm();
 }
+// Minimum de commande : montant manquant, barre de progression et articles pour compléter
+function minHTML(){
+  const miss=minMiss();if(!miss)return "";
+  const inCart=new Set(Object.keys(cart).map(kid));
+  const pool=PRODUCTS.filter(p=>!inCart.has(p.id)&&!outOfStock.has(p.id)&&!p.variants);
+  const up=pool.filter(p=>p.price>=miss).sort((a,b)=>a.price-b.price),down=pool.filter(p=>p.price<miss).sort((a,b)=>b.price-a.price);
+  const sug=[...up,...down].slice(0,3);
+  return `<div class="minbox" role="status"><div>Plus que <b class="tabnum">${eur(miss)}</b> pour valider votre commande <span style="color:var(--muted)">(minimum ${eur(MIN_ORDER)}, livraison offerte)</span></div>
+    <div class="bar"><i style="width:${Math.min(100,Math.round(total()/MIN_ORDER*100))}%"></i></div>
+    ${sug.length?`<div class="minsug"><span>Complétez votre panier</span>${sug.map(p=>`<div class="sg"><img src="${miniSrc(p,0)}" alt=""><div>${esc(p.name)}<b>${eur(p.price)}</b></div><button type="button" data-inc="${p.id}" aria-label="Ajouter ${esc(p.name)} au panier">Ajouter</button></div>`).join("")}</div>`:""}</div>`;
+}
 function mode(){return "retrait"}
 // Lieu de livraison : la ville, puis un quartier de sa liste (uniquement ceux proposés)
 function fillQuartiers(sel){
@@ -908,8 +931,9 @@ function bindForm(){
   const T='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>';
   const ok=()=>{
     const free=shipIsFree(),miss=FREE_SHIP_MIN-total();
-    const valid=!!($("#fPrenom").value.trim()&&$("#fNom").value.trim()&&normTel($("#fTel").value)&&quartierChoisi()&&$("#fOk").checked);
-    const btn=$("#send");btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid)};
+    const low=minMiss();
+    const valid=!low&&!!($("#fPrenom").value.trim()&&$("#fNom").value.trim()&&normTel($("#fTel").value)&&quartierChoisi()&&$("#fOk").checked);
+    const btn=$("#send");btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid);btn.textContent=low?`Encore ${eur(low)} pour commander`:"Envoyer ma demande"};
   const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,villeId:$("#fVille").value,quartier:$("#fQuartier").value});
   fillQuartiers(store.get("draft",{}).quartier);
   $("#fVille").addEventListener("change",()=>fillQuartiers(""));

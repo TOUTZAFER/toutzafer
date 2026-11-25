@@ -2,6 +2,9 @@
  "contact": {
   "whatsapp": "262693473945"
  },
+ "commande": {
+  "minimum": 24.99
+ },
  "villes": [
   {
    "id": "v-le-port",
