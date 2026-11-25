@@ -157,6 +157,11 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .shipnote.warn{background:var(--warn-soft);color:var(--warn)}
 .sumrow{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);padding-top:6px}
 .sumrow b{color:var(--ok);font-weight:700}
+.sheet .info ul.assur{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:9px;color:var(--ok);font-size:.95rem;line-height:1.35}
+.sheet .info ul.assur li{display:flex;gap:10px;align-items:flex-start;margin:0;padding:0}
+.sheet .info ul.assur li::before,.sheet .info ul.assur li::marker{content:none}
+.assur svg{flex:none;margin-top:1px}
+.sheet .info a.qprod,.qprod{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:10px 14px;border-radius:14px;background:#e9f6ee;color:#146c34;font-weight:700;text-decoration:none}
 .shipline{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--brand-text)}
 
 .blk{display:flex;flex-direction:column;gap:14px}
@@ -795,6 +800,7 @@ const articlePath=p=>`/article/${p.id}-${slugify(p.name)}`;
 const productURL=p=>SITE_URL+articlePath(p);
 const HOME_TITLE=document.title;
 const pathArticle=()=>{const m=location.pathname.match(/^\/article\/(a\d{2,4})(?:-|$)/);return m?m[1]:null};
+const waProduit=p=>`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Bonjour Tout'zafer, j'ai une question sur cet article : ${p.name} (${productURL(p)})`)}`;
 const shareWA=p=>"https://wa.me/?text="+encodeURIComponent(`${p.name} à ${eur(p.price)} chez Tout'zafer : ${productURL(p)}`);
 function similarHTML(p){
   const ok=x=>x.id!==p.id&&!outOfStock.has(x.id);
@@ -824,6 +830,7 @@ function renderSheet(){
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
       <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${p.was?`<span class="wasbox">${wasHTML(p)}<span class="offrow"><span class="offbadge">−${p.off}%</span>${p.promoTo?`<span class="offdate">jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</span>`:""}</span></span>`:""}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
+      <ul class="assur"><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span>Livraison offerte</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Aucun paiement à l’avance</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg><span>Paiement en espèces ou CB, directement sur place avec le livreur.</span></li><li><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>Nous vous appelons pour organiser la livraison.</span></li></ul><a class="qprod qlink" href="${waProduit(p)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5A8.5 8.5 0 1 1 21 11.5z"/></svg>Une question sur ce produit ?</a>
       ${p.desc?`<p class="desc">${esc(p.desc)}</p>`:""}
       ${p.specs.length?`<ul>${p.specs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
       <div class="share"><a class="shbtn" href="${shareWA(p)}" target="_blank" rel="noopener"><img src="img/ico/whatsapp.png" alt="" width="20" height="20">Partager</a><button class="shbtn" id="copyLink" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Copier le lien</button></div>
