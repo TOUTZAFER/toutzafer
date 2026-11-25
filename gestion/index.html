@@ -1170,7 +1170,7 @@ function openPoint(id){
   <div class="db">
     ${st?statGrid([["Demandes",st.n],["Livrées",st.liv],["CA livré",eur(st.ca)],["Annulées",st.annul]]):""}
     <label class="fld">Nom de la ville<input class="inp" id="ptNom" value="${esc(p.nom)}" placeholder="Ex. Saint-Paul"></label>
-    <label class="fld">Quartiers proposés <small>un par ligne · le client peut aussi choisir « Autre quartier » et l’écrire</small><textarea class="ta" id="ptQ" rows="9">${esc((p.quartiers||[]).join("\n"))}</textarea></label>
+    <label class="fld">Quartiers proposés <small>un par ligne · le client choisit uniquement parmi cette liste</small><textarea class="ta" id="ptQ" rows="9">${esc((p.quartiers||[]).join("\n"))}</textarea></label>
     ${libres.length?`<p class="hint">Quartiers écrits par des clients : ${libres.map(q=>`<button type="button" class="chip addq" data-addq="${esc(q)}">+ ${esc(q)}</button>`).join(" ")}</p>`:""}
     <label class="fld">Livreur habituel <small>attribué d’office aux nouvelles demandes de cette ville</small><select class="sel" id="ptLiv"${HASDB?"":" disabled"}><option value="">Aucun</option>${livActifs().map(l=>`<option value="${esc(l.id)}"${l.id===v.livreurId?" selected":""}>${esc(l.prenom)}</option>`).join("")}</select></label>
     <label class="fld">Note interne <small>jamais visible par les clients</small><textarea class="ta" id="ptNote" rows="2"${HASDB?"":" disabled"} placeholder="Ex. livraisons le mardi et le samedi">${esc(v.note||"")}</textarea></label>

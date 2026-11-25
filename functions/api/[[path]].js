@@ -327,6 +327,9 @@ async function newDemande(request, env, ctx) {
   if (conf && Array.isArray(conf.villes) && conf.villes.length) {
     place = placeOf(conf, b, true);
     if (!place) throw new HttpError(400, "Nous ne livrons pas (ou plus) dans cette ville : choisissez-en une autre.", { pickGone: true });
+    // le client choisit uniquement parmi les quartiers proposés pour la ville
+    const vq = (conf.villes.find(v => v.id === place.pickId) || {}).quartiers || [];
+    if (vq.length && (!place.quartier || place.quartierLibre)) throw new HttpError(400, "Choisissez votre quartier dans la liste proposée.", { pickGone: true });
   } else {
     const v = clean(b.ville || b.pick, 60), q = clean(b.quartier, 60);
     place = { pick: q ? `${v} — ${q}` : v, ville: v, quartier: q || undefined };

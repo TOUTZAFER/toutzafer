@@ -874,7 +874,6 @@ function renderDrawer(){
       <label class="fl">Téléphone<input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0692 12 34 56" value="${esc(d.tel||"")}" required><span class="err" id="eTel" hidden>Indiquez un numéro à 10 chiffres (ex. 0692 12 34 56) ou au format +262.</span></label>
       <label class="fl">Ville de livraison<select id="fVille"><option value="">Choisir votre ville</option>${VILLES.map(v=>`<option value="${esc(v.id)}"${d.villeId===v.id?" selected":""}>${esc(v.nom)}</option>`).join("")}</select></label>
       <label class="fl">Quartier<select id="fQuartier" disabled><option value="">Choisissez d’abord la ville</option></select></label>
-      <label class="fl" id="fQAutreF" hidden>Votre quartier<input id="fQAutre" autocomplete="off" placeholder="Nom de votre quartier" value="${esc(d.quartierAutre||"")}"></label>
       <p class="pkhint">Livraison offerte dans le Nord, l’Ouest et le Sud de l’île. Le livreur vous appelle pour convenir du lieu exact.</p>
       <label class="consent"><input type="checkbox" id="fOk"> <span>J'accepte que Tout’zafer utilise mes coordonnées uniquement pour traiter cette demande et me rappeler. Elles ne sont ni revendues ni utilisées pour de la publicité.</span></label>
       <input class="hp" id="fSite" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -886,17 +885,17 @@ function renderDrawer(){
   bindForm();
 }
 function mode(){return "retrait"}
-// Lieu de livraison : la ville, puis un quartier de sa liste (ou « Autre quartier » saisi librement)
+// Lieu de livraison : la ville, puis un quartier de sa liste (uniquement ceux proposés)
 function fillQuartiers(sel){
   const v=villeById($("#fVille").value),q=$("#fQuartier"),list=v?v.quartiers:[];
-  q.disabled=!v;
-  q.innerHTML=v?`<option value="">Choisir votre quartier</option>${list.map(x=>`<option${x===sel?" selected":""}>${esc(x)}</option>`).join("")}<option value="__autre"${sel==="__autre"||(v&&!list.length)?" selected":""}>${list.length?"Autre quartier…":"Indiquer mon quartier"}</option>`
-    :`<option value="">Choisissez d’abord la ville</option>`;
-  $("#fQAutreF").hidden=q.value!=="__autre";
+  q.disabled=!v||!list.length;
+  q.innerHTML=!v?`<option value="">Choisissez d’abord la ville</option>`
+    :list.length?`<option value="">Choisir votre quartier</option>${list.map(x=>`<option${x===sel?" selected":""}>${esc(x)}</option>`).join("")}`
+    :`<option value="">Le livreur verra avec vous</option>`;
 }
-function quartierChoisi(){const v=$("#fVille").value,q=$("#fQuartier").value;return !!(v&&q&&(q!=="__autre"||$("#fQAutre").value.trim().length>=2))}
-function lieu(){const v=villeById($("#fVille").value)||{},q=$("#fQuartier").value,quartier=(q==="__autre"?$("#fQAutre").value:q).trim().replace(/\s+/g," ");
-  return {villeId:v.id||"",ville:v.nom||"",quartier,pick:v.nom?`${v.nom} — ${quartier}`:""}}
+function quartierChoisi(){const v=villeById($("#fVille").value);return !!(v&&(!v.quartiers.length||$("#fQuartier").value))}
+function lieu(){const v=villeById($("#fVille").value)||{},quartier=$("#fQuartier").value.trim();
+  return {villeId:v.id||"",ville:v.nom||"",quartier,pick:v.nom?(quartier?`${v.nom} — ${quartier}`:v.nom):""}}
 function bindForm(){
   bindTelFormat($("#fTel")); // en premier : les contrôles suivants voient le numéro déjà mis en forme
   const T='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>';
@@ -904,12 +903,11 @@ function bindForm(){
     const free=shipIsFree(),miss=FREE_SHIP_MIN-total();
     const valid=!!($("#fPrenom").value.trim()&&$("#fNom").value.trim()&&normTel($("#fTel").value)&&quartierChoisi()&&$("#fOk").checked);
     const btn=$("#send");btn.setAttribute("aria-disabled",String(!valid));btn.classList.toggle("dis",!valid)};
-  const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,villeId:$("#fVille").value,quartier:$("#fQuartier").value,quartierAutre:$("#fQAutre").value});
+  const keep=()=>store.set("draft",{prenom:$("#fPrenom").value,nom:$("#fNom").value,tel:$("#fTel").value,villeId:$("#fVille").value,quartier:$("#fQuartier").value});
   fillQuartiers(store.get("draft",{}).quartier);
   $("#fVille").addEventListener("change",()=>fillQuartiers(""));
-  $("#fQuartier").addEventListener("change",()=>{const au=$("#fQuartier").value==="__autre";$("#fQAutreF").hidden=!au;if(au)$("#fQAutre").focus()});
 
-  ["fPrenom","fNom","fTel","fVille","fQuartier","fQAutre","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{statOnce("form");ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
+  ["fPrenom","fNom","fTel","fVille","fQuartier","fOk"].forEach(id=>{const el=$("#"+id);el.addEventListener("input",()=>{statOnce("form");ok();keep()});el.addEventListener("change",()=>{ok();keep()})});
   ok();
   $("#f").addEventListener("submit",e=>e.preventDefault());
   const onSend=e=>{const btn=e.currentTarget;
