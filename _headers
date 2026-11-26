@@ -9,3 +9,7 @@
   Referrer-Policy: no-referrer
 /functions/*
   X-Robots-Tag: noindex
+/img/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/lib/*
+  X-Robots-Tag: noindex

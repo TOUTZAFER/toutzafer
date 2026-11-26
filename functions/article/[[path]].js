@@ -3,23 +3,13 @@
  * Renvoie la boutique (index.html) avec, dans l'en-tête, les informations de l'article :
  * titre, description, adresse canonique, aperçu de partage (WhatsApp, Facebook) et données
  * produit pour Google (prix TTC, disponibilité, livraison offerte, retour sous 14 jours).
- * La boutique ouvre ensuite la fiche de l'article par-dessus le catalogue.
+ * La grille des articles et la fiche sont écrites dans la page (lib/ssr.js) ; la boutique ouvre
+ * ensuite la fiche de l'article par-dessus le catalogue.
  * - nom modifié depuis Gestion : l'ancienne adresse redirige (301) vers la nouvelle ;
  * - article inconnu ou masqué : boutique avec statut 404 et « noindex ».
  * Règle des adresses identique à slugify() dans index.html.
  */
-const SITE = "https://toutzafer.re";
-const TZ_OFFSET_H = 4;
-const CATNAME = { cuisine: "Cuisine", rangement: "Rangement", maison: "Maison", enfants: "Bébé & enfants", animaux: "Animaux" };
-
-const slugify = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/, "");
-const articlePath = p => `/article/${p.id}-${slugify(p.name)}`;
-const attr = s => String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const eur = n => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",") + " €";
-const day = () => new Date(Date.now() + TZ_OFFSET_H * 3600e3).toISOString().slice(0, 10);
-function promoOn(p, d) { const r = p.promo; return !!(r && r.price > 0 && r.ref > r.price && (!r.from || r.from <= d) && (!r.to || d <= r.to)); }
-function photo(b, size) { const m = String(b).match(/^(.*)\.(webp|jpg|png)$/); return m ? `/img/w/${m[1]}-${size}.${m[2]}` : `/img/w/${b}-${size}.webp`; }
+import { SITE, CATNAME, slugify, articlePath, esc as attr, eur, day, promoOn, photo, visible, loadPage, fill } from "../../lib/ssr.js";
 const stem = b => String(b).replace(/\.(webp|jpg|png)$/, "");
 function cut(s, n) { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; }
 
@@ -41,6 +31,9 @@ function headFor(p, ogImage) {
   if (promo && p.promo.to) offer.priceValidUntil = p.promo.to;
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.id, image: imgs, description: cut(p.desc || p.d || p.name, 500),
     category: CATNAME[p.cat] || undefined, offers: offer };
+  const crumbs = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Tout’zafer", item: SITE + "/" },
+    { "@type": "ListItem", position: 2, name: p.name, item: url }] };
   return `<title>${attr(title)}</title>
 <meta name="description" content="${attr(desc)}">
 <link rel="canonical" href="${attr(url)}">
@@ -55,7 +48,8 @@ function headFor(p, ogImage) {
 <meta property="product:price:amount" content="${price.toFixed(2)}">
 <meta property="product:price:currency" content="EUR">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`;
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
+<script type="application/ld+json">${JSON.stringify(crumbs).replace(/</g, "\\u003c")}</script>`;
 }
 
 export async function onRequest({ request, env, params }) {
@@ -63,14 +57,11 @@ export async function onRequest({ request, env, params }) {
   const seg = [].concat(params.path || []).join("/");
   const m = seg.match(/^(a\d{2,4})(?:-|$)/);
   if (!m) return Response.redirect(new URL("/", url).toString(), 302);
-  const [page, cat] = await Promise.all([
-    env.ASSETS.fetch(new Request(new URL("/", url))).then(r => r.text()),
-    env.ASSETS.fetch(new Request(new URL("/catalogue.json", url))).then(r => r.ok ? r.json() : []).catch(() => [])
-  ]);
-  const p = (Array.isArray(cat) ? cat : []).find(x => x.id === m[1] && !x.hidden && x.base && x.base.length);
+  const { page, cat } = await loadPage(env, url);
+  const p = visible(cat).find(x => x.id === m[1]);
   const headers = { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" };
   if (!p) {
-    const html = page.replace(/<!--meta-->[\s\S]*?<!--\/meta-->/, `<title>Article introuvable · Tout’zafer</title>\n<meta name="robots" content="noindex">`);
+    const html = fill(page, cat).replace(/<!--meta-->[\s\S]*?<!--\/meta-->/, `<title>Article introuvable · Tout’zafer</title>\n<meta name="robots" content="noindex">`);
     return new Response(html, { status: 404, headers });
   }
   const canon = articlePath(p);
@@ -78,6 +69,6 @@ export async function onRequest({ request, env, params }) {
   // aperçu de partage : JPG (lu partout) s'il existe, sinon la photo 720 px
   const og = `/img/og/${stem(p.base[0])}.jpg`;
   const hasJpg = await env.ASSETS.fetch(new Request(new URL(og, url), { method: "HEAD" })).then(r => r.ok && /image/.test(r.headers.get("Content-Type") || "")).catch(() => false);
-  const html = page.replace(/<!--meta-->[\s\S]*?<!--\/meta-->/, headFor(p, SITE + (hasJpg ? og : photo(p.base[0], 720))));
+  const html = fill(page, cat, p).replace(/<!--meta-->[\s\S]*?<!--\/meta-->/, headFor(p, SITE + (hasJpg ? og : photo(p.base[0], 720))));
   return new Response(html, { status: 200, headers });
 }

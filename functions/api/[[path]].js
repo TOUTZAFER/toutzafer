@@ -59,10 +59,28 @@ function sameText(a, b) {               // comparaison à durée constante
 async function checkPassword(request, env, needGithub = false) {
   if (!env.ADMIN_PASSWORD) throw new HttpError(500, "Relais non configuré (ADMIN_PASSWORD manquant).");
   if (needGithub && !env.GITHUB_TOKEN) throw new HttpError(500, "Relais non configuré (GITHUB_TOKEN manquant).");
+  const lock = await pwLock(request, env);   // trop d'essais ratés depuis cette connexion : bloqué 15 minutes
+  if (lock && await lock.blocked()) throw new HttpError(429, "Trop d'essais de mot de passe. Réessayez dans 15 minutes.");
   if (!sameText(request.headers.get("X-Gestion-Password") || "", env.ADMIN_PASSWORD)) {
+    if (lock) await lock.fail();
     await new Promise(r => setTimeout(r, 600)); // ralentit les essais au hasard
     throw new HttpError(401, "Mot de passe incorrect.");
   }
+}
+
+/* Essais de mot de passe ratés : 10 au plus par connexion (adresse IP hachée) et par quart d'heure */
+async function pwLock(request, env) {
+  if (!env.DB) return null;
+  try {
+    const D = await getDB(env);
+    const salt = await kvInit(D, "salt", () => b64u(crypto.getRandomValues(new Uint8Array(16))));
+    const ip = request.headers.get("CF-Connecting-IP") || "?";
+    const now = Math.floor(Date.now() / 1000), k = `pw:${(await sha256hex(salt + "|" + ip)).slice(0, 24)}:${Math.floor(now / 900)}`;
+    return {
+      blocked: async () => ((await D.prepare("SELECT n FROM hits WHERE k = ?").bind(k).first())?.n || 0) >= 10,
+      fail: () => D.prepare("INSERT INTO hits (k, n, exp) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1").bind(k, now + 900).run()
+    };
+  } catch (e) { return null; } // la base ne répond pas : on ne bloque pas l'accès à la gestion
 }
 
 async function body(request, max = 200_000) {

@@ -21,6 +21,8 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
     notifications sur l'appareil.
 - `gestion/sw.js`, `gestion/manifest.webmanifest` : notifications et installation de la page Gestion.
 - `functions/api/[[path]].js` : les fonctions serveur (Cloudflare Pages Functions), voir l'en-tête du fichier.
+- `functions/index.js` et `lib/ssr.js` : l'accueil et les pages article sont envoyés avec la grille des articles déjà écrite en liens
+  (et la fiche de l'article), pour Google ; la boutique prend ensuite le relais.
 - `functions/article/[[path]].js` : page de chaque article, `/article/<id>-<nom>` (titre, description, aperçu de partage,
   données produit pour Google) ; `functions/sitemap.xml.js` : plan du site pour Google.
 - `img/og/` : aperçus de partage en JPG (accueil et première photo de chaque article ; créés avec chaque nouvelle photo).
@@ -36,6 +38,7 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
   conservée ; robots exclus ; conservation 25 mois.
 - Protection de l'envoi public : prix recalculés côté serveur depuis `catalogue.json`, articles en rupture refusés,
   champ piège anti-robots, limite d'envois par connexion (adresse IP hachée, jamais stockée en clair).
+  Page Gestion : après 10 mots de passe faux depuis une même connexion, accès bloqué 15 minutes.
 
 ## Hébergement (Cloudflare Pages, projet « toutzafer », branche main, sans commande de build)
 - Boutique : https://toutzafer.re · Gestion : https://toutzafer.re/gestion/

@@ -19,8 +19,10 @@
 <meta property="og:url" content="https://toutzafer.re/">
 <meta property="og:image" content="https://toutzafer.re/img/og/accueil.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://toutzafer.re/#org","name":"Tout’zafer","url":"https://toutzafer.re/","logo":"https://toutzafer.re/img/ico/icon-512.png","email":"contact@toutzafer.re","areaServed":{"@type":"AdministrativeArea","name":"La Réunion"},"sameAs":["https://www.facebook.com/p/Toutzafer-61572552450737/"]},{"@type":"WebSite","@id":"https://toutzafer.re/#site","name":"Tout’zafer","url":"https://toutzafer.re/","inLanguage":"fr","publisher":{"@id":"https://toutzafer.re/#org"}}]}</script>
 <!--/meta-->
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preload" as="image" href="img/w/h1-1296.webp" imagesrcset="img/w/h1-800.webp 800w, img/w/h1-1296.webp 1296w" imagesizes="100vw" fetchpriority="high">
 <link rel="icon" type="image/png" sizes="32x32" href="img/ico/favicon-32.png">
 <link rel="apple-touch-icon" href="img/ico/apple-touch-icon.png">
 <meta name="theme-color" content="#0020fe">
@@ -82,9 +84,9 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 @media (min-width:1112px){.hero .in{padding-left:0;padding-right:0}}
 .copy{max-width:560px}
 .ship{display:inline-flex;align-items:center;gap:8px;background:var(--pop);color:var(--pop-fg);font-weight:800;font-size:14px;border-radius:980px;padding:7px 14px 7px 12px;margin-bottom:18px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-.hero h1{margin:0;line-height:0}
-.hero h1 .wm{display:block;width:clamp(240px,40vw,440px);height:auto;filter:drop-shadow(0 2px 18px rgba(0,0,0,.3))}
-.lead{font-family:var(--font-display);font-size:clamp(22px,3.2vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:12px 0 0;max-width:20ch;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.25)}
+.hero .wmh{margin:0;line-height:0}
+.hero .wmh .wm{display:block;width:clamp(240px,40vw,440px);height:auto;filter:drop-shadow(0 2px 18px rgba(0,0,0,.3))}
+.lead{font-family:var(--font-display);font-size:clamp(22px,3.2vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:12px 0 0;max-width:22ch;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.25)}
 .ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .btn-o{border:1.5px solid rgba(255,255,255,.6);background:rgba(255,255,255,.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;border-radius:980px;padding:12px 20px;font-weight:600;font-size:15px}
 .btn-o:hover{background:rgba(255,255,255,.18)}
@@ -105,7 +107,7 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
   .hero{align-items:flex-end;min-height:440px}
   .shade{background:linear-gradient(0deg,rgba(0,8,45,.9) 0%,rgba(0,8,45,.7) 45%,rgba(0,8,45,.15) 80%,rgba(0,8,45,.05) 100%)}
   .hero .in{padding-top:28px;padding-bottom:76px}
-  .hero h1 .wm{width:min(78vw,320px)}
+  .hero .wmh .wm{width:min(78vw,320px)}
   .lead{font-size:21px;margin-top:8px}
   .ship{margin-bottom:12px;font-size:13px}
   .trust{margin-top:14px;font-size:13px;gap:6px 14px}
@@ -262,7 +264,7 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 @media (max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px}}
 .card{display:flex;flex-direction:column;gap:10px;min-width:0}
-.thumb{aspect-ratio:1;max-width:100%;width:100%;border-radius:var(--r);background:var(--tile);position:relative;overflow:hidden;border:0;padding:0}
+.thumb{display:block;aspect-ratio:1;max-width:100%;width:100%;border-radius:var(--r);background:var(--tile);position:relative;overflow:hidden;border:0;padding:0}
 .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease,opacity .35s ease}
 .thumb img.alt{position:absolute;inset:0;opacity:0}
 @media (hover:hover){.card:hover .thumb img{transform:scale(1.04)}.card:hover .thumb img.alt{opacity:1}}
@@ -271,7 +273,7 @@ header.top :focus-visible{outline-color:var(--brand-fg)}
 .badge{position:absolute;top:10px;left:10px;z-index:1;font-size:11px;font-weight:600;letter-spacing:.02em;border-radius:980px;padding:3px 9px;background:var(--warn-soft);color:var(--warn)}
 .meta{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cat{font-size:12px;color:var(--muted)}
-.name{font-size:15px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left}
+.name{font-size:15px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left;color:inherit;text-decoration:none}
 .detail{font-size:13px;color:var(--muted)}
 .price{font-size:15px;color:var(--fg);margin-top:2px}
 .card.out .name,.card.out .price{color:var(--muted)}
@@ -339,7 +341,7 @@ mark.todo{background:var(--hl);color:inherit;border-radius:3px;padding:0 3px}
 .gal .thumbs button[aria-current="true"]{border-color:var(--brand)}
 .gal .thumbs img{width:100%;height:100%;object-fit:cover}
 .info{padding:32px 28px;display:flex;flex-direction:column;gap:12px;min-width:0;position:relative}
-.info h2{font-family:var(--font-display);font-weight:700;font-size:28px;line-height:1.12;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.info h1,.info h2{font-family:var(--font-display);font-weight:700;font-size:28px;line-height:1.12;letter-spacing:-.02em;margin:0;text-wrap:balance}
 .info .big{font-size:24px}
 .info .desc{margin:4px 0 0;font-size:15px;line-height:1.55}
 .info ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:4px}
@@ -363,7 +365,7 @@ mark.todo{background:var(--hl);color:inherit;border-radius:3px;padding:0 3px}
 .similar{margin-top:14px;padding-top:16px;border-top:1px solid var(--line)}
 .similar h3{margin:0 0 10px;font-family:var(--font-display);font-size:17px;font-weight:700}
 .simgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.simcard{border:0;background:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0}
+.simcard{border:0;background:none;padding:0;text-align:left;color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:4px;min-width:0}
 .simcard img{width:100%;height:auto;aspect-ratio:1;max-width:100%;object-fit:cover;border-radius:12px;background:var(--tile)}
 .simcard .sn{font-size:12px;font-weight:600;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .simcard .sp{font-size:12px}
@@ -440,8 +442,8 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <div class="in">
       <div class="copy">
         <span class="ship"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span data-ship>Livraison offerte</span></span>
-        <h1><img class="wm" src="img/logo/wordmark.svg" alt="Tout’zafer" width="418" height="132"></h1>
-        <p class="lead">Les articles du quotidien à petit prix.</p>
+        <div class="wmh"><img class="wm" src="img/logo/wordmark.svg" alt="Tout’zafer" width="418" height="132"></div>
+        <h1 class="lead">Les articles du quotidien à petit prix, à La Réunion.</h1>
         <ul class="trust">
           <li><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>Paiement à la livraison</li>
           <li><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>Sans engagement</li>
@@ -718,7 +720,7 @@ let heroIdx=0,heroTimer=null,heroList=[];
 function renderHero(){
   heroList=HERO_SLIDES.filter(([,id])=>byId(id)&&!outOfStock.has(id));
   heroIdx=Math.max(0,Math.min(heroIdx,heroList.length-1));
-  $("#slides").innerHTML=heroList.map(([src],i)=>{const b=src.split("/").pop().replace(".jpg","");return `<div class="slide${i===heroIdx?" on":""}"><img src="img/w/${b}-1296.webp" srcset="img/w/${b}-800.webp 800w, img/w/${b}-1296.webp 1296w" sizes="100vw" alt="" ${i?'loading="lazy"':""} width="1296" height="777"></div>`}).join("");
+  $("#slides").innerHTML=heroList.map(([src],i)=>{const b=src.split("/").pop().replace(".jpg","");return `<div class="slide${i===heroIdx?" on":""}"><img src="img/w/${b}-1296.webp" srcset="img/w/${b}-800.webp 800w, img/w/${b}-1296.webp 1296w" sizes="100vw" alt="" ${i?'loading="lazy"':'fetchpriority="high"'} width="1296" height="777"></div>`}).join("");
   $("#dots").innerHTML=heroList.map((_,i)=>`<button data-slide="${i}" aria-label="Image ${i+1}" aria-current="${i===heroIdx}"></button>`).join("");
   showSlide(heroIdx);
   applyContact();
@@ -767,6 +769,7 @@ function renderGrid(){
   if(grouped){const order=CATS.map(c=>c[0]);list.sort((a,b)=>order.indexOf(a.cat)-order.indexOf(b.cat));} // tri stable : ordre A→Z et ruptures en fin conservés dans chaque catégorie
   const n=list.length;
   $("#resultLine").textContent = `${n} article${n>1?"s":""}${promoOnly?" en promo":""}${cat!=="all"?" · "+CATNAME[cat]:""}${words.length?` pour « ${query.trim()} »`:""}`;
+  if(catalogueState==="loading"&&$("#grid").dataset.ssr)return;
   if(catalogueState!=="ok"){$("#resultLine").textContent="";$("#grid").innerHTML=catalogueState==="error"?`<p class="empty">Le catalogue n’a pas pu être chargé. Vérifiez votre connexion. <button class="add" style="margin:12px auto 0" id="retryCat">Réessayer</button></p>`:`<p class="empty">Chargement du catalogue…</p>`;const r=$("#retryCat");if(r)r.onclick=loadCatalogue;renderCatNav([]);return}
   if(!n){$("#grid").innerHTML=promoOnly&&!words.length?`<p class="empty">Aucune promo en cours${cat!=="all"?" dans "+CATNAME[cat]:""}.</p>`:`<p class="empty">Aucun article ne correspond${words.length?` à « ${esc(query.trim())} »`:""}${cat!=="all"?" dans "+CATNAME[cat]:""}. Essayez un autre mot-clé ou toutes les catégories.</p>`;return}
   let prevCat=null;
@@ -776,8 +779,8 @@ function renderGrid(){
     if(grouped&&p.cat!==prevCat){prevCat=p.cat;const k=list.filter(x=>x.cat===p.cat).length;head=`<h2 class="ghead" id="g-${p.cat}" data-cat="${p.cat}">${CATNAME[p.cat]}<span class="tabnum">${k}</span></h2>`}
     const quick=quickHTML(p);
     return head+`<article class="card${out?" out":""}" data-id="${p.id}">
-      <div class="media"><button class="thumb" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':pastilleHTML(p)}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</button>${quick}</div>
-      <div class="meta">${grouped?"":`<span class="cat">${CATNAME[p.cat]}</span>`}<button class="name" data-open="${p.id}">${esc(p.name)}</button><span class="price${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span></div>
+      <div class="media"><a class="thumb" href="${articlePath(p)}" data-open="${p.id}" aria-label="Voir ${esc(p.name)}">${out?'<span class="badge">En rupture</span>':pastilleHTML(p)}${imgTag(p,0,'alt="" loading="lazy" width="720" height="720"')}${p.base.length>1?imgTag(p,1,'class="alt" alt="" loading="lazy" width="720" height="720"'):""}</a>${quick}</div>
+      <div class="meta">${grouped?"":`<span class="cat">${CATNAME[p.cat]}</span>`}<a class="name" href="${articlePath(p)}" data-open="${p.id}">${esc(p.name)}</a><span class="price${p.was?" promo":""}">${priceHTML(p.price)}${wasHTML(p)}</span></div>
       </article>`;
   }).join("");
   observePeek();
@@ -822,7 +825,7 @@ function similarHTML(p){
   if(list.length<3)list=list.concat(PRODUCTS.filter(x=>ok(x)&&x.cat!==p.cat&&!list.includes(x)));
   const seed=[...p.id].reduce((a,c)=>a+c.charCodeAt(0),0); // ordre stable par article
   list=list.map((x,i)=>[x,(i*7+seed)%13]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]).slice(0,3);
-  return `<div class="similar"><h3>Vous aimerez aussi</h3><div class="simgrid">${list.map(x=>`<button class="simcard" data-open="${x.id}" aria-label="Voir ${esc(x.name)}"><img src="${miniSrc(x)}" alt="" loading="lazy" width="360" height="360"><span class="sn">${esc(x.name)}</span><span class="sp${x.was?" promo":""}">${priceHTML(x.price)}${wasHTML(x)}</span></button>`).join("")}</div></div>`;
+  return `<div class="similar"><h3>Vous aimerez aussi</h3><div class="simgrid">${list.map(x=>`<a class="simcard" href="${articlePath(x)}" data-open="${x.id}" aria-label="Voir ${esc(x.name)}"><img src="${miniSrc(x)}" alt="" loading="lazy" width="360" height="360"><span class="sn">${esc(x.name)}</span><span class="sp${x.was?" promo":""}">${priceHTML(x.price)}${wasHTML(x)}</span></a>`).join("")}</div></div>`;
 }
 function openSheet(id){const p=byId(id);if(!p)return;
   if(sheetId&&sheetId!==id){try{history.replaceState({sheet:id},"",articlePath(p))}catch(e){}openSheetRaw(id);$("#sheet").scrollTo({top:0});return}
@@ -840,7 +843,7 @@ function renderSheet(){
       <span class="counter tabnum" id="counter"></span>${p.was&&!outOfStock.has(p.id)?pastilleHTML(p):""}</div>
     <div class="thumbs">${p.imgs.map((s,i)=>`<button data-img="${i}" aria-label="Voir la photo ${i+1}"><img src="${miniSrc(p,i)}" alt=""></button>`).join("")}</div></div>
     <div class="info">
-      <span class="cat">${CATNAME[p.cat]}</span><h2 id="sTitle">${esc(p.name)}</h2>
+      <span class="cat">${CATNAME[p.cat]}</span><h1 id="sTitle">${esc(p.name)}</h1>
       ${p.variants&&!out?`<div class="vars" role="radiogroup" aria-label="Modèle"><span>Modèle</span>${p.variants.map(v=>`<button role="radio" data-var="${esc(v.name)}" aria-checked="${v.name===sheetVar}"><img src="${miniSrc(p,v.img)}" alt="">${esc(v.name)}</button>`).join("")}</div>`:""}
       <div class="buyrow"><span class="big${p.was?" promo":""}">${priceHTML(p.price)}${p.was?`<span class="wasbox">${wasHTML(p)}<span class="offrow"><span class="offbadge">−${p.off}%</span>${p.promoTo?`<span class="offdate">jusqu’au ${new Date(p.promoTo+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</span>`:""}</span></span>`:""}</span><div id="sheetAct">${actionHTML(p,true)}</div></div>
       ${out?'<span class="badge" style="position:static;align-self:flex-start">En rupture</span>':""}
@@ -1085,7 +1088,7 @@ document.addEventListener("click",e=>{
   const vb=e.target.closest("[data-var]");if(vb&&sheetId){const p=byId(sheetId);sheetVar=vb.dataset.var;document.querySelectorAll("#sheet [data-var]").forEach(b=>b.setAttribute("aria-checked",b.dataset.var===sheetVar));const v=p.variants.find(x=>x.name===sheetVar);if(v)goImg(v.img);refreshSheetAct();return}
   const t=e.target.closest("[data-inc],[data-dec],[data-open],[data-img],[data-go],[data-slide]");if(!t)return;
   if(t.dataset.inc)inc(t.dataset.inc);else if(t.dataset.dec)dec(t.dataset.dec);
-  else if(t.dataset.open)openSheet(t.dataset.open);
+  else if(t.dataset.open){if(t.tagName==="A"){if(e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;e.preventDefault()}openSheet(t.dataset.open)}
   else if(t.dataset.img!==undefined)goImg(+t.dataset.img);
   else if(t.dataset.go)goImg(sheetImg+ +t.dataset.go);
   else if(t.dataset.slide!==undefined){showSlide(+t.dataset.slide);startHero()}
