@@ -157,6 +157,19 @@ body.wide main.wrap{max-width:1200px}
 .tabs button{border:0;background:none;border-radius:9px;padding:8px 16px;font-size:14px;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center}
 .tabs button[aria-selected="true"]{background:var(--bg);color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 @media (max-width:480px){.tabs{width:100%}.tabs button{padding:8px 10px;font-size:13px;flex:1;justify-content:center}}
+.tabs .ti{display:none}
+/* téléphone et tablette : menu en bas, comme une application */
+@media (max-width:860px){
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;width:auto;max-width:none;margin:0;gap:0;border-radius:0;overflow:visible;
+    padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));
+    background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+  .tabs button{position:relative;flex:1;min-width:0;flex-direction:column;justify-content:center;gap:3px;padding:6px 2px;min-height:52px;font-size:11.5px;border-radius:12px}
+  .tabs button[aria-selected="true"]{background:none;box-shadow:none;color:var(--brand);font-weight:700}
+  .tabs .ti{display:block}
+  .tabs .tabbadge{position:absolute;top:2px;left:calc(50% + 6px);margin:0;min-width:18px;height:18px;font-size:11px;padding:0 5px}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
 .tabbadge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:980px;background:var(--s1);color:#fff;font-size:12px;font-weight:700}
 body:not(.t-articles) .status:not(.err){display:none!important}
 
@@ -332,10 +345,10 @@ a.btn.pri{color:#fff}
 
 <main class="wrap">
   <nav class="tabs" id="tabs" role="tablist" hidden>
-    <button role="tab" data-tab="orders" aria-selected="false">Demandes<span class="tabbadge tabnum" id="ordBadge" hidden></span></button>
-    <button role="tab" data-tab="articles" aria-selected="false">Articles</button>
-    <button role="tab" data-tab="synth" aria-selected="false">Synthèse</button>
-    <button role="tab" data-tab="settings" aria-selected="false">Réglages</button>
+    <button role="tab" data-tab="orders" aria-selected="false"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12a1 1 0 0 1 1 1v15l-3-2-2 2-2-2-2 2-2-2-3 2V5a1 1 0 0 1 1-1z"/><path d="M9 9h6M9 13h6"/></svg><span class="tl">Demandes</span><span class="tabbadge tabnum" id="ordBadge" hidden></span></button>
+    <button role="tab" data-tab="articles" aria-selected="false"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></svg><span class="tl">Articles</span></button>
+    <button role="tab" data-tab="synth" aria-selected="false"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg><span class="tl">Synthèse</span></button>
+    <button role="tab" data-tab="settings" aria-selected="false"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg><span class="tl">Réglages</span></button>
   </nav>
   <!-- Connexion -->
   <section class="login" id="vLogin" hidden>
