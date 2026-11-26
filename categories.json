@@ -1,0 +1,37 @@
+{
+ "cuisine": {
+  "slug": "cuisine",
+  "title": "Articles de cuisine pas chers à La Réunion · Tout’zafer",
+  "desc": "Boîtes de conservation, verres, carafe, ustensiles, supports : la cuisine à petit prix à La Réunion. Livraison offerte, paiement à la livraison.",
+  "h1": "Cuisine : boîtes, ustensiles et rangement à petit prix",
+  "intro": "Boîtes de conservation en verre ou pour le frigo, verres et carafe grande capacité, kit d’ustensiles, support pour micro-ondes, présentoir à fruits, tête de robinet orientable : tout pour une cuisine pratique et bien rangée, sans se ruiner. Livraison offerte dans le Nord, l’Ouest et le Sud de La Réunion, paiement à la livraison en espèces ou par carte."
+ },
+ "rangement": {
+  "slug": "rangement",
+  "title": "Rangement pas cher à La Réunion : bacs, étagères · Tout’zafer",
+  "desc": "Bacs avec couvercle, paniers, étagères, porte-vêtements : le rangement à petit prix à La Réunion. Livraison offerte, paiement à la livraison.",
+  "h1": "Rangement : bacs, paniers et étagères à petit prix",
+  "intro": "Bacs avec couvercle, paniers à poignées, étagère à chaussures, porte-vêtements sur roulettes, étagères de stockage et bibliothèque : de quoi gagner de la place dans la kaz, de la chambre à la buanderie en passant par le garage. Livraison offerte dans le Nord, l’Ouest et le Sud de La Réunion, paiement à la livraison."
+ },
+ "maison": {
+  "slug": "maison",
+  "title": "Articles pour la maison pas chers à La Réunion · Tout’zafer",
+  "desc": "Étendoir à linge, porte-serviettes, support d’écran, coffret à outils : les petits plus de la maison à La Réunion. Livraison offerte.",
+  "h1": "Maison : les petits plus du quotidien",
+  "intro": "Étendoir à linge, porte-serviettes, rehausseur d’écran avec rangement, tour pour manettes et jeux vidéo, coffret à outils 46 pièces : des articles simples et utiles pour la maison, le bureau ou le coin gaming. Livraison offerte dans le Nord, l’Ouest et le Sud de La Réunion, paiement à la livraison."
+ },
+ "enfants": {
+  "slug": "bebe-enfants",
+  "title": "Articles bébé et enfants pas chers à La Réunion · Tout’zafer",
+  "desc": "Harnais de marche, protège-tête pour bébé, mallette de dessin : bébé et enfants à petit prix à La Réunion. Livraison offerte.",
+  "h1": "Bébé & enfants : sécurité et loisirs à petit prix",
+  "intro": "Harnais de marche et protège-tête pour accompagner les premiers pas de bébé, mallette de dessin complète pour les plus grands : des articles choisis pour les familles, à petit prix. Livraison offerte dans le Nord, l’Ouest et le Sud de La Réunion, paiement à la livraison en espèces ou par carte."
+ },
+ "animaux": {
+  "slug": "animaux",
+  "title": "Accessoires pour chat pas chers à La Réunion · Tout’zafer",
+  "desc": "Arbre à chat, cabane, hamac, gamelle, boîte à croquettes : les accessoires pour chat à petit prix à La Réunion. Livraison offerte.",
+  "h1": "Animaux : tout pour le chat à petit prix",
+  "intro": "Arbre à chat, petite cabane, hamac, gamelle et boîte à croquettes : de quoi offrir à votre chat un coin à lui pour grimper, dormir et manger, sans exploser le budget. Livraison offerte dans le Nord, l’Ouest et le Sud de La Réunion, paiement à la livraison."
+ }
+}

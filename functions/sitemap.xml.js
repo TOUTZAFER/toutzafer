@@ -9,7 +9,7 @@ const xml = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 export async function onRequest({ request, env }) {
   const go = toCanonical(request); if (go) return go;
   const cat = await env.ASSETS.fetch(new Request(new URL("/catalogue.json", request.url))).then(r => r.ok ? r.json() : []).catch(() => []);
-  const urls = [`${SITE}/`, ...(Array.isArray(cat) ? cat : []).filter(p => !p.hidden && p.base && p.base.length)
+  const urls = [`${SITE}/`, ...["cuisine", "rangement", "maison", "bebe-enfants", "animaux"].map(c => `${SITE}/${c}`), ...(Array.isArray(cat) ? cat : []).filter(p => !p.hidden && p.base && p.base.length)
     .map(p => `${SITE}/article/${p.id}-${slugify(p.name)}`)];
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${xml(u)}</loc></url>`).join("\n")}\n</urlset>\n`;
   return new Response(body, { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "max-age=3600" } });

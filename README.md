@@ -21,6 +21,10 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
     notifications sur l'appareil.
 - `gestion/sw.js`, `gestion/manifest.webmanifest` : notifications et installation de la page Gestion.
 - `functions/api/[[path]].js` : les fonctions serveur (Cloudflare Pages Functions), voir l'en-tête du fichier.
+- Catégories : un bandeau par catégorie (nom + nombre d'articles), collé en haut pendant le défilement ; menu « Filtre » (catégories, promotions) et menu « Tri ».
+  Choisir une catégorie filtre sur place et change l'adresse (toutzafer.re/cuisine, /rangement, /maison, /bebe-enfants, /animaux).
+  Ces adresses sont aussi de vraies pages pour Google (functions/<slug>.js + lib/ssr.js) : même boutique filtrée, avec titre, H1 et présentation
+  tirés de categories.json (seul fichier à modifier pour les textes).
 - `functions/index.js` et `lib/ssr.js` : l'accueil et les pages article sont envoyés avec la grille des articles déjà écrite en liens
   (et la fiche de l'article), pour Google ; la boutique prend ensuite le relais.
 - `functions/article/[[path]].js` : page de chaque article, `/article/<id>-<nom>` (titre, description, aperçu de partage,
