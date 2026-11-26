@@ -280,7 +280,10 @@ body:not(.catpage) .cathead{display:none}
 .cathead .catlinks{margin:0;flex-wrap:wrap}
 .ghead,.resultline{scroll-margin-top:60px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.resultline{color:var(--muted);font-size:13px;margin:18px 0 18px}
+.resultline{color:var(--muted);font-size:13px;margin:18px 0 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
+.clearf{flex:none;background:var(--bg-alt,#f2f3f5);border:1px solid var(--line);color:var(--fg);border-radius:980px;padding:5px 12px;font-size:13px;font-weight:600}
+.clearf:hover{border-color:var(--fg)}
+.clearall{margin:0 auto}
 /* Grille */
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 20px;padding-bottom:56px}
 @media (max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -805,10 +808,11 @@ function renderGrid(){
   const grouped = true; // toujours regroupé par catégorie, avec son bandeau
   {const order=CATS.map(c=>c[0]);list.sort((a,b)=>order.indexOf(a.cat)-order.indexOf(b.cat));} // tri stable : ordre A→Z et ruptures en fin conservés dans chaque catégorie
   const n=list.length;
-  $("#resultLine").textContent = `${n} article${n>1?"s":""}${promoOnly?" en promo":""}${cat!=="all"?" · "+CATNAME[cat]:""}${words.length?` pour « ${query.trim()} »`:""}`;
+  const active=cat!=="all"||promoOnly||words.length>0||sortBy!=="az";
+  $("#resultLine").innerHTML = `<span>${n} article${n>1?"s":""}${promoOnly?" en promo":""}${cat!=="all"?" · "+CATNAME[cat]:""}${words.length?` pour « ${esc(query.trim())} »`:""}</span>${active?'<button type="button" class="clearf" data-clear>✕ Effacer les filtres</button>':""}`;
   if(catalogueState==="loading"&&$("#grid").dataset.ssr)return;
   if(catalogueState!=="ok"){$("#resultLine").textContent="";$("#grid").innerHTML=catalogueState==="error"?`<p class="empty">Le catalogue n’a pas pu être chargé. Vérifiez votre connexion. <button class="add" style="margin:12px auto 0" id="retryCat">Réessayer</button></p>`:`<p class="empty">Chargement du catalogue…</p>`;const r=$("#retryCat");if(r)r.onclick=loadCatalogue;renderCatNav([]);return}
-  if(!n){$("#grid").innerHTML=promoOnly&&!words.length?`<p class="empty">Aucune promo en cours${cat!=="all"?" dans "+CATNAME[cat]:""}.</p>`:`<p class="empty">Aucun article ne correspond${words.length?` à « ${esc(query.trim())} »`:""}${cat!=="all"?" dans "+CATNAME[cat]:""}. Essayez un autre mot-clé ou toutes les catégories.</p>`;return}
+  if(!n){$("#grid").innerHTML=promoOnly&&!words.length?`<p class="empty">Aucune promo en cours${cat!=="all"?" dans "+CATNAME[cat]:""}.</p>`:`<p class="empty">Aucun article ne correspond${words.length?` à « ${esc(query.trim())} »`:""}${cat!=="all"?" dans "+CATNAME[cat]:""}.<br><button type="button" class="add clearall" data-clear style="margin:16px auto 0">Voir tous les articles</button></p>`;return}
   let prevCat=null;
   $("#grid").innerHTML = list.map(p=>{
     const out = outOfStock.has(p.id);
@@ -1162,6 +1166,7 @@ function route(){const h=location.hash,v=h==="#mentions-legales"?"legal":h==="#c
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{
   const pv=e.target.closest("[data-promo]");if(pv){promoOnly=!promoOnly;renderGrid();const r=$("#resultLine");if(r&&r.getBoundingClientRect().top<0||promoOnly){document.documentElement.style.setProperty("--tb",tbOffset()+"px");r.scrollIntoView({block:"start",behavior:"auto"})}return}
+  if(e.target.closest("[data-clear]")){query="";$("#q").value="";sortBy="az";$("#sortSel").value="az";promoOnly=false;setCat("all",true);return}
   if(e.target.closest("#catMore")){$("#catHead").classList.add("open");return}
   const jv=e.target.closest("[data-jump]");if(jv){if(e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;e.preventDefault();setCat(jv.dataset.jump,true);return}
   const vb=e.target.closest("[data-var]");if(vb&&sheetId){const p=byId(sheetId);sheetVar=vb.dataset.var;document.querySelectorAll("#sheet [data-var]").forEach(b=>b.setAttribute("aria-checked",b.dataset.var===sheetVar));const v=p.variants.find(x=>x.name===sheetVar);if(v)goImg(v.img);refreshSheetAct();return}
