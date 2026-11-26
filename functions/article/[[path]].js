@@ -2,7 +2,7 @@
  *
  * Renvoie la boutique (index.html) avec, dans l'en-tête, les informations de l'article :
  * titre, description, adresse canonique, aperçu de partage (WhatsApp, Facebook) et données
- * produit pour Google (prix TTC, disponibilité, livraison offerte, retour sous 14 jours).
+ * produit pour Google (prix total, disponibilité, livraison offerte, retour sous 14 jours).
  * La grille des articles et la fiche sont écrites dans la page (lib/ssr.js) ; la boutique ouvre
  * ensuite la fiche de l'article par-dessus le catalogue.
  * - nom modifié depuis Gestion : l'ancienne adresse redirige (301) vers la nouvelle ;

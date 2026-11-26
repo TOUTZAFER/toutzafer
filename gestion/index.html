@@ -679,7 +679,7 @@ function deleteItem(){const p=items.find(x=>x.id===ed.id);if(!p)return;items=ite
 const STEPS=[["appeler","À appeler"],["livraison","En livraison"],["livree","Livrée"],["annulee","Annulée"]];
 const STEPNAME=Object.fromEntries(STEPS);
 const DEFAULT_MOTIFS=["Ne souhaite plus l’article","Injoignable","Absent au rendez-vous","Article indisponible","Autre"];
-const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer.\n\nJe vous confirme votre commande n° {numero} :\n{articles}\n\nTotal : {total} TTC, à régler à la livraison en espèces ou par carte bancaire.\n\nLivraison offerte : {point}.\nVotre livreur vous contactera pour convenir du lieu exact, du jour et de l’heure.\n\nMerci pour votre confiance !";
+const DEFAULT_MODELE="Bonjour {prenom}, ici Tout’zafer.\n\nJe vous confirme votre commande n° {numero} :\n{articles}\n\nTotal : {total}, à régler à la livraison en espèces ou par carte bancaire.\n\nLivraison offerte : {point}.\nVotre livreur vous contactera pour convenir du lieu exact, du jour et de l’heure.\n\nMerci pour votre confiance !";
 const STATUTS={entrepreneur:"Entrepreneur (vous-même)",salarie:"Salarié",auto:"Auto-entrepreneur",autre:"Autre"};
 // Réglages publics (reglages.json : numéro, villes et quartiers de livraison)
 let CONF=null,confSha=null,confErr="";
@@ -995,7 +995,7 @@ function renderSynth(){
   const none='<p class="sempty">Aucune vente sur la période.</p>';
   $("#synth").innerHTML=`<div class="sy-top"><label class="sr" for="syPeriod" hidden>Période</label><select id="syPeriod" aria-label="Période"><option value="all">Toute la période</option>${months.map(m=>`<option value="${m}"${m===synthPeriod?" selected":""}>${monthLabel(m)}</option>`).join("")}</select></div>
   <div class="kpis">
-    <div class="kpi main"><span>Chiffre d’affaires livré TTC</span><b>${eur(ca)}</b><small>${nb} vente${nb>1?"s":""}</small></div>
+    <div class="kpi main"><span>Chiffre d’affaires livré</span><b>${eur(ca)}</b><small>${nb} vente${nb>1?"s":""}</small></div>
     <div class="kpi"><span>Panier moyen</span><b>${nb?eur(ca/nb):"–"}</b><small>${nItems} article${nItems>1?"s":""} vendus</small></div>
     <div class="kpi"><span>Part en espèces</span><b>${pct(sold.filter(o=>o.paiement==="especes").reduce((a,o)=>a+o.total,0),ca)}</b><small>du chiffre d’affaires</small></div>
     <div class="kpi"><span>Annulations</span><b>${pct(canc.length,canc.length+nb)}</b><small>${canc.length} demande${canc.length>1?"s":""} · ${eur(canc.reduce((a,o)=>a+o.total,0))}</small></div>
@@ -1006,7 +1006,7 @@ function renderSynth(){
     <section class="spanel"><h3>Par livreur</h3>${nb?bars(liv):none}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par ville de livraison</h3>${pts.length?bars(pts):none}</section>
     <section class="spanel" style="grid-column:1/-1"><h3>Par article <small>${artN} article${artN>1?"s":""} vendus</small></h3>${artN?bars(arts):none}${artN>8?`<button class="more" data-symore>${symore?"Voir moins":`Voir les ${artN} articles`}</button>`:""}</section>
-    <section class="spanel" style="grid-column:1/-1"><h3>Par mois</h3>${mrows.length?`<div class="stable"><table><thead><tr><th>Mois</th><th>Ventes</th><th>CA TTC</th><th>Espèces</th><th>CB</th><th>Non saisi</th><th>Annulées</th></tr></thead><tbody>
+    <section class="spanel" style="grid-column:1/-1"><h3>Par mois</h3>${mrows.length?`<div class="stable"><table><thead><tr><th>Mois</th><th>Ventes</th><th>CA</th><th>Espèces</th><th>CB</th><th>Non saisi</th><th>Annulées</th></tr></thead><tbody>
       ${mrows.map(r=>`<tr><td class="m">${monthLabel(r.m)}</td><td>${r.n}</td><td>${eur(r.ca)}</td><td>${eur(r.es)}</td><td>${eur(r.cb)}</td><td>${eur(r.ns)}</td><td>${r.c}</td></tr>`).join("")}
       <tr><td>Total</td><td>${T.n}</td><td>${eur(T.ca)}</td><td>${eur(T.es)}</td><td>${eur(T.cb)}</td><td>${eur(T.ns)}</td><td>${T.c}</td></tr></tbody></table></div>`:'<p class="sempty">Aucune vente pour l’instant.</p>'}</section>
   </div>`;
