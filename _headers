@@ -13,3 +13,8 @@
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 /lib/*
   X-Robots-Tag: noindex
+# Adresses techniques de Cloudflare (toutzafer.pages.dev et aperçus) : jamais indexées
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

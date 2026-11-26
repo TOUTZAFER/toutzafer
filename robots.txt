@@ -1,2 +1,7 @@
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /gestion/
+Disallow: /api/
+Disallow: /lib/
+
+Sitemap: https://toutzafer.re/sitemap.xml
