@@ -289,6 +289,13 @@ async function putOrder(D, o) {
   await D.prepare("UPDATE orders SET status = ?, updated = ?, data = ? WHERE id = ?").bind(status, upd, JSON.stringify(data), id).run();
   return { ...o, updatedAt: upd };
 }
+/* Numéro de commande : TZ-0001, TZ-0002… un seul compteur pour toutes les demandes enregistrées
+   (site, message collé, saisie à la main). Compteur gardé dans kv « seq », incrémenté de façon atomique. */
+async function nextNumber(D) {
+  const r = await D.prepare("INSERT INTO kv (k, v) VALUES ('seq', '1') ON CONFLICT(k) DO UPDATE SET v = CAST(v AS INTEGER) + 1 RETURNING v").first();
+  return "TZ-" + String(parseInt(r.v, 10)).padStart(4, "0");
+}
+
 async function insertOrder(D, o, idBase) {
   const created = o.date || nowIso();
   for (let k = 1; k <= 20; k++) {
@@ -378,8 +385,7 @@ async function newDemande(request, env, ctx) {
   const minOrder = Number(conf && conf.commande && conf.commande.minimum) || 0;
   if (total + 0.004 < minOrder) throw new HttpError(400, `Il manque ${eurTxt(minOrder - total)} pour atteindre le minimum de commande de ${eurTxt(minOrder)}.`, { pickGone: true });
   const saved = round2(lines.reduce((a, l) => a + (l.was ? (l.was - l.price) * l.q : 0), 0));
-  const r = reunion();
-  const idBase = `TZ-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`;
+  const idBase = await nextNumber(D);
   const o = await insertOrder(D, { date: nowIso(), prenom, nom, tel, ...place, lines, total, saved, shipFree: true, status: "appeler", source: "site",
     shownTotal: typeof b.total === "number" ? round2(b.total) : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 
@@ -479,9 +485,9 @@ async function createManual(D, b, conf) {
   if (!prenom || !tel) throw new HttpError(400, "Indiquez au moins le prénom et le téléphone.");
   const lines = checkLines(s.lines);
   const total = round2(lines.reduce((a, l) => a + l.q * l.price, 0));
-  let idBase = clean(s.id, 40).replace(/[^A-Za-z0-9-]/g, "");
-  if (!idBase) { const r = reunion(); idBase = `M-${z2(r.getUTCDate())}${z2(r.getUTCMonth() + 1)}${String(r.getUTCFullYear()).slice(2)}-${z2(r.getUTCHours())}${z2(r.getUTCMinutes())}${z2(r.getUTCSeconds())}`; }
-  return insertOrder(D, { date: nowIso(), prenom, nom, tel, ...place, lines, total, status: "appeler", source: s.id ? "message" : "manuel",
+  const ref = clean(s.id, 40).replace(/[^A-Za-z0-9-]/g, "");   // numéro écrit dans un message reçu (envoi de secours)
+  const idBase = await nextNumber(D);
+  return insertOrder(D, { date: nowIso(), prenom, nom, tel, ...place, lines, total, status: "appeler", source: s.id ? "message" : "manuel", ref: ref || undefined,
     canal: ["sms", "wa"].includes(s.canal) ? s.canal : undefined, ...(await habitualLivreur(D, pickId)) }, idBase);
 }
 

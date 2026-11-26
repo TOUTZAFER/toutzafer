@@ -806,7 +806,7 @@ function orderCard(o){
   return `<article class="ocard st-${st}${freshIds.has(o.id)?" fresh":""}"><span class="who">${esc(o.prenom)} ${esc(o.nom)}</span>
     ${pills.length?`<div class="pills">${pills.join("")}</div>`:""}
     ${o.tel&&st!=="livree"&&st!=="annulee"?`<a class="call tabnum" href="tel:${esc(o.tel)}">${ICO_TEL}${fmtTel2(o.tel)}</a>`:o.tel?`<span class="meta2 tabnum">${fmtTel2(o.tel)}</span>`:""}
-    <span class="meta2">Reçue le ${fmtDT(o.date)} · <span class="tabnum nw">n° ${esc(o.id)}</span>${o.pick?`<br>${esc(o.pick)}`:""}</span>
+    <span class="meta2">Reçue le ${fmtDT(o.date)} · <span class="tabnum nw">n° ${esc(o.id)}</span>${o.ref&&o.ref!==o.id?` <span class="tabnum">(message ${esc(o.ref)})</span>`:""}${o.pick?`<br>${esc(o.pick)}`:""}</span>
     <ul>${(o.lines||[]).map(l=>`<li>${l.q} × ${esc(l.name)}</li>`).join("")}</ul>
     <span class="tot tabnum">${eur(o.total)}</span>${act}</article>`;
 }
