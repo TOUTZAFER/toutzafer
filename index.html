@@ -67,8 +67,9 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .top .link{background:none;border:0;color:var(--brand-fg);opacity:.8;font-size:13px;padding:6px 4px;white-space:nowrap}
 @media (max-width:400px){.top .link{font-size:12px}}
 .top .link:hover{opacity:1}
-.cartbtn{display:flex;align-items:center;gap:8px;background:var(--brand-fg);color:var(--brand);border:0;border-radius:980px;padding:7px 14px;font-size:13px;font-weight:600}
+.cartbtn{display:flex;align-items:center;gap:7px;background:var(--brand-fg);color:var(--brand);border:0;border-radius:980px;padding:7px 14px;font-size:13px;font-weight:600}
 header.top :focus-visible{outline-color:var(--brand-fg)}
+.cartbtn .ci{flex:none;margin-left:-2px}
 .cartbtn .n{background:var(--brand);color:var(--brand-fg);border-radius:980px;min-width:20px;height:20px;display:inline-grid;place-items:center;font-size:12px;padding:0 6px}
 
 /* Hero */
@@ -431,7 +432,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
   <div class="wrap">
     <button class="logo" id="goHome" aria-label="Tout'zafer, accueil"><img src="img/logo/wordmark.svg" alt="Tout’zafer" width="95" height="30"></button>
     <div class="sp"></div>
-    <button class="cartbtn" id="openCart" aria-label="Ouvrir le panier">Panier <span class="n tabnum" id="cartCount">0</span></button>
+    <button class="cartbtn" id="openCart" aria-label="Ouvrir le panier"><svg class="ci" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2"/><circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>Panier <span class="n tabnum" id="cartCount">0</span></button>
   </div>
 </header>
 
@@ -804,7 +805,24 @@ function renderCartBar(){const n=count(),bar=$("#cartBar"),hide=!n||$("#shop").h
   bar.hidden=hide;$("#cbN").textContent=`${n} article${n>1?"s":""}`;$("#cbT").textContent=eur(total())}
 function bump(){[$("#cartCount"),$("#cbT")].forEach(el=>{el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump")})}
 
-function inc(k){if(outOfStock.has(kid(k)))return;stat("add",kid(k));cart[k]=(cart[k]||0)+1;if(cart[k]===1)toast("Ajouté au panier");afterCartChange();bump()}
+function inc(k){if(outOfStock.has(kid(k)))return;stat("add",kid(k));cart[k]=(cart[k]||0)+1;if(cart[k]===1)toast("Ajouté au panier");afterCartChange();bump();ding()}
+/* « Ding » de caisse à chaque ajout au panier (son fabriqué dans le navigateur, aucun fichier à charger) */
+let audioCtx=null;
+function ding(){try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  audioCtx=audioCtx||new AC();if(audioCtx.state==="suspended")audioCtx.resume();
+  const c=audioCtx,t=c.currentTime+.01,out=c.createGain();out.gain.value=.22;out.connect(c.destination);
+  // petit « clac » du tiroir
+  const n=c.createBufferSource(),buf=c.createBuffer(1,c.sampleRate*.04,c.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+  const hp=c.createBiquadFilter();hp.type="highpass";hp.frequency.value=2500;const ng=c.createGain();ng.gain.value=.5;
+  n.buffer=buf;n.connect(hp).connect(ng).connect(out);n.start(t);
+  // deux coups de clochette : « ka-ching »
+  [[1318.5,t+.03,.35],[1975.5,t+.11,.9]].forEach(([f,at,len])=>[[1,1],[2.76,.35],[5.4,.12]].forEach(([m,a])=>{
+    const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=f*m;
+    g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(a,at+.004);g.gain.exponentialRampToValueAtTime(.0001,at+len/m**.5);
+    o.connect(g).connect(out);o.start(at);o.stop(at+len+.05)}));
+}catch(e){}}
 function dec(id){if(!cart[id])return;cart[id]--;if(!cart[id])delete cart[id];afterCartChange()}
 function afterCartChange(){save();refreshQuick();renderCount();if($("#drawer").classList.contains("on"))renderDrawer();if(sheetId)refreshSheetAct()}
 
