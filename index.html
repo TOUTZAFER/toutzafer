@@ -839,6 +839,7 @@ function renderCatNav(){
    le titre et la présentation de la catégorie s'affichent ; « Tout » revient à l'accueil complet */
 function setCat(c,push){
   if(!(c in CATSLUG))c="all";const was=cat;cat=c;navCur=null;
+  const tb=$(".toolbar"),tbTop=push&&tb?tb.getBoundingClientRect().top:null;
   document.body.classList.toggle("catpage",c!=="all");document.body.dataset.cat=c==="all"?"":c;
   const t=CATTXT&&CATTXT[c];
   if(c!=="all"){$("#catCrumb").textContent=CATNAME[c];if(t){$("#catH1").textContent=t.h1;$("#catIntro").textContent=t.intro}else{$("#catH1").textContent=CATNAME[c];$("#catIntro").textContent=""}}
@@ -848,8 +849,8 @@ function setCat(c,push){
   if(push){const u=c==="all"?"/":catPath(c);if(location.pathname!==u){try{history.pushState({cat:c},"",u)}catch(e){}}}
   if($("#catSel"))$("#catSel").value=promoOnly?"promo":c;
   renderGrid();
-  if(push){const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth";
-    if(c==="all"&&was!=="all"&&!promoOnly){scrollTo(0,0)}else if(c==="all"){$("#resultLine").scrollIntoView({behavior:"auto"})}else{document.documentElement.style.setProperty("--tb",tbOffset()+"px");$("#resultLine").scrollIntoView({behavior:"auto"})}}
+  // la barre de recherche / filtre / tri reste à la même place à l'écran (seuls les articles en dessous changent)
+  if(tbTop!==null){const d=tb.getBoundingClientRect().top-tbTop;if(Math.abs(d)>1)scrollBy({top:d,behavior:"instant"})}
 }
 /* Accueil : la catégorie affichée sous la barre est mise en évidence pendant le défilement */
 let spyTick=false;
