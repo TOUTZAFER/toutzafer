@@ -24,9 +24,13 @@ function headFor(p, ogImage) {
     itemCondition: "https://schema.org/NewCondition",
     seller: { "@type": "Organization", name: "Tout’zafer" },
     shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "EUR" },
-      shippingDestination: { "@type": "DefinedRegion", addressCountry: "RE" } },
+      shippingDestination: { "@type": "DefinedRegion", addressCountry: "RE" },
+      // délai annoncé dans les CGV : en général sous 48 h après la confirmation par téléphone
+      deliveryTime: { "@type": "ShippingDeliveryTime", handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+        transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 2, unitCode: "DAY" } } },
     hasMerchantReturnPolicy: { "@type": "MerchantReturnPolicy", applicableCountry: "RE", returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-      merchantReturnDays: 14, returnFees: "https://schema.org/FreeReturn" }
+      merchantReturnDays: 14, returnFees: "https://schema.org/FreeReturn",
+      returnMethod: "https://schema.org/ReturnByMail" } // reprise gratuite par notre livreur (valeur la plus proche proposée par Google)
   };
   if (promo && p.promo.to) offer.priceValidUntil = p.promo.to;
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.id, image: imgs, description: cut(p.desc || p.d || p.name, 500),
