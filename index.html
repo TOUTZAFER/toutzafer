@@ -329,6 +329,12 @@ footer button:hover{color:var(--fg);text-decoration:underline}
 /* Mentions légales */
 .legal{max-width:760px;padding-block:32px 72px}
 .legal .back{background:none;border:0;padding:0;color:var(--brand-text);font-weight:600;font-size:14px}
+.legalbox{margin:4px 0 14px}
+.legalbox summary{cursor:pointer;color:var(--fg);font-weight:600;text-decoration:underline;text-underline-offset:3px;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.legalbox summary::-webkit-details-marker{display:none}
+.legalbox summary::after{content:"▾";text-decoration:none;font-size:.9em}
+.legalbox[open] summary::after{content:"▴"}
+.legalbox .form-box{margin-top:12px}
 .legal h2.doctitle{border:0;padding:0;font-family:var(--font-display);font-weight:800;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;margin:16px 0 4px}
 .legal .upd{color:var(--muted);font-size:13px;margin:0 0 16px}
 .legal h3{font-size:16px;font-weight:700;margin:22px 0 10px}
@@ -541,7 +547,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
     <p>Nous vous remboursons la totalité des sommes payées au plus tard 14 jours après votre demande, avec le même moyen de paiement que celui utilisé à l’achat. Nous pouvons attendre d’avoir récupéré l’article pour vous rembourser. Votre responsabilité peut être engagée si l’article a été déprécié par des manipulations autres que celles nécessaires pour en vérifier la nature, les caractéristiques et le bon fonctionnement.</p>
     <p>Le droit de rétractation ne s’applique pas aux articles qui ne peuvent être rendus pour des raisons d’hygiène ou de protection de la santé une fois leur emballage scellé ouvert.</p>
 
-    <h3>Formulaire de rétractation</h3>
+    <details class="legalbox"><summary>Voir le formulaire de rétractation</summary>
     <div class="form-box">
       <p><i>(Veuillez compléter et renvoyer le présent formulaire uniquement si vous souhaitez vous rétracter du contrat.)</i></p>
       <p>À l’attention de Aiman CASSAM EI (Tout’zafer), 132 rue Victor Le Vigoureux, 97410 Saint-Pierre, La Réunion, contact@toutzafer.re :</p>
@@ -549,9 +555,11 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
       <p>Commandé le (*)/reçu le (*) :<br>Nom du (des) consommateur(s) :<br>Adresse du (des) consommateur(s) :<br>Signature du (des) consommateur(s) (uniquement en cas de notification du présent formulaire sur papier) :<br>Date :</p>
       <p>(*) Rayez la mention inutile.</p>
     </div>
+    </details>
 
     <h2>7. Garanties</h2>
     <p>Tout’zafer ne propose pas de garantie commerciale en plus des garanties légales ci-dessous, qui s’appliquent dans tous les cas. Pour les mettre en œuvre, contactez-nous par WhatsApp, téléphone ou e-mail.</p>
+    <details class="legalbox"><summary>Lire le texte légal des garanties</summary>
     <div class="form-box">
       <p>Le consommateur dispose d’un délai de deux ans à compter de la délivrance du bien pour obtenir la mise en œuvre de la garantie légale de conformité en cas d’apparition d’un défaut de conformité. Durant ce délai, le consommateur n’est tenu d’établir que l’existence du défaut de conformité et non la date d’apparition de celui-ci.</p>
       <p>Lorsque le contrat de vente du bien prévoit la fourniture d’un contenu numérique ou d’un service numérique de manière continue pendant une durée supérieure à deux ans, la garantie légale est applicable à ce contenu numérique ou ce service numérique tout au long de la période de fourniture prévue. Durant ce délai, le consommateur n’est tenu d’établir que l’existence du défaut de conformité affectant le contenu numérique ou le service numérique et non la date d’apparition de celui-ci.</p>
@@ -567,6 +575,7 @@ label.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:5
       <p>Le vendeur qui fait obstacle de mauvaise foi à la mise en œuvre de la garantie légale de conformité encourt une amende civile d’un montant maximal de 300 000 euros, qui peut être porté jusqu’à 10 % du chiffre d’affaires moyen annuel (article L. 241-5 du code de la consommation).</p>
       <p>Le consommateur bénéficie également de la garantie légale des vices cachés en application des articles 1641 à 1649 du code civil, pendant une durée de deux ans à compter de la découverte du défaut. Cette garantie donne droit à une réduction de prix si le bien est conservé ou à un remboursement intégral contre restitution du bien.</p>
     </div>
+    </details>
 
     <h2>8. Réclamations</h2>
     <p>Pour toute réclamation, contactez-nous par WhatsApp, téléphone ou e-mail : nous vous répondons rapidement.</p>
