@@ -412,6 +412,8 @@ a.btn.pri{color:#fff}
       <div class="oacts"><button class="btn pri" id="waSave">Enregistrer le numéro</button></div>
       <label class="fld">Minimum de commande (€) <small>en dessous, le client ne peut pas envoyer sa demande · 0 = pas de minimum</small><input class="inp tabnum" id="minIn" inputmode="decimal" autocomplete="off"></label>
       <div class="oacts"><button class="btn pri" id="minSave">Enregistrer le minimum</button></div>
+      <label class="fld">Messages de la barre du haut <small>un message par ligne (8 au plus) · ils défilent toutes les 4 secondes au centre de la barre bleue, sur ordinateur · l’icône est choisie d’après le texte (livraison, paiement, appel, retour, quartier, promo…)</small><textarea class="ta" id="anTxt" rows="6"></textarea></label>
+      <div class="oacts"><button class="btn pri" id="anSave">Enregistrer les messages</button><button class="btn" id="anReset">Revenir aux messages d’origine</button></div>
       <p class="hint" style="font-size:13px">Livraison offerte et délai de livraison : fixés dans les conditions générales de vente, à modifier ensemble si besoin.</p>
       <label class="tglrow"><input type="checkbox" id="teamOn"> Ne pas compter mes visites sur cet appareil</label>
       <p class="hint" style="font-size:13px">Pour les statistiques. Activé d’office sur les appareils où Gestion est ouverte. Sur iPhone, ouvrez la boutique avec le lien « Boutique ↗ » en haut de Gestion pour que Safari soit aussi exclu.</p></div>
@@ -1168,6 +1170,7 @@ function renderSettings(){
   $("#mtChips").innerHTML=motifs().map(m=>`<span class="chip">${esc(m)}<button data-mtdel="${esc(m)}" aria-label="Retirer ${esc(m)}">✕</button></span>`).join("");
   if(document.activeElement!==$("#mdTxt"))$("#mdTxt").value=settings.modele||DEFAULT_MODELE;
   if(document.activeElement!==$("#waIn")&&CONF&&CONF.contact)$("#waIn").value=fmtTelInput(nat(CONF.contact.whatsapp));
+  if(document.activeElement!==$("#anTxt")&&CONF)$("#anTxt").value=(Array.isArray(CONF.annonces)&&CONF.annonces.length?CONF.annonces:ANN_DEFAULT).join("\n");
   if(document.activeElement!==$("#minIn")&&CONF)$("#minIn").value=String((CONF.commande&&CONF.commande.minimum)||0).replace(".",",");
   $("#ptAdd").disabled=!CONF;$("#waSave").disabled=!CONF;$("#minSave").disabled=!CONF;$("#lvAdd").disabled=!HASDB;
   ["#mtAdd","#mdSave","#mdReset"].forEach(s=>$(s).disabled=!HASDB);
@@ -1278,6 +1281,17 @@ bindTelFormat($("#waIn"));
 // visites de l'équipe exclues des statistiques (réglage propre à chaque appareil et navigateur)
 try{if(localStorage.getItem("tz_equipe")===null)localStorage.setItem("tz_equipe","1");$("#teamOn").checked=localStorage.getItem("tz_equipe")==="1"}catch(e){}
 $("#teamOn").onchange=e=>{try{localStorage.setItem("tz_equipe",e.target.checked?"1":"0")}catch(x){}toast(e.target.checked?"Vos visites ne seront plus comptées sur cet appareil":"Vos visites seront de nouveau comptées sur cet appareil")};
+const ANN_DEFAULT=["Livraison offerte dès 24,99 € d’achat","Paiement à la livraison, en espèces ou par carte","Sans engagement : on vous appelle pour confirmer","Livré chez vous dans le Nord, l’Ouest et le Sud"];
+async function saveAnnonces(list,msg){if(!CONF)return;const next=JSON.parse(JSON.stringify(CONF));next.annonces=list;
+  $("#anSave").disabled=true;$("#anReset").disabled=true;
+  if(await saveConf(next,"messages de la barre du haut"))toast(msg+" · visibles sur la boutique d’ici 1 à 2 minutes");
+  $("#anSave").disabled=false;$("#anReset").disabled=false;renderSettings()}
+$("#anSave").onclick=()=>{const list=[...new Set($("#anTxt").value.split("\n").map(t=>t.trim().replace(/\s+/g," ")).filter(Boolean))];
+  if(!list.length){toast("Ajoutez au moins un message");$("#anTxt").focus();return}
+  if(list.length>8){toast("8 messages au plus");return}
+  const long=list.find(t=>t.length>90);if(long){toast("Message trop long (90 caractères au plus) : « "+long.slice(0,30)+"… »");return}
+  saveAnnonces(list,"Messages enregistrés")};
+$("#anReset").onclick=()=>{$("#anTxt").value=ANN_DEFAULT.join("\n");saveAnnonces([],"Messages d’origine rétablis")};
 $("#minSave").onclick=async()=>{const v=Math.round(parseFloat($("#minIn").value.replace(",",".").replace(/[^0-9.]/g,""))*100)/100;
   if(!(v>=0&&v<=500)){toast("Montant invalide (entre 0 et 500 €)");$("#minIn").focus();return}
   if(!CONF||((CONF.commande&&CONF.commande.minimum)||0)===v){toast("Minimum inchangé");return}

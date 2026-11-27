@@ -189,7 +189,10 @@ function validConfig(c) {
   if (!villes.some(v => v.actif)) throw new HttpError(400, "Gardez au moins une ville proposée aux clients.");
   const min = c.commande == null ? 0 : Number(c.commande.minimum);
   if (!(min >= 0 && min <= 500)) throw new HttpError(400, "Minimum de commande invalide (entre 0 et 500 €).");
-  return { contact: { whatsapp: wa }, commande: { minimum: round2(min) }, villes };
+  const out = { contact: { whatsapp: wa }, commande: { minimum: round2(min) }, villes };
+  // messages de la barre du haut (ordinateur) : 8 au plus, 90 caractères chacun
+  if (Array.isArray(c.annonces)) out.annonces = [...new Set(c.annonces.map(t => clean(t, 90)).filter(Boolean))].slice(0, 8);
+  return out;
 }
 async function loadConfig(env) {
   const { api, branch } = gh(env);
@@ -199,7 +202,9 @@ async function loadConfig(env) {
 async function saveConfig(env, b) {
   const { api, branch } = gh(env), cfg = b && b.config;
   // une page Gestion restée ouverte avant l'ajout du minimum ne l'envoie pas : on garde celui en place
-  if (cfg && typeof cfg === "object" && cfg.commande == null) { const cur = await loadConfig(env).catch(() => null); if (cur && cur.config && cur.config.commande) cfg.commande = cur.config.commande; }
+  if (cfg && typeof cfg === "object" && (cfg.commande == null || cfg.annonces == null)) { const cur = await loadConfig(env).catch(() => null);
+    if (cur && cur.config && cfg.commande == null && cur.config.commande) cfg.commande = cur.config.commande;
+    if (cur && cur.config && cfg.annonces == null && Array.isArray(cur.config.annonces)) cfg.annonces = cur.config.annonces; }
   const config = validConfig(cfg);
   const msg = String((b && b.message) || "Gestion : réglages de la boutique").replace(/[\r\n]+/g, " ").slice(0, 300);
   const body = { message: msg, content: textToB64(JSON.stringify(config, null, 1) + "\n"), branch };
