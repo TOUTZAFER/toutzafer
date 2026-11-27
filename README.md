@@ -15,10 +15,12 @@ Si l'envoi échoue, le client peut transmettre la même demande sur WhatsApp ou 
     confirmation écrite au client (WhatsApp ou SMS), demandes collées depuis un message ou saisies à la main ;
   - **Articles** : nouvel article, modification, promotion, rupture / retour en stock, masquer, supprimer ;
   - **Synthèse** : ventes (chiffre d'affaires livré par paiement, livreur, point, article et mois ; annulations) et
-    fréquentation du site (visites, fiches vues, parcours d'achat, articles, recherches, provenance, appareils) ;
+    fréquentation du site (visites et évolution, créneaux jour × heure, carte des demandes par commune, pays,
+    parcours d'achat, articles, recherches, provenance, appareils) ;
   - **Réglages** : villes et quartiers de livraison (quartiers proposés, livreur habituel, note interne, pause, ordre) et des
     livreurs (téléphone, statut, SIRET, note, chiffres), motifs d'annulation, message de confirmation, numéro WhatsApp,
     notifications sur l'appareil.
+- `gestion/communes-974.json` : contour des communes de La Réunion pour la carte de la Synthèse.
 - `gestion/sw.js`, `gestion/manifest.webmanifest` : notifications et installation de la page Gestion.
 - `functions/api/[[path]].js` : les fonctions serveur (Cloudflare Pages Functions), voir l'en-tête du fichier.
 - Catégories : un bandeau par catégorie (nom + nombre d'articles), collé en haut pendant le défilement ; menu « Filtre » (catégories, promotions) et menu « Tri ».

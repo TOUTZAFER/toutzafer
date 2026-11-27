@@ -429,6 +429,12 @@ async function recordStats(request, env) {
   const counts = new Map();
   for (const e of list) { const k = statKey(e); if (k) counts.set(k, (counts.get(k) || 0) + 1); }
   if (!counts.size || !env.DB) return new Response(null, { status: 204 });
+  // chaque visite compte aussi pour son créneau (jour de la semaine + heure de La Réunion) et son pays : deux compteurs, rien d'autre
+  if (counts.has("visit")) {
+    const r = reunion(), n = counts.get("visit"), cc = String((request.cf && request.cf.country) || request.headers.get("CF-IPCountry") || "").toLowerCase();
+    counts.set(`hr:${(r.getUTCDay() + 6) % 7}-${String(r.getUTCHours()).padStart(2, "0")}`, n);
+    counts.set("geo:" + (/^[a-z]{2}$/.test(cc) && cc !== "xx" && cc !== "t1" ? cc : "zz"), n);
+  }
   const D = await getDB(env);
   const salt = await kvInit(D, "salt", () => b64u(crypto.getRandomValues(new Uint8Array(16))));
   const h = (await sha256hex(salt + "|" + (request.headers.get("CF-Connecting-IP") || "?"))).slice(0, 24), now = Math.floor(Date.now() / 1000);
@@ -455,7 +461,14 @@ async function readStats(D, url) {
   ]);
   const out = {};
   for (const r of daily.results || []) (out[r.day] = out[r.day] || {})[r.grp] = r.n;
-  return { first: first && first.d, from, to, daily: out, totals: Object.fromEntries((totals.results || []).map(r => [r.k, r.n])) };
+  // période précédente de même durée, pour les évolutions
+  let prev = null;
+  if (day(url.searchParams.get("from"))) {
+    const ms = 864e5, a = Date.parse(from + "T00:00:00Z"), b = Date.parse(to + "T00:00:00Z"), iso = t => new Date(t).toISOString().slice(0, 10);
+    const pr = await D.prepare(`SELECT grp, SUM(n) AS n FROM (SELECT ${g} AS grp, n FROM stats WHERE day BETWEEN ? AND ?) WHERE grp IN ('visit','view','add','sent') GROUP BY grp`).bind(iso(a - (b - a) - ms), iso(a - ms)).all();
+    prev = Object.fromEntries((pr.results || []).map(r => [r.grp, r.n]));
+  }
+  return { first: first && first.d, from, to, prev, daily: out, totals: Object.fromEntries((totals.results || []).map(r => [r.k, r.n])) };
 }
 
 /* ---------- Demandes : page Gestion ---------- */

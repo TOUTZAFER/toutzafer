@@ -300,6 +300,13 @@ a.btn.pri{color:#fff}
 .vcol i{display:block;width:100%;background:var(--brand);border-radius:4px 4px 0 0;opacity:.85}
 .vcol:hover i,.vcol.on i{opacity:1;background:#0019c4}
 .vlabs{display:flex;gap:2px}.vlabs span{flex:1;min-width:0;font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:visible}
+.kpi em{font-style:normal;font-size:12px;font-weight:700}.kpi em.up{color:#146c34}.kpi em.dn{color:#b8001f}.kpi.main em{color:#fff}.kpi em small{font-weight:500}
+.hmap{display:grid;grid-template-columns:30px repeat(18,minmax(0,1fr));gap:3px;align-items:center}
+.hmap i{display:block;aspect-ratio:1;border-radius:4px;background:var(--bg-alt)}.hmap .hl{font-size:11.5px;color:var(--muted)}.hmap .hh{font-size:10px;color:var(--muted);text-align:center}
+.hleg{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);flex-wrap:wrap}.hleg i{width:18px;height:10px;border-radius:3px;display:block}.hleg span{margin:0 4px}.hleg .nol{display:inline-flex;align-items:center;gap:6px;margin-left:10px}
+.keyfact{background:var(--bg-alt);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0}.keyfact b{color:var(--brand)}
+.rmap svg{display:block;width:100%;height:auto;max-height:420px}.rmap text{font:700 13px var(--font);pointer-events:none}
+.rate{display:inline-block;border-radius:980px;padding:2px 8px;font-weight:700;font-size:12px;background:#e3f6ea;color:#146c34}.rate.lo{background:#fde7e7;color:#b8001f}.rate.na{background:var(--bg-alt);color:var(--muted)}
 .vread{margin:4px 0 0;font-size:13px;color:var(--muted);min-height:18px}
 .atable td:first-child{max-width:260px}
 .stable .atable tr:last-child td{font-weight:400}
@@ -1044,6 +1051,17 @@ document.addEventListener("change",e=>{if(e.target.id==="syPeriod"){synthPeriod=
 let synView="ventes",auDays=30,auData=null,auErr="",auMore=false,auLoading=false;
 const isoDay=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const nf=n=>(+n||0).toLocaleString("fr-FR");
+const RAMP=["#e8ebff","#c5cdff","#99a6ff","#6678ff","#3350ff","#0020fe","#0016b3"];
+const rampOf=(v,mx)=>v>0&&mx>0?RAMP[Math.min(6,Math.floor(Math.pow(v/mx,.6)*6.999))]:"";
+const hleg=extra=>`<div class="hleg"><span>Moins</span>${RAMP.map(c=>`<i style="background:${c}"></i>`).join("")}<span>Plus</span>${extra||""}</div>`;
+const delta=(cur,prev)=>{if(!auData||!auData.prev||!(prev>0))return "";const d=Math.round((cur-prev)/prev*100);
+  return `<em class="${d>=0?"up":"dn"}">${d>=0?"▲ +":"▼ −"}${Math.abs(d)} % <small>vs période précédente</small></em>`};
+let GEO=null,geoAsked=false;
+function loadGeo(){if(geoAsked)return;geoAsked=true;fetch("communes-974.json").then(r=>r.ok?r.json():null).then(j=>{if(j&&j.communes){GEO=j;if(synView==="audience"&&!$("#audience").hidden)renderAudience()}}).catch(()=>{})}
+const geoNorm=x=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/^(le |la |les |l['’])/,"").trim();
+const DAYS7=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],DAYS7L=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
+let regionNames=null;try{regionNames=new Intl.DisplayNames(["fr"],{type:"region"})}catch(e){}
+const countryName=c=>{if(c==="zz")return "Pays inconnu";if(c==="re")return "La Réunion";if(c==="fr")return "France hexagonale";try{return regionNames?regionNames.of(c.toUpperCase()):c.toUpperCase()}catch(e){return c.toUpperCase()}};
 const pctOf=(a,b)=>b?(Math.round(a/b*1000)/10).toLocaleString("fr-FR")+" %":"–";
 function setSyn(v){synView=v;document.querySelectorAll("[data-syn]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.syn===v)));
   $("#synth").hidden=v!=="ventes";$("#audience").hidden=v!=="audience";if(v==="audience")loadAudience();else renderSynth()}
@@ -1102,20 +1120,49 @@ function renderAudience(){
   const cats=CATS.map(([k,l])=>({label:l,v:v("cat:"+k)})).filter(r=>r.v).sort((a,b)=>b.v-a.v);
   const funnel=[["Visites",visits],["Paniers ouverts",v("cart")],["Formulaires commencés",v("form")],["Demandes envoyées",v("sent")]].map(([l,n],i)=>({label:l,sub:i?pctOf(n,visits)+" des visites":"",v:n}));
   const none='<p class="sempty">Rien sur la période.</p>';
+  const PV=auData.prev||{};
+  // créneaux : jours × heures (6 h à 23 h), le reste regroupé en « nuit »
+  const HR=Array.from({length:7},(_,d)=>Array.from({length:24},(_,h)=>v(`hr:${d}-${String(h).padStart(2,"0")}`)));
+  const hrTot=HR.flat().reduce((a,b)=>a+b,0),hrMax=Math.max(0,...HR.flat()),night=HR.reduce((a,r)=>a+r.slice(0,6).reduce((x,y)=>x+y,0),0);
+  let bestSlot=null;HR.forEach((r,d)=>r.forEach((n,h)=>{if(n>0&&(!bestSlot||n>bestSlot.n))bestSlot={n,d,h}}));
+  const hours=Array.from({length:18},(_,i)=>i+6);
+  const heat=hrTot?`<div class="hmap" role="img" aria-label="Visites par jour de la semaine et par heure"><div></div>${hours.map(h=>`<div class="hh">${h%3===0?h:""}</div>`).join("")}
+    ${HR.map((r,d)=>`<div class="hl">${DAYS7[d]}</div>${hours.map(h=>`<i title="${DAYS7[d]} ${h} h : ${r[h]} visite${r[h]>1?"s":""}"${r[h]?` style="background:${rampOf(r[h],hrMax)}"`:""}></i>`).join("")}`).join("")}</div>
+    ${hleg()}<p class="keyfact">Créneau le plus fréquenté : <b>${DAYS7L[bestSlot.d]} vers ${bestSlot.h} h</b> (${nf(bestSlot.n)} visite${bestSlot.n>1?"s":""}). Un bon moment pour publier sur Facebook ou en statut WhatsApp.${night?` Entre minuit et 6 h : ${nf(night)} visite${night>1?"s":""}.`:""}</p>`
+    :'<p class="sempty">La grille se remplit au fil des visites : le créneau de chaque visite est compté depuis la mise en place de ce tableau de bord.</p>';
+  // carte : demandes reçues sur la période, par commune de livraison
+  loadGeo();
+  const byCom={};inP.forEach(o=>{const pt=pointOf(o),n=geoNorm((pt&&pt.nom)||o.ville||String(o.pick||"").split(" — ")[0]);if(n)byCom[n]=(byCom[n]||0)+1});
+  const served=new Set(villes().filter(x=>x.actif!==false).map(x=>geoNorm(x.nom))),comMax=Math.max(0,...Object.values(byCom));
+  const topCom=Object.entries(byCom).sort((a,b)=>b[1]-a[1])[0];
+  const rmap=!GEO?'<p class="sempty">Chargement de la carte…</p>':`<div class="rmap"><svg viewBox="${GEO.box.join(" ")}" role="img" aria-label="Demandes par commune de livraison">${GEO.communes.map(c=>{const k=geoNorm(c.n),n=byCom[k]||0,sv=served.has(k);
+      return `<path d="${c.d}" fill="${n?rampOf(n,comMax):sv?"#f6f7fb":"#e6e8ee"}" stroke="#fff" stroke-width="1.6"><title>${esc(c.n)} : ${sv||n?`${n} demande${n>1?"s":""}`:"non livrée"}</title></path>`}).join("")}
+      ${GEO.communes.map(c=>{const n=byCom[geoNorm(c.n)]||0;return n?`<text x="${c.c[0]}" y="${c.c[1]+4}" text-anchor="middle" fill="${n/comMax>.45?"#fff":"#16130f"}">${n}</text>`:""}).join("")}</svg></div>
+    ${hleg('<span class="nol"><i style="background:#e6e8ee"></i>Non livrée</span>')}${topCom?"":'<p class="sempty">Aucune demande reçue sur la période.</p>'}`;
+  const comRows=Object.entries(byCom).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{const g=GEO&&GEO.communes.find(c=>geoNorm(c.n)===k),vv=villes().find(x=>geoNorm(x.nom)===k);return {label:esc(vv?vv.nom:g?g.n:k),sub:pctOf(n,inP.length),v:n}});
+  // pays
+  const geoRows=Object.entries(T).filter(([k])=>k.startsWith("geo:")).map(([k,n])=>({label:esc(countryName(k.slice(4))),sub:pctOf(n,visits),v:n})).sort((a,b)=>b.v-a.v);
+  const geoShown=geoRows.length>6?[...geoRows.slice(0,5),{label:"Autres pays",v:geoRows.slice(5).reduce((a,r)=>a+r.v,0)}]:geoRows;
+  // parcours : où part le plus de monde
+  let loss=null;for(let i=1;i<funnel.length;i++){const a=funnel[i-1].v,b=funnel[i].v;if(a>0){const l=1-b/a;if(!loss||l>loss.l)loss={l,a:funnel[i-1].label,b:funnel[i].label}}}
+  const rate=a=>a.views<5?`<span class="rate na">${a.views?pctOf(a.adds,a.views):"–"}</span>`:`<span class="rate${a.adds/a.views<.08?" lo":""}">${pctOf(a.adds,a.views)}</span>`;
   el.innerHTML=top+`<div class="kpis">
-    <div class="kpi main"><span>Visites</span><b class="tabnum">${nf(visits)}</b><small>${nf(v("pv"))} pages chargées</small></div>
-    <div class="kpi"><span>Fiches articles vues</span><b class="tabnum">${nf(sum("view"))}</b><small>${visits?(sum("view")/visits).toFixed(1).replace(".",","):"–"} par visite</small></div>
-    <div class="kpi"><span>Ajouts au panier</span><b class="tabnum">${nf(sum("add"))}</b><small>${nf(v("cart"))} paniers ouverts</small></div>
-    <div class="kpi"><span>Demandes envoyées</span><b class="tabnum">${nf(v("sent"))}</b><small>${pctOf(v("sent"),visits)} des visites</small></div>
+    <div class="kpi main"><span>Visites</span><b class="tabnum">${nf(visits)}</b>${delta(visits,PV.visit)}<small>${nf(v("pv"))} pages chargées</small></div>
+    <div class="kpi"><span>Fiches articles vues</span><b class="tabnum">${nf(sum("view"))}</b>${delta(sum("view"),PV.view)}<small>${visits?(sum("view")/visits).toFixed(1).replace(".",","):"–"} par visite</small></div>
+    <div class="kpi"><span>Ajouts au panier</span><b class="tabnum">${nf(sum("add"))}</b>${delta(sum("add"),PV.add)}<small>${nf(v("cart"))} paniers ouverts</small></div>
+    <div class="kpi"><span>Demandes envoyées</span><b class="tabnum">${nf(v("sent"))}</b>${delta(v("sent"),PV.sent)}<small>${pctOf(v("sent"),visits)} des visites</small></div>
     <div class="kpi"><span>Recherches</span><b class="tabnum">${nf(searches.reduce((a,x)=>a+x.n,0))}</b><small>${zero.length} terme${zero.length>1?"s":""} sans résultat</small></div>
   </div>
   <section class="spanel"><h3>Visites par ${auDays<=31?"jour":auDays<=92?"semaine":"mois"}</h3>${chart}</section>
   <div class="sgrid">
-    <section class="spanel"><h3>Parcours d’achat</h3>${cbars(funnel)}<p class="hint">Chaque étape est comptée une fois par visite.</p></section>
+    <section class="spanel"><h3>Quand viennent vos visiteurs <small>heure de La Réunion</small></h3>${heat}</section>
+    <section class="spanel"><h3>Où sont vos clients <small>demandes par commune</small></h3>${rmap}${comRows.length?cbars(comRows.slice(0,6)):""}</section>
+    <section class="spanel"><h3>Parcours d’achat</h3>${cbars(funnel)}${loss&&loss.l>0?`<p class="keyfact">La plus grosse perte : entre <b>« ${loss.a} » et « ${loss.b} »</b>, ${Math.round(loss.l*100)} % des visiteurs s’arrêtent.</p>`:""}<p class="hint">Chaque étape est comptée une fois par visite.</p></section>
+    <section class="spanel"><h3>Pays des visiteurs</h3>${geoShown.length?cbars(geoShown):'<p class="sempty">Le pays de chaque visite est compté depuis la mise en place de ce tableau de bord.</p>'}</section>
     <section class="spanel"><h3>Provenance des visites</h3>${src.length?cbars(src):none}<p class="hint">« Accès direct » : lien ouvert depuis WhatsApp ou un SMS, favori, adresse tapée.</p></section>
     <section class="spanel" style="grid-column:1/-1"><h3>Articles <small>vues · ajouts au panier · demandes sur la période</small></h3>
-      <div class="stable"><table class="atable"><thead><tr><th>Article</th><th>Vues</th><th>Ajouts</th><th>Demandes</th><th>Vues → demande</th></tr></thead><tbody>
-      ${shown.map(a=>`<tr><td>${aname(a)}</td><td>${nf(a.views)}</td><td>${nf(a.adds)}</td><td>${nf(a.ords)}</td><td>${a.views?pctOf(a.ords,a.views):"–"}</td></tr>`).join("")}</tbody></table></div>
+      <div class="stable"><table class="atable"><thead><tr><th>Article</th><th>Vues</th><th>Ajouts</th><th>Demandes</th><th>Vues → ajout</th></tr></thead><tbody>
+      ${shown.map(a=>`<tr><td>${aname(a)}</td><td>${nf(a.views)}</td><td>${nf(a.adds)}</td><td>${nf(a.ords)}</td><td>${rate(a)}</td></tr>`).join("")}</tbody></table></div>
       ${arts.length>10?`<button class="more" data-aumore>${auMore?"Voir moins":`Voir les ${arts.length} articles`}</button>`:""}</section>
     <section class="spanel"><h3>Souvent vus, peu demandés</h3>${lowConv.length?`<ul class="alist">${lowConv.map(a=>`<li>${aname(a)}<span class="tabnum">${nf(a.views)} vues · ${nf(a.ords)} demande${a.ords>1?"s":""}</span></li>`).join("")}</ul><p class="hint">Prix, photos ou description à revoir ?</p>`:'<p class="sempty">Aucun article vu au moins 5 fois sans être demandé.</p>'}</section>
     <section class="spanel"><h3>Les moins vus</h3><ul class="alist">${lowViews.map(a=>`<li>${aname(a)}<span class="tabnum">${nf(a.views)} vue${a.views>1?"s":""}</span></li>`).join("")}</ul><p class="hint">À mettre en avant : promotion, publication Facebook, première photo.</p></section>
