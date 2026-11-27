@@ -9,7 +9,7 @@
  * - article inconnu ou masqué : boutique avec statut 404 et « noindex ».
  * Règle des adresses identique à slugify() dans index.html.
  */
-import { SITE, CATNAME, slugify, articlePath, esc as attr, eur, day, promoOn, photo, visible, loadPage, fill, toCanonical } from "../../lib/ssr.js";
+import { SITE, CATNAME, slugify, articlePath, esc as attr, eur, day, promoOn, photo, visible, loadPage, fill, toCanonical, edgeCached } from "../../lib/ssr.js";
 const stem = b => String(b).replace(/\.(webp|jpg|png)$/, "");
 function cut(s, n) { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; }
 
@@ -52,7 +52,8 @@ function headFor(p, ogImage) {
 <script type="application/ld+json">${JSON.stringify(crumbs).replace(/</g, "\\u003c")}</script>`;
 }
 
-export async function onRequest({ request, env, params }) {
+export const onRequest = context => edgeCached(context, () => articleResponse(context));
+async function articleResponse({ request, env, params }) {
   const go = toCanonical(request); if (go) return go;
   const url = new URL(request.url);
   const seg = [].concat(params.path || []).join("/");
