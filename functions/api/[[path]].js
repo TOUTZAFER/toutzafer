@@ -296,8 +296,9 @@ async function putOrder(D, o) {
 }
 /* Numéro de commande : TZ-0001, TZ-0002… un seul compteur pour toutes les demandes enregistrées
    (site, message collé, saisie à la main). Compteur gardé dans kv « seq », incrémenté de façon atomique. */
+const FIRST_NUMBER = 435;   // la numérotation reprend à la suite des commandes passées avant le site
 async function nextNumber(D) {
-  const r = await D.prepare("INSERT INTO kv (k, v) VALUES ('seq', '1') ON CONFLICT(k) DO UPDATE SET v = CAST(v AS INTEGER) + 1 RETURNING v").first();
+  const r = await D.prepare(`INSERT INTO kv (k, v) VALUES ('seq', '${FIRST_NUMBER}') ON CONFLICT(k) DO UPDATE SET v = MAX(CAST(v AS INTEGER) + 1, ${FIRST_NUMBER}) RETURNING v`).first();
   return "TZ-" + String(parseInt(r.v, 10)).padStart(4, "0");
 }
 
