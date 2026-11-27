@@ -1169,6 +1169,7 @@ function renderAudience(){
     <section class="spanel"><h3>Recherches des clients</h3>${searches.length?`<ul class="alist">${searches.slice(0,15).map(x=>`<li><span>« ${esc(x.t)} »${x.zero?' <b class="zero">aucun résultat</b>':""}</span><span class="tabnum">${nf(x.n)}</span></li>`).join("")}</ul>${zero.length?'<p class="hint">« Aucun résultat » : un article que les clients cherchent et que la boutique n’a pas, ou un mot à ajouter dans une description.</p>':""}`:none}</section>
     <section class="spanel"><h3>Appareils et arrivée</h3>${dev.length?cbars(dev):none}${land.length?cbars(land):""}</section>
     <section class="spanel"><h3>Catégories consultées</h3>${cats.length?cbars(cats):none}</section>
+    <section class="spanel"><h3>Remise à zéro</h3><p class="hint" style="margin:0">Efface tous les compteurs de fréquentation (visites, fiches vues, créneaux, pays, recherches…). Les demandes et les ventes ne sont pas touchées. Action définitive.</p><div><button class="btn" data-aureset>Remettre les compteurs à zéro</button></div></section>
     <section class="spanel"><h3>Autres actions</h3>${cbars([{label:"Filtre « % Promo » utilisé",v:v("promo")},{label:"Clics vers WhatsApp (question)",v:v("wa")},{label:"Fiches partagées",v:sum("share")},{label:"Envois de secours WhatsApp/SMS",v:v("fallback")}])}</section>
   </div>`;
 }
@@ -1177,6 +1178,9 @@ document.addEventListener("click",e=>{
   const c=e.target.closest("[data-au]");if(c&&auData){const x=auSeries()[+c.dataset.au];document.querySelectorAll(".vcol").forEach(b=>b.classList.toggle("on",b===c));
     $("#auRead").textContent=`${x.title[0].toUpperCase()+x.title.slice(1)} : ${nf(x.visit)} visite${x.visit>1?"s":""} · ${nf(x.view)} fiche${x.view>1?"s":""} vue${x.view>1?"s":""}`;return}
   if(e.target.closest("[data-aumore]")){auMore=!auMore;renderAudience()}
+  const rz=e.target.closest("[data-aureset]");
+  if(rz){if(!confirm("Remettre à zéro tous les compteurs de fréquentation ?\n\nCette action est définitive. Les demandes et les ventes ne sont pas touchées."))return;
+    rz.disabled=true;API("stats-reset",{confirm:"RAZ"}).then(()=>{auData=null;toast("Compteurs remis à zéro");loadAudience()}).catch(err=>{rz.disabled=false;if(err instanceof AuthError){showLogin(err.message);return}toast("Remise à zéro impossible : "+(err.message||err))})}
 });
 document.addEventListener("pointerover",e=>{const c=e.target.closest&&e.target.closest("[data-au]");if(c&&e.pointerType==="mouse")c.click()});
 document.addEventListener("change",e=>{if(e.target.id==="auPeriod"){auDays=+e.target.value;auData=null;loadAudience()}});

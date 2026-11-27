@@ -656,7 +656,7 @@ export async function onRequest(ctx) {
     if (route === "config" && M === "POST") { await checkPassword(request, env, true); return json(await saveConfig(env, await body(request))); }
 
     const admin = { "GET orders": 1, "POST order-update": 1, "POST order-create": 1, "POST order-delete": 1, "GET settings": 1, "POST settings": 1,
-      "POST push-subscribe": 1, "POST push-unsubscribe": 1, "POST push-test": 1, "GET stats": 1 };
+      "POST push-subscribe": 1, "POST push-unsubscribe": 1, "POST push-test": 1, "GET stats": 1, "POST stats-reset": 1 };
     if (!admin[M + " " + route]) return json({ error: "Introuvable" }, 404);
     await checkPassword(request, env);
     const D = await getDB(env);
@@ -667,6 +667,12 @@ export async function onRequest(ctx) {
     }
     if (route === "stats") return json(await readStats(D, new URL(request.url)));
     const b = await body(request);
+    // remise à zéro des compteurs de fréquentation (les demandes et les ventes ne sont pas touchées)
+    if (route === "stats-reset") {
+      if (b.confirm !== "RAZ") throw new HttpError(400, "Confirmation manquante.");
+      const r = await D.prepare("DELETE FROM stats").run();
+      return json({ ok: true, deleted: (r.meta && r.meta.changes) || 0 });
+    }
     if (route === "order-update") {
       const o = await getOrder(D, String(b.id || ""));
       if (!o) throw new HttpError(404, "Demande introuvable (supprimée ?).");
