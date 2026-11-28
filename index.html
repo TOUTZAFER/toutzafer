@@ -840,7 +840,7 @@ document.addEventListener("touchend",e=>{document.querySelectorAll("#grid .card.
 function renderGrid(){
   const words = norm(query).split(/\s+/).filter(Boolean);
   if(promoOnly&&!PRODUCTS.some(p=>p.was))promoOnly=false;
-  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;if(promoOnly&&!p.was)return false;const hay=norm([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs].join(" "));return words.every(w=>hay.includes(w))});
+  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;if(promoOnly&&!p.was)return false;const hay=norm([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs,...(p.kw||[])].join(" "));return words.every(w=>hay.includes(w))});
   list.sort((a,b)=>sortBy==="asc"?a.price-b.price||a.name.localeCompare(b.name,"fr"):sortBy==="desc"?b.price-a.price||a.name.localeCompare(b.name,"fr"):a.name.localeCompare(b.name,"fr"));
   list = [...list.filter(p=>!outOfStock.has(p.id)),...list.filter(p=>outOfStock.has(p.id))];
   const grouped = true; // toujours regroupé par catégorie, avec son bandeau

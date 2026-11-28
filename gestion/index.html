@@ -635,6 +635,7 @@ function openEditor(id){
     <label class="fld">Précision courte <small>sous le nom, ex. « Lot de 3 · 1,2 L »</small><input class="inp" id="eD" value="${esc(ed.d||"")}"></label>
     <label class="fld">Description<textarea class="ta" id="eDesc" rows="4" placeholder="À quoi sert l’article, pourquoi il est pratique…">${esc(ed.desc||"")}</textarea></label>
     <label class="fld">Caractéristiques <small>une par ligne</small><textarea class="ta" id="eSpecs" rows="4" placeholder="Dimensions : 30 × 20 cm&#10;Matière : verre">${esc((ed.specs||[]).join("\n"))}</textarea></label>
+    <label class="fld">Mots-clés de recherche <small>facultatif, séparés par des virgules ; jamais affichés au client, ils servent seulement à faire trouver l’article</small><textarea class="ta" id="eKw" rows="2" placeholder="gourde, bouteille, pichet, eau fraîche">${esc((ed.kw||[]).join(", "))}</textarea></label>
     <label class="fld">Modèles au choix <small>facultatif, un par ligne ; chaque modèle s’affiche avec sa photo, dans le même ordre</small><textarea class="ta" id="eVar" rows="2" placeholder="Licorne&#10;Astronaute">${esc((ed.variants||[]).map(v=>v.name).join("\n"))}</textarea></label>
     <div class="sws"><label><input type="checkbox" id="eStock" ${ed.oos?"":"checked"}> En stock</label><label><input type="checkbox" id="eVis" ${ed.hidden?"":"checked"}> Visible sur la boutique</label></div>
   </div>
@@ -686,6 +687,7 @@ async function saveEditor(){
     const p={id:ed.id,n:ed.n,cat:$("#eCat").value,name,price:Math.round(price*100)/100,d:$("#eD").value.trim(),desc:$("#eDesc").value.trim(),
       specs:$("#eSpecs").value.split("\n").map(s=>s.trim()).filter(Boolean),base:ed.base.slice(),oos:!$("#eStock").checked};
     if(vnames.length){const off=p.base.length>vnames.length?1:0;p.variants=vnames.map((v,i)=>{const prev=(ed.variants||[]).find(x=>x.name===v);return {name:v,img:Math.min(prev?prev.img:i+off,p.base.length-1)}})}
+    const kw=[...new Set($("#eKw").value.split(/[,;\n]/).map(x=>x.trim().replace(/\s+/g," ").slice(0,40)).filter(Boolean))].slice(0,40);if(kw.length)p.kw=kw;
     if(!$("#eVis").checked)p.hidden=true;
     const old=items.find(x=>x.id===p.id);
     if($("#ePromoOn").checked){
