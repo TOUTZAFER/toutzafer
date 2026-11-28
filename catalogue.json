@@ -19,7 +19,15 @@
    "a01-n3",
    "a01-n4"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "caisse",
+   "bac plastique",
+   "boîte de rangement",
+   "organisateur",
+   "rangement salle de bain",
+   "rangement linge"
+  ]
  },
  {
   "id": "a02",
@@ -40,7 +48,14 @@
    "a02-n2",
    "a02-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "étagère d’appoint",
+   "mini étagère",
+   "rehausse placard",
+   "organisateur de placard",
+   "organisateur cuisine"
+  ]
  },
  {
   "id": "a03",
@@ -61,7 +76,14 @@
    "a03-n2",
    "a03-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "corbeille",
+   "panier plastique",
+   "organisateur",
+   "panier salle de bain",
+   "rangement placard"
+  ]
  },
  {
   "id": "a04",
@@ -82,7 +104,14 @@
    "a04-n2",
    "a04-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "meuble à chaussures",
+   "range-chaussures",
+   "rangement chaussures",
+   "baskets",
+   "savates"
+  ]
  },
  {
   "id": "a05",
@@ -103,7 +132,15 @@
    "a05-n2",
    "a05-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "étagère micro-ondes",
+   "meuble micro-ondes",
+   "micro onde",
+   "microonde",
+   "étagère de cuisine",
+   "rangement plan de travail"
+  ]
  },
  {
   "id": "a06",
@@ -124,7 +161,15 @@
    "a06-n2",
    "a06-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "gobelet",
+   "verre à eau",
+   "verre à jus",
+   "verre à cocktail",
+   "verres à boire",
+   "café glacé"
+  ]
  },
  {
   "id": "a07",
@@ -159,6 +204,14 @@
     "d": "2026-11-23",
     "p": 12.99
    }
+  ],
+  "kw": [
+   "pichet",
+   "cruche",
+   "broc",
+   "pot à eau",
+   "carafe à eau",
+   "carafe à jus"
   ]
  },
  {
@@ -192,6 +245,14 @@
     "d": "2000-01-01",
     "p": 29.99
    }
+  ],
+  "kw": [
+   "portant",
+   "penderie",
+   "dressing",
+   "tringle",
+   "porte-habits",
+   "cintres"
   ]
  },
  {
@@ -213,7 +274,14 @@
    "a09-n2",
    "a09-n3"
   ],
-  "oos": true
+  "oos": true,
+  "kw": [
+   "séchoir",
+   "séchoir à linge",
+   "étendage",
+   "tancarville",
+   "sécher le linge"
+  ]
  },
  {
   "id": "a10",
@@ -234,7 +302,14 @@
    "a10-n2",
    "a10-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "organisateur frigo",
+   "rangement réfrigérateur",
+   "bac frigo",
+   "boîte alimentaire",
+   "boîte de conservation"
+  ]
  },
  {
   "id": "a11",
@@ -255,7 +330,16 @@
    "a11-n2",
    "a11-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "boîte hermétique",
+   "boîte alimentaire",
+   "plat en verre",
+   "lunch box",
+   "gamelle repas",
+   "tupperware",
+   "repas à emporter"
+  ]
  },
  {
   "id": "a12",
@@ -292,6 +376,17 @@
     "d": "2000-01-01",
     "p": 29.99
    }
+  ],
+  "kw": [
+   "jeu enfant",
+   "jouet",
+   "jouer",
+   "coloriage",
+   "dessiner",
+   "kit créatif",
+   "loisirs créatifs",
+   "cadeau enfant",
+   "anniversaire"
   ]
  },
  {
@@ -313,7 +408,14 @@
    "a13-n2",
    "a13-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "aide à la marche",
+   "apprendre à marcher",
+   "sangle de marche",
+   "ceinture de marche",
+   "bébé qui marche"
+  ]
  },
  {
   "id": "a14",
@@ -334,7 +436,14 @@
    "a14-n2",
    "a14-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "anti-choc",
+   "protection tête bébé",
+   "coussin de protection",
+   "casque anti-chute",
+   "bébé qui tombe"
+  ]
  },
  {
   "id": "a15",
@@ -361,6 +470,13 @@
     "d": "2000-01-01",
     "p": 24.99
    }
+  ],
+  "kw": [
+   "corbeille à fruits",
+   "panier à fruits",
+   "coupe à fruits",
+   "présentoir à fruits",
+   "étagère à fruits"
   ]
  },
  {
@@ -382,7 +498,15 @@
    "a16-n2",
    "a16-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "support moniteur",
+   "rehausse écran",
+   "réhausseur PC",
+   "support PC",
+   "bureau",
+   "télétravail"
+  ]
  },
  {
   "id": "a17",
@@ -403,7 +527,15 @@
    "a17-n2",
    "a17-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "étagère magnétique",
+   "étagère aimantée",
+   "aimant",
+   "range-épices",
+   "porte-épices",
+   "rangement frigo"
+  ]
  },
  {
   "id": "a18",
@@ -425,7 +557,14 @@
    "a18-n3",
    "a18-n4"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "tour à chat",
+   "grattoir",
+   "jeu pour chat",
+   "chaton",
+   "arbre à griffer"
+  ]
  },
  {
   "id": "a19",
@@ -446,7 +585,14 @@
    "a19-n2",
    "a19-n3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "bol pour chat",
+   "écuelle",
+   "mangeoire",
+   "gamelle surélevée",
+   "bol inox"
+  ]
  },
  {
   "id": "a20",
@@ -467,7 +613,15 @@
    "a20-2",
    "a20-3"
   ],
-  "oos": true
+  "oos": true,
+  "kw": [
+   "maison pour chat",
+   "lit pour chat",
+   "couchage chat",
+   "panier pour chat",
+   "dodo chat",
+   "igloo"
+  ]
  },
  {
   "id": "a21",
@@ -489,7 +643,14 @@
    "a21-n3",
    "a21-n4"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "fauteuil pour chat",
+   "lit pour chat",
+   "couchage chat",
+   "grattoir",
+   "canapé chat"
+  ]
  },
  {
   "id": "a22",
@@ -510,7 +671,15 @@
    "a22-2",
    "a22-3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "bac à croquettes",
+   "conteneur croquettes",
+   "réserve croquettes",
+   "nourriture chat",
+   "nourriture chien",
+   "boîte hermétique"
+  ]
  },
  {
   "id": "a23",
@@ -531,7 +700,16 @@
    "a23-2",
    "a23-3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "rangement jeux PS5",
+   "PS4",
+   "PlayStation",
+   "Xbox",
+   "gamer",
+   "porte-manettes",
+   "rangement manettes"
+  ]
  },
  {
   "id": "a24",
@@ -552,7 +730,14 @@
    "a24-2",
    "a24-3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "porte serviette sur pied",
+   "serviettes de bain",
+   "salle de bain",
+   "valet de salle de bain",
+   "étendoir à serviettes"
+  ]
  },
  {
   "id": "a25",
@@ -573,7 +758,15 @@
    "a25-2",
    "a25-3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "caisse à outils",
+   "boîte à outils",
+   "outillage",
+   "clé à cliquet",
+   "clés à douille",
+   "mécanique"
+  ]
  },
  {
   "id": "a26",
@@ -594,7 +787,14 @@
    "a26-2",
    "a26-3"
   ],
-  "oos": true
+  "oos": true,
+  "kw": [
+   "rayonnage",
+   "rack",
+   "étagère garage",
+   "étagère métallique",
+   "étagère charge lourde"
+  ]
  },
  {
   "id": "a27",
@@ -615,7 +815,15 @@
    "a27-2",
    "a27-3"
   ],
-  "oos": false
+  "oos": false,
+  "kw": [
+   "embout de robinet",
+   "mousseur",
+   "aérateur",
+   "douchette",
+   "bec de robinet",
+   "rallonge de robinet"
+  ]
  },
  {
   "id": "a28",
@@ -641,6 +849,14 @@
     "d": "2000-01-01",
     "p": 19.99
    }
+  ],
+  "kw": [
+   "set d’ustensiles",
+   "ustensiles en silicone",
+   "accessoires de cuisine",
+   "spatule",
+   "maryse",
+   "cuillère"
   ]
  },
  {
@@ -676,6 +892,14 @@
     "d": "2026-11-23",
     "p": 34.99
    }
+  ],
+  "kw": [
+   "meuble bibliothèque",
+   "étagère à livres",
+   "rangement livres",
+   "étagère déco",
+   "étagère salon",
+   "étagère design"
   ]
  },
  {
@@ -703,6 +927,14 @@
     "d": "2000-01-01",
     "p": 34.99
    }
+  ],
+  "kw": [
+   "boîte hermétique",
+   "boîte alimentaire",
+   "boîte plastique",
+   "tupperware",
+   "garde-manger",
+   "rangement placard cuisine"
   ]
  }
 ]

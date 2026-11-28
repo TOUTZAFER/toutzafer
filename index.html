@@ -838,9 +838,11 @@ function observePeek(){
 document.addEventListener("touchstart",e=>{const c=e.target.closest?.("#grid .card:not(.out)");if(!c)return;c.classList.add("peek","touch");clearTimeout(c._pt)},{passive:true});
 document.addEventListener("touchend",e=>{document.querySelectorAll("#grid .card.touch").forEach(c=>{c.classList.remove("touch");c._pt=setTimeout(()=>{const r=c.getBoundingClientRect(),mid=innerHeight/2;if(!(r.top<mid+innerHeight*.03&&r.bottom>mid-innerHeight*.03))c.classList.remove("peek")},700)})},{passive:true});
 function renderGrid(){
-  const words = norm(query).split(/\s+/).filter(Boolean);
+  // recherche : sans accents ni majuscules, tirets et apostrophes comptés comme des espaces, pluriel ignoré, début de mot uniquement
+  const flat = t => norm(String(t)).replace(/œ/g,"oe").replace(/[^a-z0-9]+/g," ").trim();
+  const words = flat(query).split(" ").filter(Boolean).map(w=>w.length>3?w.replace(/[sx]$/,""):w);
   if(promoOnly&&!PRODUCTS.some(p=>p.was))promoOnly=false;
-  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;if(promoOnly&&!p.was)return false;const hay=norm([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs,...(p.kw||[])].join(" "));return words.every(w=>hay.includes(w))});
+  let list = PRODUCTS.filter(p=>{if(cat!=="all"&&p.cat!==cat)return false;if(promoOnly&&!p.was)return false;const hay=" "+flat([p.name,p.d,p.desc,CATNAME[p.cat],...p.specs,...(p.kw||[])].join(" "));return words.every(w=>hay.includes(" "+w))});
   list.sort((a,b)=>sortBy==="asc"?a.price-b.price||a.name.localeCompare(b.name,"fr"):sortBy==="desc"?b.price-a.price||a.name.localeCompare(b.name,"fr"):a.name.localeCompare(b.name,"fr"));
   list = [...list.filter(p=>!outOfStock.has(p.id)),...list.filter(p=>outOfStock.has(p.id))];
   const grouped = true; // toujours regroupé par catégorie, avec son bandeau
